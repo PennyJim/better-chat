@@ -1,3 +1,5 @@
+local reloaded = false
+
 remote.add_interface("emojipack registration", {
 	add = function (mod_name, shortcode_dictionary)
 		if not script.active_mods[mod_name] then return end
@@ -6,6 +8,7 @@ remote.add_interface("emojipack registration", {
 		global.emojipacks[mod_name] = shortcode_dictionary
 	end
 })
+
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
 ---@param pattern string
@@ -22,10 +25,24 @@ local function replace_all(text, pattern, replaceFun)
 	return output
 end
 
+---Clean emojipacks of unloaded mods
+local function clean_emojipacks()
+	local defunct_mods = {}
+	for mod_name in pairs(global.emojipacks) do
+		if not script.active_mods[mod_name] then
+			defunct_mods[#defunct_mods+1] = mod_name
+		end
+	end
+	for _, defunct_mod in pairs(defunct_mods) do
+		global.emojipacks[defunct_mod] = nil
+	end
+end
 
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
 local function replace_shortcodes(text)
+	if reloaded then clean_emojipacks() end
+
 	return replace_all(text, "%:%S+%:", function (shortcode)
 		local item = nil
 		for _, dictionary in pairs(global.emojipacks) do
@@ -127,4 +144,7 @@ end)
 script.on_init(function ()
 	global.emojipacks = {}
 	global.chatHistory = {}
+end)
+script.on_load(function ()
+	reloaded = true
 end)
