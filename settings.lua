@@ -15,6 +15,18 @@ data:extend{
 		maximum_value = 10.0
 	},
 	{
+		type = "bool-setting",
+		name = "bc-images-instead-of-items",
+		setting_type = "runtime-per-user",
+		default_value = false
+	},
+	{
+		type = "bool-setting",
+		name = "bc-images-instead-of-signals",
+		setting_type = "runtime-per-user",
+		default_value = true
+	},
+	{
 		type = "color-setting",
 		name = "bc-warn-color",
 		setting_type = "runtime-per-user",

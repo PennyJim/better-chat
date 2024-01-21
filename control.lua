@@ -1,3 +1,18 @@
+---Replaces all instances of a pattern with the output of the provided function
+---@param text string
+---@param pattern string
+---@param replaceFun fun(match:string):string
+---@return unknown
+local function replace_all(text, pattern, replaceFun)
+	local output = text
+	for match in text:gmatch(pattern) do
+		local front, back = output:find(match, 1, true)
+		local firsthalf = output:sub(1, front-1)
+		local secondHalf = output:sub(back+1)
+		output = firsthalf..replaceFun(match)..secondHalf
+	end
+	return output
+end
 
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
@@ -8,7 +23,27 @@ local function processMessage(sender, text)
 	-- Add player name
 	fullMessage = fullMessage..sender.name..": "
 
+	--Process Item codes with images
+	local message = replace_shortcodes(text)
+	if settings.get_player_settings(sender)["bc-images-instead-of-items"].value then
+		message = replace_all(message, "%[item=%S+]", function (match)
+			return "[img=item."..match:sub(7)
+		end)
+		message = replace_all(message, "%[fluid=%S+]", function (match)
+			return "[img=fluid."..match:sub(8)
+		end)
+		message = replace_all(message, "%[entity=%S+]", function (match)
+			return "[img=entity."..match:sub(9)
+		end)
+	end
+	if settings.get_player_settings(sender)["bc-images-instead-of-signals"].value then
+		message = replace_all(message, "%[virtual%-signal=%S+]", function (match)
+			return "[img=virtual-signal."..match:sub(17)
+		end)
+	end
+
 	fullMessage = fullMessage..message
+
 	return fullMessage
 end
 
