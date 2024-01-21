@@ -1,3 +1,11 @@
+remote.add_interface("emojipack registration", {
+	add = function (mod_name, shortcode_dictionary)
+		if not script.active_mods[mod_name] then return end
+		global.emojipacks = global.emojipacks or {}
+
+		global.emojipacks[mod_name] = shortcode_dictionary
+	end
+})
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
 ---@param pattern string
@@ -14,6 +22,18 @@ local function replace_all(text, pattern, replaceFun)
 	return output
 end
 
+
+---Replaces `:<shortcodes>:` into their emoji
+---@param text string
+local function replace_shortcodes(text)
+	return replace_all(text, "%:%S+%:", function (shortcode)
+		local item = nil
+		for _, dictionary in pairs(global.emojipacks) do
+			item = dictionary[shortcode:sub(2,-2)] or item
+		end
+		return item or shortcode
+	end)
+end
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
 ---@param text string
@@ -105,5 +125,6 @@ script.on_event(defines.events.on_console_chat, function (event)
 end)
 
 script.on_init(function ()
+	global.emojipacks = {}
 	global.chatHistory = {}
 end)
