@@ -51,11 +51,18 @@ local function replace_shortcodes(text)
 		return item or shortcode
 	end)
 end
+
+-- TODO: move stuff left of `:` into different function?
+
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
 ---@param text string
 local function processMessage(sender, text)
 	local fullMessage = ""
+
+	-- TODO: Add timestamp?
+
+	-- TODO: Add Nicknames?
 
 	-- Add player name
 	fullMessage = fullMessage..sender.name..": "
@@ -148,3 +155,9 @@ end)
 script.on_load(function ()
 	reloaded = true
 end)
+-- TODO: add individual player chat logs?
+-- TODO: fix whisper and shout
+-- script.on_event(defines.events.on_player_created, function (event)
+-- end)
+-- script.on_event(defines.events.on_player_removed, function (event)
+-- end)
