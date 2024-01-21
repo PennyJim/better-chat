@@ -1,0 +1,8 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+Date: 2024-01-21
+  Major Features:
+    - Chat History Replacement
+    - Emojipack support
+  Minor Features:
+    - Cleaning rich text objects to being only icons 
