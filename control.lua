@@ -1,4 +1,5 @@
 local reloaded = false
+local ChatHistoryManager = require("ChatHistoryManager")
 
 remote.add_interface("emojipack registration", {
 	add = function (mod_name, shortcode_dictionary)
@@ -101,39 +102,38 @@ end
 ---Processes messsage, saves it to history, then sends latest x messages
 ---@param sender LuaPlayer	
 ---@param message string
-local function send_message(sender, message)
+---@param send_level "global"|"force"|"player"
+---@param recipient integer?
+local function send_message(sender, message, send_level, recipient)
 	local msg = processMessage(sender, message)
 	local error = nil
 
-	-- Mark duplicate if it's been sent in last x seconds
-	local duplicate_timer = 60*settings.global["bc-duplicate-timer"].value
-	for i = #global.chatHistory, 1, -1 do
-		local chat = global.chatHistory[i]
-		if (chat.tick < game.tick - duplicate_timer) then break
-		elseif chat.msg == msg then
-			error = {msg={"bc-warning.duplicate-message"}, type="warn"}
-			break
-		end
+	-- TODO: reimplement with new chat history
+	-- -- Mark duplicate if it's been sent in last x seconds
+	-- local duplicate_timer = 60*settings.global["bc-duplicate-timer"].value
+	-- for i = #global.chatHistory, 1, -1 do
+	-- 	local chat = global.chatHistory[i]
+	-- 	if (chat.tick < game.tick - duplicate_timer) then break
+	-- 	elseif chat.msg == msg then
+	-- 		error = {msg={"bc-warning.duplicate-message"}, type="warn"}
+	-- 		break
+	-- 	end
+	-- end
+
+	if send_level == "force" then recipient = sender.force_index end
+	if send_level ~= "global" and not recipient then 
+		return log("Wasn't given a location to send the message!!")
 	end
 
-	-- Remove oldest chat if new message and at max capacity
-	if not error then
-		-- HACK: add config change listener to pruge chatHistory if it shrinks instead of this
-		if #global.chatHistory >= settings.global["bc-global-chat-history"].value then
-			table.remove(global.chatHistory, 1)
-		end
-		global.chatHistory[#global.chatHistory+1] = {msg=msg,color=sender.chat_color,tick=game.tick}
-	end
+	ChatHistoryManager.add_message{
+		message = msg,
+		sender = sender.index,
+		color = sender.chat_color,
+		level = send_level,
+		chat_index = recipient
+	}
 
-	--Reprint chat to modify latest message
-	global_console_clear();
-	for _, chat in pairs(global.chatHistory) do
-		game.print(chat.msg, {
-			color = chat.color,
-			sound = defines.print_sound.never,
-			skip = defines.print_skip.never
-		})
-	end
+	ChatHistoryManager.print_chat(send_level, recipient)
 
 	if error then
 		local errorColor = settings.get_player_settings(sender)
@@ -145,12 +145,15 @@ local function send_message(sender, message)
 end
 
 script.on_event(defines.events.on_console_chat, function (event)
-	send_message(game.get_player(event.player_index), event.message)
+	send_message(game.get_player(event.player_index), event.message, "force")
+	log(serpent.block(global.GlobalChatLog))
+	log(serpent.block(global.ForceChatLog))
+	log(serpent.block(global.PlayerChatLog))
 end)
 
 script.on_init(function ()
 	global.emojipacks = {}
-	global.chatHistory = {}
+	ChatHistoryManager.init()
 end)
 script.on_load(function ()
 	reloaded = true
@@ -158,6 +161,7 @@ end)
 -- TODO: add individual player chat logs?
 -- TODO: fix whisper and shout
 
+--#region Players/Forces Created/Destroyed
 script.on_event(defines.events.on_player_created, function (event)
 	ChatHistoryManager.add_player(event.player_index)
 end)
@@ -170,3 +174,4 @@ end)
 script.on_event(defines.events.on_forces_merged, function (event)
 	ChatHistoryManager.remove_force(event.source_index)
 end)
+--#endregion

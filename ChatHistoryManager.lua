@@ -155,7 +155,19 @@ manager.print_chat = function(chat_level, chat_index)
 	elseif chat_level == "force" then
 
 	elseif chat_level == "player" then
+	end
+end
 
+---Initializes Chat History
+manager.init = function()
+	global.GlobalChatLog = newChatLog();
+	global.ForceChatLog = {}
+	for _,force in pairs(game.forces) do
+		global.ForceChatLog[force.index] = newChatLog();
+	end
+	global.PlayerChatLog = {}
+	for player in pairs(game.players) do
+		global.ForceChatLog[player] = newChatLog();
 	end
 end
 
