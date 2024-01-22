@@ -139,9 +139,9 @@ manager.add_message = function(messageParams)
 
 	if messageParams.level =="global" then
 		-- Add message to global chat, every force, and every player
-		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value)
+		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value--[[@as integer]])
 
-		local force_chat_history = settings.global["bc-force-chat-history"].value
+		local force_chat_history = settings.global["bc-force-chat-history"].value--[[@as integer]]
 		for _,force in pairs(game.forces) do
 			global.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
@@ -153,16 +153,16 @@ manager.add_message = function(messageParams)
 	elseif messageParams.level == "force" then
 		-- Add message to the force and players in the force
 		global.ForceChatLog[messageParams.chat_index]
-			:add(newChat, settings.global["bc-force-chat-history"].value)
+			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as integer]])
 
 		for player_index in pairs(game.forces[messageParams.chat_index].players) do
-			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value
+			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 	elseif messageParams.level == "player" then
 		-- Add message to the player
 		global.PlayerChatLog[messageParams.chat_index]
-			:add(newChat, settings.get_player_settings(messageParams.chat_index)["bc-player-chat-history"].value)
+			:add(newChat, settings.get_player_settings(messageParams.chat_index)["bc-player-chat-history"].value--[[@as integer]])
 	else
 		log({"", {"bc-invalid-chat-level"}, serpent.line(messageParams), "\n"})
 	end
@@ -176,30 +176,34 @@ manager.print_chat = function(chat_level, chat_index)
 		for player_index, player in pairs(game.players) do
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
-					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value,
 				player.print({"", chat.header, chat.msg}, {
+					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
 					sound = defines.print_sound.never,
 					skip = defines.print_skip.never
 				})
 			end
 		end
 	elseif chat_level == "force" then
+		---@cast chat_index integer
 		for player_index, player in pairs(game.forces[chat_index].players) do
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
-					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value,
 				player.print({"", chat.header, chat.msg}, {
+					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
 					sound = defines.print_sound.never,
 					skip = defines.print_skip.never
 				})
 			end
 		end
 	elseif chat_level == "player" then
+		---@cast chat_index integer
 		local player = game.get_player(chat_index)
+		-- TODO: improve this error statement
+		if not player then return log("[ERR] Something has gone wrong") end
 		player.clear_console()
 		for chat in global.PlayerChatLog[chat_index]:all() do
-				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value,
 			player.print({"", chat.header, chat.msg}, {
+				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value--[[@as Color]],
 				sound = defines.print_sound.never,
 				skip = defines.print_skip.never
 			})

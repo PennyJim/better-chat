@@ -101,6 +101,7 @@ end
 ---@param send_level historyLevel
 ---@param recipient integer?
 local function send_message(header, message, color, send_level, recipient)
+---@diagnostic disable-next-line: need-check-nil
 	header[1] = header[1] or "chat-localization.bc-empty-header"
 
 	if send_level ~= "global" and not recipient then
@@ -122,7 +123,7 @@ end
 ---@param player LuaPlayer
 ---@param message LocalisedString
 local function warn(player, message)
-	player.print(message, settings.get_player_settings(player)["bc-warn-color"].value)
+	player.print(message, settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]])
 end
 
 -- TODO: Add Nicknames?
@@ -146,6 +147,7 @@ end
 
 script.on_event(defines.events.on_console_chat, function (event)
 	local player = game.get_player(event.player_index)
+	if not player then return end
 	local message = processMessage(player, event.message)
 	send_message({"chat-localization.bc-message-header", player.name}, message, player.chat_color, "force", player.force_index)
 	log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
@@ -163,7 +165,7 @@ script.on_event(defines.events.on_console_command, function (event)
 		local recipient = game.get_player(target);
 
 		if not recipient then
-			warn(player, {"chat-localization.bc-invalid-recipient", target})
+			return warn(player, {"chat-localization.bc-invalid-recipient", target})
 		end
 
 		local message = event.parameters:sub(#target+2);
