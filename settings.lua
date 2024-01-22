@@ -16,7 +16,7 @@ data:extend{
 	{
 		type = "int-setting",
 		name = "bc-player-chat-history",
-		setting_type = "runtime-player",
+		setting_type = "runtime-per-user",
 		default_value = 64,
 		minimum_value = 1
 	},

@@ -59,7 +59,9 @@ script.register_metatable("bc-chatlog", chatMetatable)
 ---Creates a new ChatLog
 ---@return ChatLog
 local function newChatLog()
-	return setmetatable({}, chatMetatable)
+	return setmetatable({
+		size = 0
+	}, chatMetatable)
 end
 
 ---@class ChatLogManager
@@ -123,7 +125,7 @@ manager.add_message = function(messageParams)
 	elseif messageParams.level == "force" then
 		-- Add message to the force and players in the force
 		global.ForceChatLog[messageParams.chat_index]
-			:add(newChat, settings.global["bc-force-chat-history"])
+			:add(newChat, settings.global["bc-force-chat-history"].value)
 
 		for player_index in pairs(game.forces[messageParams.chat_index].players) do
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value
