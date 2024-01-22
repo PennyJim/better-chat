@@ -1,7 +1,7 @@
 ---@class Chat
 ---@field msg string
+---@field header string
 ---@field color Color?
----@field sender string?
 
 ---@class LinkedListItem<T>: {next:LinkedListItem?,value:T}
 ---Helper function to create new LinkedListItem
@@ -123,10 +123,10 @@ end
 
 ---@class addMessageParams
 ---@field message string
----@field level "global"|"force"|"player"?
----@field chat_index integer?
----@field sender string?
+---@field header string
 ---@field color Color?
+---@field level historyLevel?
+---@field chat_index integer?
 ---Adds a message to chat history
 ---@param messageParams addMessageParams
 manager.add_message = function(messageParams)
@@ -134,7 +134,7 @@ manager.add_message = function(messageParams)
 	local newChat = {
 		msg = messageParams.message,
 		color = messageParams.color,
-		sender = messageParams.sender
+		header = messageParams.header
 	}
 
 	if messageParams.level =="global" then
@@ -142,12 +142,12 @@ manager.add_message = function(messageParams)
 		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value)
 
 		local force_chat_history = settings.global["bc-force-chat-history"].value
-		for force_index in pairs(game.forces) do
-			global.ForceChatLog[force_index]:add(newChat, force_chat_history)
+		for _,force in pairs(game.forces) do
+			global.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
 
-		local player_chat_history = settings.global["bc-player-chat-history"].value
 		for player_index in pairs(game.players) do
+			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 	elseif messageParams.level == "force" then
@@ -164,20 +164,20 @@ manager.add_message = function(messageParams)
 		global.PlayerChatLog[messageParams.chat_index]
 			:add(newChat, settings.get_player_settings(messageParams.chat_index)["bc-player-chat-history"].value)
 	else
-		log({"", {"bc-invalid-chat-level"}, serpent.line(messageParams)})
+		log({"", {"bc-invalid-chat-level"}, serpent.line(messageParams), "\n"})
 	end
 end
 
 ---Print out all messages for a group
----@param chat_level "global"|"force"|"player"
+---@param chat_level historyLevel
 ---@param chat_index integer?
 manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
 		for player_index, player in pairs(game.players) do
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
-				player.print(chat.msg, {
 					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value,
+				player.print({"", chat.header, chat.msg}, {
 					sound = defines.print_sound.never,
 					skip = defines.print_skip.never
 				})
@@ -187,8 +187,8 @@ manager.print_chat = function(chat_level, chat_index)
 		for player_index, player in pairs(game.forces[chat_index].players) do
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
-				player.print(chat.msg, {
 					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value,
+				player.print({"", chat.header, chat.msg}, {
 					sound = defines.print_sound.never,
 					skip = defines.print_skip.never
 				})
@@ -198,8 +198,8 @@ manager.print_chat = function(chat_level, chat_index)
 		local player = game.get_player(chat_index)
 		player.clear_console()
 		for chat in global.PlayerChatLog[chat_index]:all() do
-			player.print(chat.msg, {
 				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value,
+			player.print({"", chat.header, chat.msg}, {
 				sound = defines.print_sound.never,
 				skip = defines.print_skip.never
 			})

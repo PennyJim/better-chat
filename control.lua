@@ -1,3 +1,5 @@
+---@alias historyLevel "global"|"force"|"player"
+
 local reloaded = false
 local ChatHistoryManager = require("ChatHistoryManager")
 
@@ -53,20 +55,15 @@ local function replace_shortcodes(text)
 	end)
 end
 
--- TODO: move stuff left of `:` into different function?
-
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
 ---@param text string
+---@return string
 local function processMessage(sender, text)
-	local fullMessage = ""
+	-- local fullMessage = ""
 
-	-- TODO: Add timestamp?
-
-	-- TODO: Add Nicknames?
-
-	-- Add player name
-	fullMessage = fullMessage..sender.name..": "
+	-- -- Add player name
+	-- fullMessage = fullMessage..sender.name..": "
 
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
@@ -86,13 +83,11 @@ local function processMessage(sender, text)
 			return "[img=virtual-signal."..match:sub(17)
 		end)
 	end
-
-	fullMessage = fullMessage..message
-
-	return fullMessage
+	return message
 end
 
 ---Clear everyone's console
+---@deprecated
 local function global_console_clear()
 	for _, player in pairs(game.players) do
 		player.clear_console();
@@ -100,55 +95,39 @@ local function global_console_clear()
 end
 
 ---Processes messsage, saves it to history, then sends latest x messages
----@param sender LuaPlayer	
+---@param header LocalisedString
 ---@param message string
----@param send_level "global"|"force"|"player"
+---@param color Color?
+---@param send_level historyLevel
 ---@param recipient integer?
-local function send_message(sender, message, send_level, recipient)
-	local msg = processMessage(sender, message)
-	local error = nil
+local function send_message(header, message, color, send_level, recipient)
+	header[1] = header[1] or "chat-localization.bc-empty-header"
 
-	-- TODO: reimplement with new chat history
-	-- -- Mark duplicate if it's been sent in last x seconds
-	-- local duplicate_timer = 60*settings.global["bc-duplicate-timer"].value
-	-- for i = #global.chatHistory, 1, -1 do
-	-- 	local chat = global.chatHistory[i]
-	-- 	if (chat.tick < game.tick - duplicate_timer) then break
-	-- 	elseif chat.msg == msg then
-	-- 		error = {msg={"bc-warning.duplicate-message"}, type="warn"}
-	-- 		break
-	-- 	end
-	-- end
-
-	if send_level == "force" then recipient = sender.force_index end
-	if send_level ~= "global" and not recipient then 
-		return log("Wasn't given a location to send the message!!")
+	if send_level ~= "global" and not recipient then
+		return log("Wasn't given a location to send the message!!\n")
 	end
 
 	ChatHistoryManager.add_message{
-		message = msg,
-		sender = sender.index,
-		color = sender.chat_color,
+		message = message,
+		header = header,
+		color = color,
 		level = send_level,
 		chat_index = recipient
 	}
 
 	ChatHistoryManager.print_chat(send_level, recipient)
 
-	if error then
-		local errorColor = settings.get_player_settings(sender)
-			["bc-"..error.type.."-color"].value
-		sender.print(error.msg, {
-			color = errorColor
-		})
-	end
 end
 
 script.on_event(defines.events.on_console_chat, function (event)
-	send_message(game.get_player(event.player_index), event.message, "force")
-	log{"", "global-chat-log", serpent.block(global.GlobalChatLog)}
-	log{"", "force-chat-log", serpent.block(global.ForceChatLog)}
-	log{"", "player-chat-log", serpent.block(global.PlayerChatLog)}
+	local player = game.get_player(event.player_index)
+	local message = processMessage(player, event.message)
+	send_message({"chat-localization.bc-message-header", player.name}, message, player.chat_color, "force", player.force_index)
+	log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
+	log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
+	log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
+end)
+
 end)
 
 script.on_init(function ()
