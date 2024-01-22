@@ -146,9 +146,9 @@ end
 
 script.on_event(defines.events.on_console_chat, function (event)
 	send_message(game.get_player(event.player_index), event.message, "force")
-	log(serpent.block(global.GlobalChatLog))
-	log(serpent.block(global.ForceChatLog))
-	log(serpent.block(global.PlayerChatLog))
+	log{"", "global-chat-log", serpent.block(global.GlobalChatLog)}
+	log{"", "force-chat-log", serpent.block(global.ForceChatLog)}
+	log{"", "player-chat-log", serpent.block(global.PlayerChatLog)}
 end)
 
 script.on_init(function ()
