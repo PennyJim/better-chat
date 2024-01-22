@@ -116,7 +116,32 @@ local function send_message(header, message, color, send_level, recipient)
 	}
 
 	ChatHistoryManager.print_chat(send_level, recipient)
+end
 
+---Sends an ephemeral warning message to player
+---@param player LuaPlayer
+---@param message LocalisedString
+local function warn(player, message)
+	player.print(message, settings.get_player_settings(player)["bc-warn-color"].value)
+end
+
+-- TODO: Add Nicknames?
+
+---Sends a message globally
+---@param player LuaPlayer
+---@param message string
+local function shout(player, message)
+	message = processMessage(player, message)
+	send_message({"chat-localization.bc-shout-header", player.name}, message, player.chat_color, "global")
+end
+---Sends a message to a player
+---@param player LuaPlayer
+---@param recipient LuaPlayer
+---@param message string
+local function whisper(player, recipient, message)
+	message = processMessage(player, message)
+	send_message({"chat-localization.bc-whisper-to-header", recipient.name}, message, player.chat_color, "player", player.index)
+	send_message({"chat-localization.bc-whisper-from-header", player.name}, message, player.chat_color, "player", recipient.index)
 end
 
 script.on_event(defines.events.on_console_chat, function (event)
@@ -128,6 +153,22 @@ script.on_event(defines.events.on_console_chat, function (event)
 	log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
 end)
 
+script.on_event(defines.events.on_console_command, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return end
+	if event.command == "shout" then
+		shout(player, event.parameters)
+	elseif event.command == "whisper" then
+		local target = event.parameters:match("%S+")
+		local recipient = game.get_player(target);
+
+		if not recipient then
+			warn(player, {"chat-localization.bc-invalid-recipient", target})
+		end
+
+		local message = event.parameters:sub(#target+2);
+		whisper(player, recipient, message)
+	end
 end)
 
 script.on_init(function ()
