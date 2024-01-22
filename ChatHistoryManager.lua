@@ -155,8 +155,28 @@ manager.print_chat = function(chat_level, chat_index)
 			end
 		end
 	elseif chat_level == "force" then
-
+		for player_index, player in pairs(game.forces[chat_index].players) do
+			for chat in global.PlayerChatLog[player_index]:all() do
+				player.clear_console()
+				player.print(chat.msg, {
+					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value,
+					sound = defines.print_sound.never,
+					skip = defines.print_skip.never
+				})
+			end
+		end
 	elseif chat_level == "player" then
+		local player = game.get_player(chat_index)
+		for chat in global.PlayerChatLog[chat_index]:all() do
+			player.clear_console()
+			player.print(chat.msg, {
+				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value,
+				sound = defines.print_sound.never,
+				skip = defines.print_skip.never
+			})
+		end
+	else
+		log({"invalid-destination"})
 	end
 end
 
