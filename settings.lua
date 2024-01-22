@@ -7,6 +7,20 @@ data:extend{
 		minimum_value = 1
 	},
 	{
+		type = "int-setting",
+		name = "bc-force-chat-history",
+		setting_type = "runtime-global",
+		default_value = 64,
+		minimum_value = 1
+	},
+	{
+		type = "int-setting",
+		name = "bc-player-chat-history",
+		setting_type = "runtime-player",
+		default_value = 64,
+		minimum_value = 1
+	},
+	{
 		type = "double-setting",
 		name = "bc-duplicate-timer",
 		setting_type = "runtime-global",
@@ -25,6 +39,12 @@ data:extend{
 		name = "bc-images-instead-of-signals",
 		setting_type = "runtime-per-user",
 		default_value = true
+	},
+	{
+		type = "color-setting",
+		name = "bc-default-color",
+		setting_type = "runtime-per-user",
+		default_value = {1,1,1}
 	},
 	{
 		type = "color-setting",

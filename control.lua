@@ -158,6 +158,8 @@ end)
 -- TODO: add individual player chat logs?
 -- TODO: fix whisper and shout
 -- script.on_event(defines.events.on_player_created, function (event)
+-- -- TODO: add player to chat history
 -- end)
 -- script.on_event(defines.events.on_player_removed, function (event)
+-- -- TODO: remove player from chat history
 -- end)
