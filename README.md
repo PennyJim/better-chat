@@ -9,9 +9,9 @@ This functions by other mods calling `remote.call("emojipack registration", "add
 
 # Todo List:
 - [x] Implement Emojipack Support
-- [ ] Per-player chat history
-	- [ ] Fix /whisper and /shout
-	- [ ] Add toggleable chat timestamps?
+- [x] Per-player chat history
+	- [x] Fix /whisper and /shout
+	- [ ] ~~Add toggleable chat timestamps?~~
 - [ ] Add moderation filters
 - [ ] Add nicknames
 - [ ] more?
