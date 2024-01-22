@@ -1,8 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-Date: ????
+Date: 2024-01-21
   Major Features:
     - Now has individual history for players and forces
+  Info:
+    - Has not actually been tested on multiplayer yet. Released so I(/You :P) can
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2024-01-21
