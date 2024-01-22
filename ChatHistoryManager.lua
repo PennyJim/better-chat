@@ -4,6 +4,15 @@
 ---@field sender string?
 
 ---@class LinkedListItem<T>: {next:LinkedListItem?,value:T}
+---Helper function to create new LinkedListItem
+---@param item LinkedListItem<T>
+function createLink(item)
+	if type(item) == "table" then
+		return {value=item[1]}
+	else
+		return {value=item}
+	end
+end
 ---@class ChatLog
 ---@field first_chat LinkedListItem<Chat>? The fist item in the log
 ---@field last_chat LinkedListItem<Chat>? The last item in the log
@@ -28,7 +37,10 @@ local ChatLog = {
 	---@param sizeLimit integer
 	---@return LinkedListItem<Chat>?
 	add = function(self, chat, sizeLimit)
-		self.last_chat = chat
+		local newLink = createLink{chat}
+		if not self.first_chat then self.first_chat = newLink end
+		self.last_chat.next = newLink
+		self.last_chat = newLink
 		self.size = self.size + 1
 		self:trim(sizeLimit)
 	end,
