@@ -38,8 +38,8 @@ local ChatLog = {
 	---@return LinkedListItem<Chat>?
 	add = function(self, chat, sizeLimit)
 		local newLink = createLink{chat}
-		if not self.first_chat then self.first_chat = newLink end
-		self.last_chat.next = newLink
+		if not self.first_chat then self.first_chat = newLink
+		else self.last_chat.next = newLink end
 		self.last_chat = newLink
 		self.size = self.size + 1
 		self:trim(sizeLimit)
@@ -55,10 +55,11 @@ local ChatLog = {
 	end,
 	---Return an iterator for every element in linked list
 	---@param self ChatLog
-	---@return fun():Chat
+	---@return fun():Chat?
 	all = function(self)
 		local ChatItem = self.first_chat
 		return function ()
+			if not ChatItem then return nil end
 			local Chat = ChatItem.value
 			ChatItem = ChatItem.next
 			return Chat
