@@ -80,6 +80,17 @@ manager.add_player = function(player_index)
 	global.PlayerChatLog[player_index] = newChatLog()
 end
 
+---Removes a chatlog for deleted force
+---@param force_index integer
+manager.remove_force = function(force_index)
+	global.ForceChatLog[force_index] = nil
+end
+---Removes a chatlog for removed player
+---@param player_index integer
+manager.remove_player = function(player_index)
+	global.PlayerChatLog[player_index] = nil
+end
+
 ---@class addMessageParams
 ---@field message string
 ---@field level "global"|"force"|"player"?
