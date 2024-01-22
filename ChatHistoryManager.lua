@@ -34,7 +34,7 @@ local ChatLog = {
 	---Add a new element in the linked list
 	---@param self ChatLog
 	---@param chat Chat
-	---@param sizeLimit integer
+	---@param sizeLimit integer?
 	---@return LinkedListItem<Chat>?
 	add = function(self, chat, sizeLimit)
 		local newLink = createLink{chat}
@@ -42,7 +42,7 @@ local ChatLog = {
 		else self.last_chat.next = newLink end
 		self.last_chat = newLink
 		self.size = self.size + 1
-		self:trim(sizeLimit)
+		if sizeLimit then self:trim(sizeLimit) end
 	end,
 	---Trim elements from linked list until its equal to limit
 	---@param self ChatLog
@@ -70,11 +70,22 @@ local ChatLog = {
 local chatMetatable = {__index=ChatLog}
 script.register_metatable("bc-chatlog", chatMetatable)
 ---Creates a new ChatLog
+---@param oldLog ChatLog?
+---@param log_type "force"|"player"?
 ---@return ChatLog
-local function newChatLog()
-	return setmetatable({
-		size = 0
-	}, chatMetatable)
+local function newChatLog(oldLog, log_type)
+	local newLog = setmetatable({ size = 0 }, chatMetatable)
+	if not oldLog then return newLog end
+
+	for chat in oldLog:all() do
+		newLog:add(chat)
+	end
+	if (log_type=="force") then
+		newLog:trim(settings.global["bc-force-chat-history"].value--[[@as integer]])
+	else
+		newLog:trim(settings.player["bc-player-chat-history"].value--[[@as integer]])
+	end
+	return newLog
 end
 
 ---@class ChatLogManager
@@ -86,13 +97,17 @@ global.GlobalChatLog = newChatLog();
 ---@param force_index integer
 manager.add_force = function(force_index)
 	if global.ForceChatLog[force_index] then return end
-	global.ForceChatLog[force_index] = newChatLog()
+	global.ForceChatLog[force_index] = newChatLog(
+		global.GlobalChatLog
+	)
 end
 ---Adds a new chatlog for player_index if it didn't exist before
 ---@param player_index integer
 manager.add_player = function(player_index)
 	if global.PlayerChatLog[player_index] then return end
-	global.PlayerChatLog[player_index] = newChatLog()
+	global.PlayerChatLog[player_index] = newChatLog(
+		global.ForceChatLog[game.get_player(player_index).force_index]
+	)
 end
 
 ---Removes a chatlog for deleted force
