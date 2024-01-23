@@ -1,68 +1,45 @@
 ---@class Chat
 ---@field msg string
----@field header string
+---@field header LocalisedString
 ---@field color Color?
 
----@class LinkedListItem<T>: {next:LinkedListItem?,value:T}
----Helper function to create new LinkedListItem
----@param item LinkedListItem<T>
-function createLink(item)
-	if type(item) == "table" then
-		return {value=item[1]}
-	else
-		return {value=item}
-	end
-end
 ---@class ChatLog
----@field first_chat LinkedListItem<Chat>? The fist item in the log
----@field last_chat LinkedListItem<Chat>? The last item in the log
----@field get fun(ChatLog, integer):LinkedListItem<Chat>? Return the nth element in the linked list.
+---@field chat_array Chat[]
 ---@field size integer
+---@field top_index integer
+---@field last_index integer
 local ChatLog = {
-	---Return the nth element in the linked list.
-	---@param self ChatLog
-	---@param index integer
-	---@return LinkedListItem<Chat>?
-	get = function(self, index)
-		local item = self.first_chat
-		for i = 1, index, 1 do
-			if not item then return nil end
-			item = item.next
-		end
-		return item
-	end,
 	---Add a new element in the linked list
 	---@param self ChatLog
 	---@param chat Chat
 	---@param sizeLimit integer?
 	---@return LinkedListItem<Chat>?
 	add = function(self, chat, sizeLimit)
-		local newLink = createLink{chat}
-		if not self.first_chat then self.first_chat = newLink
-		else self.last_chat.next = newLink end
-		self.last_chat = newLink
 		self.size = self.size + 1
+		self.last_index = self.last_index + 1
+		self.chat_array[self.last_index] = chat
 		if sizeLimit then self:trim(sizeLimit) end
 	end,
 	---Trim elements from linked list until its equal to limit
 	---@param self ChatLog
 	---@param sizeLimit integer
 	trim = function(self, sizeLimit)
-		while self.size > sizeLimit do
-			self.first_chat = self.first_chat.next
-			self.size = self.size - 1
+		for i = self.top_index, self.last_index-sizeLimit, 1 do
+			self.top_index = i + 1
+			self.chat_array[i] = nil
 		end
 	end,
 	---Return an iterator for every element in linked list
 	---@param self ChatLog
+	---@param first_index integer?
 	---@return fun():Chat?
-	all = function(self)
-		local ChatItem = self.first_chat
-		return function ()
-			if not ChatItem then return nil end
-			local Chat = ChatItem.value
-			ChatItem = ChatItem.next
-			return Chat
+	from = function(self, first_index)
+		local chat_array = self.chat_array
+		local i = first_index or self.top_index
+		i = i-1
+		return function()
+			i = 1 + i
+			return chat_array[i]
 		end
 	end
 }
@@ -74,10 +51,15 @@ script.register_metatable("bc-chatlog", chatMetatable)
 ---@param log_type "force"|"player"?
 ---@return ChatLog
 local function newChatLog(oldLog, log_type)
-	local newLog = setmetatable({ size = 0 }, chatMetatable)
+	local newLog = setmetatable({
+		size = 0,
+		top_index = 1,
+		last_index = 0,
+		chat_array = {}
+	}, chatMetatable)
 	if not oldLog then return newLog end
 
-	for chat in oldLog:all() do
+	for chat in oldLog:from() do
 		newLog:add(chat)
 	end
 	if (log_type=="force") then
@@ -176,7 +158,7 @@ manager.print_chat = function(chat_level, chat_index)
 		for _, player in pairs(game.players) do
 			local player_index = player.index
 			player.clear_console()
-			for chat in global.PlayerChatLog[player_index]:all() do
+			for chat in global.PlayerChatLog[player_index]:from() do
 				player.print({"", chat.header, chat.msg}, {
 					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
 					sound = defines.print_sound.never,
@@ -189,7 +171,7 @@ manager.print_chat = function(chat_level, chat_index)
 		for _, player in pairs(game.forces[chat_index].players) do
 			local player_index = player.index
 			player.clear_console()
-			for chat in global.PlayerChatLog[player_index]:all() do
+			for chat in global.PlayerChatLog[player_index]:from() do
 				player.print({"", chat.header, chat.msg}, {
 					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
 					sound = defines.print_sound.never,
@@ -203,7 +185,7 @@ manager.print_chat = function(chat_level, chat_index)
 		-- TODO: improve this error statement
 		if not player then return log("[ERR] Something has gone wrong") end
 		player.clear_console()
-		for chat in global.PlayerChatLog[chat_index]:all() do
+		for chat in global.PlayerChatLog[chat_index]:from() do
 			player.print({"", chat.header, chat.msg}, {
 				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value--[[@as Color]],
 				sound = defines.print_sound.never,

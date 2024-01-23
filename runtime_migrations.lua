@@ -8,37 +8,70 @@ script.on_configuration_changed(function (stuff_changed)
 		elseif old_version == "0.1.0" then goto v0_1_0
 		elseif old_version == "0.2.0" then goto v0_2_0
 		elseif old_version == "0.2.1" then goto v0_2_1
+		elseif old_version == "0.2.2" then goto v0_2_2
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
 		end
 
 		::v0_1_0::
-		local oldHistory = global.chatHistory
-		global.chatHistory = nil;
+		if true then -- block reduce oldHistory's scope
+			local oldHistory = global.chatHistory
+			global.chatHistory = nil;
 
-		--Replicate ChatHistoryManager.init
-		global.GlobalChatLog = ChatHistoryManager.__newChatLog()
-		global.ForceChatLog = {}
-		for _,force in pairs(game.forces) do
-			global.ForceChatLog[force.index] = ChatHistoryManager.__newChatLog();
+			--Replicate ChatHistoryManager.init
+			global.GlobalChatLog = ChatHistoryManager.__newChatLog()
+			global.ForceChatLog = {}
+			for _,force in pairs(game.forces) do
+				global.ForceChatLog[force.index] = ChatHistoryManager.__newChatLog();
+			end
+			global.PlayerChatLog = {}
+			for _,player in pairs(game.players) do
+				local player_index = player.index
+				global.PlayerChatLog[player_index] = ChatHistoryManager.__newChatLog();
+			end
+
+			--Migrate old chat history into new one's global chat
+			for _, chat in pairs(oldHistory) do
+				ChatHistoryManager.add_message{
+					message = chat.msg,
+					header = {"chat-localization.bc-empty-header"},
+					color = chat.color,
+					level = "global"
+				}
+			end
 		end
-		global.PlayerChatLog = {}
-		for _,player in pairs(game.players) do
-			local player_index = player.index
-			global.PlayerChatLog[player_index] = ChatHistoryManager.__newChatLog();
+		-- Don't need to convert chatlogs as it 
+		--  made them using the internal command
+		goto v0_2_2
+
+		::v0_2_0::
+		::v0_2_1::
+		if true then --block to redue linkedListMigration's scope
+			local function linkedListMigration(list)
+				local log = ChatHistoryManager.__newChatLog()
+				local array = log.chat_array
+
+				local link = list.first_chat
+				while link do
+					array[#array+1] = link.value
+					link = link.next
+				end
+				log.size = #array
+				log.last_index = #array
+
+				return log
+			end
+
+			global.GlobalChatLog = linkedListMigration(global.GlobalChatLog)
+			for force_index in pairs(global.ForceChatLog) do
+				global.ForceChatLog[force_index] = linkedListMigration(global.ForceChatLog[force_index])
+			end
+			for player_index in pairs(global.PlayerChatLog) do
+				global.PlayerChatLog[player_index] = linkedListMigration(global.PlayerChatLog[player_index])
+			end
 		end
 
-		--Migrate old chat history into new one's global chat
-		for _, chat in pairs(oldHistory) do
-			ChatHistoryManager.add_message{
-				message = chat.msg,
-				header = {"chat-localization.bc-empty-header"},
-				color = chat.color,
-				level = "global"
-			}
-		end
-
-		::v0_2_0:: ::v0_2_1::
+		::v0_2_2::
 	end
 end)
