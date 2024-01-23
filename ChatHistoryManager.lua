@@ -91,8 +91,6 @@ end
 ---@class ChatLogManager
 local manager = {}
 
-global.GlobalChatLog = newChatLog();
-
 ---Adds a new chatlog for force_index if it didn't exist before
 ---@param force_index integer
 manager.add_force = function(force_index)
@@ -123,9 +121,9 @@ end
 
 ---@class addMessageParams
 ---@field message string
----@field header string
+---@field header LocalisedString
 ---@field color Color?
----@field level historyLevel?
+---@field level historyLevel
 ---@field chat_index integer?
 ---Adds a message to chat history
 ---@param messageParams addMessageParams
@@ -225,5 +223,8 @@ manager.init = function()
 		global.ForceChatLog[player] = newChatLog();
 	end
 end
+
+---Functions for internal manipulations by runtime_migrations
+manager.__newChatLog = newChatLog
 
 return manager

@@ -1,4 +1,5 @@
 ---@alias historyLevel "global"|"force"|"player"
+require("runtime_migrations")
 
 local reloaded = false
 local ChatHistoryManager = require("ChatHistoryManager")
