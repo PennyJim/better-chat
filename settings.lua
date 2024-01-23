@@ -3,8 +3,9 @@ data:extend{
 		type = "int-setting",
 		name = "bc-global-chat-history",
 		setting_type = "runtime-global",
-		default_value = 64,
+		default_value = 36,
 		minimum_value = 1,
+		maximum_value = 64,
 		order = "history-a"
 	},
 	{
@@ -19,8 +20,9 @@ data:extend{
 		type = "int-setting",
 		name = "bc-player-chat-history",
 		setting_type = "runtime-per-user",
-		default_value = 64,
+		default_value = 36,
 		minimum_value = 1,
+		maximum_value = 64,
 		order = "a-history-c"
 	},
 	-- {
