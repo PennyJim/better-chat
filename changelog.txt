@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.1
+Date: 2024-01-22
+  Minor Features:
+    - Now has more granular icon replacement settings
+  Bugfixes:
+    - Now has migrations so loading a 0.1 world and chatting won't crash
+    - Added some locale so there weren't dangling localization keys
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2024-01-21
   Major Features:
