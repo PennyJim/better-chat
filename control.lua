@@ -134,14 +134,6 @@ local function processMessage(sender, text)
 	return message
 end
 
----Clear everyone's console
----@deprecated
-local function global_console_clear()
-	for _, player in pairs(game.players) do
-		player.clear_console();
-	end
-end
-
 ---Processes messsage, saves it to history, then sends latest x messages
 ---@param header LocalisedString
 ---@param message string

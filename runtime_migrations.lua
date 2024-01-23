@@ -24,8 +24,9 @@ script.on_configuration_changed(function (stuff_changed)
 			global.ForceChatLog[force.index] = ChatHistoryManager.__newChatLog();
 		end
 		global.PlayerChatLog = {}
-		for player in pairs(game.players) do
-			global.PlayerChatLog[player] = ChatHistoryManager.__newChatLog();
+		for _,player in pairs(game.players) do
+			local player_index = player.index
+			global.PlayerChatLog[player_index] = ChatHistoryManager.__newChatLog();
 		end
 
 		--Migrate old chat history into new one's global chat

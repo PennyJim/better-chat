@@ -144,7 +144,8 @@ manager.add_message = function(messageParams)
 			global.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
 
-		for player_index in pairs(game.players) do
+		for _, player in pairs(game.players) do
+			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
@@ -153,7 +154,8 @@ manager.add_message = function(messageParams)
 		global.ForceChatLog[messageParams.chat_index]
 			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as integer]])
 
-		for player_index in pairs(game.forces[messageParams.chat_index].players) do
+		for _,player in pairs(game.forces[messageParams.chat_index].players) do
+			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
@@ -171,7 +173,8 @@ end
 ---@param chat_index integer?
 manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
-		for player_index, player in pairs(game.players) do
+		for _, player in pairs(game.players) do
+			local player_index = player.index
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
 				player.print({"", chat.header, chat.msg}, {
@@ -183,7 +186,8 @@ manager.print_chat = function(chat_level, chat_index)
 		end
 	elseif chat_level == "force" then
 		---@cast chat_index integer
-		for player_index, player in pairs(game.forces[chat_index].players) do
+		for _, player in pairs(game.forces[chat_index].players) do
+			local player_index = player.index
 			player.clear_console()
 			for chat in global.PlayerChatLog[player_index]:all() do
 				player.print({"", chat.header, chat.msg}, {
@@ -219,8 +223,9 @@ manager.init = function()
 		global.ForceChatLog[force.index] = newChatLog();
 	end
 	global.PlayerChatLog = {}
-	for player in pairs(game.players) do
-		global.PlayerChatLog[player] = newChatLog();
+	for _, player in pairs(game.players) do
+		local player_index = player.index
+		global.PlayerChatLog[player_index] = newChatLog();
 	end
 end
 
