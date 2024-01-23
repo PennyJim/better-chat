@@ -220,7 +220,7 @@ manager.init = function()
 	end
 	global.PlayerChatLog = {}
 	for player in pairs(game.players) do
-		global.ForceChatLog[player] = newChatLog();
+		global.PlayerChatLog[player] = newChatLog();
 	end
 end
 
