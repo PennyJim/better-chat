@@ -68,21 +68,68 @@ local function processMessage(sender, text)
 
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
-	if settings.get_player_settings(sender)["bc-images-instead-of-items"].value then
-		message = replace_all(message, "%[item=%S+]", function (match)
-			return "[img=item."..match:sub(7)
-		end)
-		message = replace_all(message, "%[fluid=%S+]", function (match)
-			return "[img=fluid."..match:sub(8)
-		end)
-		message = replace_all(message, "%[entity=%S+]", function (match)
-			return "[img=entity."..match:sub(9)
-		end)
-	end
-	if settings.get_player_settings(sender)["bc-images-instead-of-signals"].value then
-		message = replace_all(message, "%[virtual%-signal=%S+]", function (match)
-			return "[img=virtual-signal."..match:sub(17)
-		end)
+
+	--- Dropdown based icon settings
+	-- ---@alias icon-replacement-setting "bc-icon-none"|"bc-icon-signals"|"bc-icon-items"|"bc-icon-entities"|"bc-icon-almost-everything"|"bc-icon-everything"
+	-- local replacement_level = settings.get_player_settings(sender)["bc-icon-replacement"].value --[[@as icon-replacement-setting]]
+
+	-- if replacement_level == "bc-icon-everything" then goto everything
+	-- elseif replacement_level == "bc-icon-almost-everything" then goto almost_everything
+	-- elseif replacement_level == "bc-icon-entities" then goto entities
+	-- elseif replacement_level =="bc-icon-items" then goto items
+	-- elseif replacement_level == "bc-icon-signals" then goto signals
+	-- elseif replacement_level == "bc-icon-none" then goto none
+	-- end
+
+	-- ::everything::
+	-- message = replace_all(message, "%[achievement=%S+]", function (match)
+	-- 	return "[img=achievement."..match:sub(9)
+	-- end)
+	-- message = replace_all(message, "%[tile=%S+]", function (match)
+	-- 	return "[img=tile."..match:sub(9)
+	-- end)
+	-- message = replace_all(message, "%[item-group=%S+]", function (match)
+	-- 	return "[img=item-group."..match:sub(9)
+	-- end)
+
+	-- ::almost_everything::
+	-- message = replace_all(message, "%[technology=%S+]", function (match)
+	-- 	return "[img=technology."..match:sub(9)
+	-- end)
+	-- message = replace_all(message, "%[recipe=%S+]", function (match)
+	-- 	return "[img=recipe."..match:sub(9)
+	-- end)
+
+	-- ::entities::
+	-- message = replace_all(message, "%[entity=%S+]", function (match)
+	-- 	return "[img=entity."..match:sub(9)
+	-- end)
+
+	-- ::items::
+	-- message = replace_all(message, "%[item=%S+]", function (match)
+	-- 	return "[img=item."..match:sub(7)
+	-- end)
+	-- message = replace_all(message, "%[fluid=%S+]", function (match)
+	-- 	return "[img=fluid."..match:sub(8)
+	-- end)
+
+	-- ::signals::
+	-- message = replace_all(message, "%[virtual%-signal=%S+]", function (match)
+	-- 	return "[img=virtual-signal."..match:sub(17)
+	-- end)
+
+	-- ::none::
+
+	--- Toggle based icon settings
+	local player_settings = settings.get_player_settings(sender)
+	local icons = {"item","entity","technology","recipe","item-group","fluid","tile","virtual-signal","achievement"}
+
+	for _,icon in pairs(icons) do
+		if(player_settings["bc-"..icon.."-icon"].value) then
+			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=%S+]", function (match)
+				return "[img="..icon.."."..match:sub(3+#icon)
+			end)
+		end
 	end
 	return message
 end

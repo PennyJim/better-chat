@@ -16,7 +16,7 @@ script.on_configuration_changed(function (stuff_changed)
 		local oldHistory = global.chatHistory
 		global.chatHistory = nil;
 
-		--Repliacate ChatHistoryManager.init
+		--Replicate ChatHistoryManager.init
 		global.GlobalChatLog = ChatHistoryManager.__newChatLog()
 		global.ForceChatLog = {}
 		for _,force in pairs(game.forces) do
