@@ -13,7 +13,6 @@ local ChatLog = {
 	---@param self ChatLog
 	---@param chat Chat
 	---@param sizeLimit integer?
-	---@return LinkedListItem<Chat>?
 	add = function(self, chat, sizeLimit)
 		self.size = self.size + 1
 		self.last_index = self.last_index + 1

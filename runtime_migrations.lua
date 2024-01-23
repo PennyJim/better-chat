@@ -9,6 +9,7 @@ script.on_configuration_changed(function (stuff_changed)
 		elseif old_version == "0.2.0" then goto v0_2_0
 		elseif old_version == "0.2.1" then goto v0_2_1
 		elseif old_version == "0.2.2" then goto v0_2_2
+		elseif old_version == "0.2.3" then goto v0_2_3
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -47,6 +48,7 @@ script.on_configuration_changed(function (stuff_changed)
 
 		::v0_2_0::
 		::v0_2_1::
+		::v0_2_2::
 		if true then --block to redue linkedListMigration's scope
 			local function linkedListMigration(list)
 				local log = ChatHistoryManager.__newChatLog()
@@ -72,6 +74,6 @@ script.on_configuration_changed(function (stuff_changed)
 			end
 		end
 
-		::v0_2_2::
+		::v0_2_3::
 	end
 end)
