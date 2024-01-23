@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.3
+Date: 2024-01-23
+  Bugfixes:
+    - Should now always print the correct chat to the correct people
+  Changes:
+    - Uses an array instead of a needlessly complex linked list
+    - Limited global and player chat history
+    - Added a warning about high values for force history
+---------------------------------------------------------------------------------------------------
 Version: 0.2.2
 Date: 2024-01-23
   Bugfixes:
