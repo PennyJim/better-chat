@@ -26,77 +26,87 @@ data:extend{
 	--  order = "global-a-??-b"
 	-- },
 }
-data:extend{{
+data:extend{
+	{
+		type = "double-setting",
+		name = "bc-color-fade",
+		setting_type = "runtime-per-user",
+		default_value = 0,
+		minimum_value = 0,
+		maximum_value = 1,
+		order = "player-aa"
+	},
+	{
 		type = "int-setting",
 		name = "bc-player-chat-history",
 		setting_type = "runtime-per-user",
 		default_value = 36,
 		minimum_value = 1,
 		maximum_value = 64,
-		order = "player-a-history-c"
+		order = "player-ba"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-virtual-signal-icon",
 		setting_type = "runtime-per-user",
 		default_value = true,
-		order = "player-b-icons-a"
+		order = "player-da"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-item-icon",
 		setting_type = "runtime-per-user",
 		default_value = true,
-		order = "player-b-icons-b"
+		order = "player-db"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-fluid-icon",
 		setting_type = "runtime-per-user",
 		default_value = true,
-		order = "player-b-icons-c"
+		order = "player-dc"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-entity-icon",
 		setting_type = "runtime-per-user",
 		default_value = true,
-		order = "player-b-icons-d"
+		order = "player-dd"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-recipe-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
-		order = "player-b-icons-e"
+		order = "player-de"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-technology-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
-		order = "player-b-icons-f"
+		order = "player-df"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-achievement-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
-		order = "player-b-icons-g"
+		order = "player-dg"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-item-group-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
-		order = "player-b-icons-h"
+		order = "player-dh"
 	},
 	{
 		type = "bool-setting",
 		name = "bc-tile-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
-		order = "player-b-icons-i"
+		order = "player-di"
 	},
 	-- { -- Changed my mind about a dropdown list, but not completely
 	-- 	type = "string-setting",
@@ -113,40 +123,31 @@ data:extend{{
 	-- 	}
 	-- },
 	{
-		type = "double-setting",
-		name = "bc-color-fade",
-		setting_type = "runtime-per-user",
-		default_value = 0,
-		minimum_value = 0,
-		maximum_value = 1,
-		order = "player-z-color-a"
-	},
-	{
 		type = "color-setting",
 		name = "bc-default-color",
 		setting_type = "runtime-per-user",
 		default_value = {1,1,1},
-		order = "player-z-color-b"
+		order = "player-fa"
 	},
 	{
 		type = "color-setting",
 		name = "bc-error-color",
 		setting_type = "runtime-per-user",
 		default_value = {1,0,0},
-		order = "player-z-color-c"
+		order = "player-fb"
 	},
 	{
 		type = "color-setting",
 		name = "bc-warn-color",
 		setting_type = "runtime-per-user",
 		default_value = {1,1,0},
-		order = "player-z-color-d"
+		order = "player-fc"
 	},
 	{
 		type = "color-setting",
 		name = "bc-debug-color",
 		setting_type = "runtime-per-user",
 		default_value = {0.3,0.3,0.3},
-		order = "player-z-color-e"
+		order = "player-fd"
 	}
 }
