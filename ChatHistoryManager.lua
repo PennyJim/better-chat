@@ -149,21 +149,64 @@ manager.add_message = function(messageParams)
 	end
 end
 
+---@class ColorSettings
+---@field brighten_percent float
+
+---returns the player settings related to color processing
+---@param player_settings LuaCustomTable<string,ModSetting>
+---@return ColorSettings
+local function get_color_process_settings(player_settings)
+	return {
+		brighten_percent = player_settings["bc-color-process"].value--[[@as float]]
+	}
+end
+
+---Processes a color according to player settings
+---@param color_settings ColorSettings
+---@param color Color
+---@return Color
+local function process_color(color_settings, color)
+	local new_color = {
+		r = color.r,
+		g = color.g,
+		b = color.b
+	}
+	--Brighten
+	local brighten_inverse = 1/(1-color_settings.brighten_percent)
+	new_color.r = new_color.r/brighten_inverse+color_settings.brighten_percent
+	new_color.g = new_color.g/brighten_inverse+color_settings.brighten_percent
+	new_color.b = new_color.b/brighten_inverse+color_settings.brighten_percent
+
+
+	return new_color
+end
+
 ---Prints the chats to the passed player
 ---@param player LuaPlayer
 local function print_chats(player)
 	local player_index = player.index
-	local default_color = settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]]
-	local do_color_message = settings.get_player_settings(player_index)["bc-color-message"].value--[[@as boolean]]
+	--Obtain relevant settings
+	local player_settings = settings.get_player_settings(player_index)
+	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
+	local do_color_message = player_settings["bc-color-message"].value--[[@as boolean]]
+	local color_processing = get_color_process_settings(player_settings)
+
+	--Go through every chat
 	player.clear_console()
 	for chat in global.PlayerChatLog[player_index]:from() do
-		local color = do_color_message and chat.color or default_color
+		--Get general message color
+		local color = process_color(color_processing, do_color_message and chat.color or default_color)
+
+		---@diagnostic disable-next-line: param-type-mismatch
 		if type(chat.header[1]) == "string" and chat.header[1]:find("chat%-localization") then
-			local header_color = chat.color or default_color
+			---Get header color in messages that have a header
+			local header_color = process_color(color_processing, chat.color or default_color)
 			chat.header[3] = header_color.r
 			chat.header[4] = header_color.g
 			chat.header[5] = header_color.b
 		end
+
+		--Print the message
 		player.print({"", chat.header, chat.msg}, {
 			color = color,
 			sound = defines.print_sound.never,

@@ -120,6 +120,14 @@ data:extend{{
 		order = "player-z-color-a"
 	},
 	{
+		type = "double-setting",
+		name = "bc-color-process",
+		setting_type = "runtime-per-user",
+		default_value = 0,
+		minimum_value = 0,
+		maximum_value = 1
+	},
+	{
 		type = "color-setting",
 		name = "bc-default-color",
 		setting_type = "runtime-per-user",
