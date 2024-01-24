@@ -113,33 +113,27 @@ data:extend{{
 	-- 	}
 	-- },
 	{
-		type = "bool-setting",
-		name = "bc-color-message",
-		setting_type = "runtime-per-user",
-		default_value = true,
-		order = "player-z-color-a"
-	},
-	{
 		type = "double-setting",
-		name = "bc-color-process",
+		name = "bc-color-fade",
 		setting_type = "runtime-per-user",
 		default_value = 0,
 		minimum_value = 0,
-		maximum_value = 1
+		maximum_value = 1,
+		order = "player-z-color-a"
 	},
 	{
 		type = "color-setting",
 		name = "bc-default-color",
 		setting_type = "runtime-per-user",
 		default_value = {1,1,1},
-		order = "player-z-color-a"
+		order = "player-z-color-b"
 	},
 	{
 		type = "color-setting",
 		name = "bc-error-color",
 		setting_type = "runtime-per-user",
 		default_value = {1,0,0},
-		order = "player-z-color-b"
+		order = "player-z-color-c"
 	},
 	{
 		type = "color-setting",

@@ -157,7 +157,7 @@ end
 ---@return ColorSettings
 local function get_color_process_settings(player_settings)
 	return {
-		brighten_percent = player_settings["bc-color-process"].value--[[@as float]]
+		brighten_percent = player_settings["bc-color-fade"].value--[[@as float]]
 	}
 end
 
@@ -188,19 +188,18 @@ local function print_chats(player)
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
-	local do_color_message = player_settings["bc-color-message"].value--[[@as boolean]]
 	local color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
 	player.clear_console()
 	for chat in global.PlayerChatLog[player_index]:from() do
 		--Get general message color
-		local color = process_color(color_processing, do_color_message and chat.color or default_color)
+		local color = process_color(color_processing, chat.color or default_color)
 
 		---@diagnostic disable-next-line: param-type-mismatch
 		if type(chat.header[1]) == "string" and chat.header[1]:find("chat%-localization") then
 			---Get header color in messages that have a header
-			local header_color = process_color(color_processing, chat.color or default_color)
+			local header_color = chat.color or default_color
 			chat.header[3] = header_color.r
 			chat.header[4] = header_color.g
 			chat.header[5] = header_color.b
