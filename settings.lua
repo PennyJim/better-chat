@@ -6,7 +6,7 @@ data:extend{
 		default_value = 36,
 		minimum_value = 1,
 		maximum_value = 64,
-		order = "global-a-history-a"
+		order = "global-aa"
 	},
 	{
 		type = "int-setting",
@@ -14,7 +14,7 @@ data:extend{
 		setting_type = "runtime-global",
 		default_value = 64,
 		minimum_value = 1,
-		order = "global-a-history-b"
+		order = "global-ab"
 	},
 	-- {
 	-- 	type = "double-setting",
@@ -23,7 +23,7 @@ data:extend{
 	-- 	default_value = 1.0,
 	-- 	minimum_value = 0.1,
 	-- 	maximum_value = 10.0,
-	--  order = "global-a-??-b"
+	--  order = "global-ba"
 	-- },
 }
 data:extend{
