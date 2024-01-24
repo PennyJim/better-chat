@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.6
+Date: 2024-01-24
+  Changes:
+    - Fading out chat colors and the full message coloration toggle have been merged
+    - Now actually immediately reacts to settings changes
+---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: 2024-01-23
   Major Features:
