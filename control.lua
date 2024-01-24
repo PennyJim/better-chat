@@ -190,9 +190,9 @@ script.on_event(defines.events.on_console_chat, function (event)
 	if not player then return end
 	local message = processMessage(player, event.message)
 	send_message({"chat-localization.bc-message-header", player.name}, message, player.chat_color, "force", player.force_index)
-	log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
-	log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
-	log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
+	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
+	-- log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
+	-- log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
 end)
 
 script.on_event(defines.events.on_console_command, function (event)
@@ -244,24 +244,24 @@ end)
 script.on_event(defines.events.on_player_joined_game, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one joined???") end
-	send_message({"player-joined-game", player.name}, "", player.chat_color, "global")
+	send_message({"multiplayer.player-joined-game", player.name}, "", player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_left_game, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one left???") end
-	send_message({"player-left-game", player.name}, "", player.chat_color, "global")
+	send_message({"multiplayer.player-left-game", player.name}, "", player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_died, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one died???") end
 	if not player.character then return log("Player.character doesn't exist on death, change to pre-death") end
 	local message = {
-		"player-died",
+		"multiplayer.player-died",
 		player.name,
 		player.character.gps_tag --[[@as LocalisedString]]
 	}
 	if event.cause then
-		message[1] = "player-died-by"
+		message[1] = "multiplayer.player-died-by"
 		message[4] = message[3]
 		message[3] = event.cause.localised_name
 	end
@@ -313,7 +313,7 @@ script.on_event(defines.events.on_player_banned, function (event)
 		player.name,
 		event.reason or "unspecified"
 	}
-	if not event.player_index then message[1] = "unknown-was-banned" end
+	if not event.player_index then message[1] = "unknown-player-was-banned" end
 	send_message(message, "", player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_unbanned, function (event)
