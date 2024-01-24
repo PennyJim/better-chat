@@ -10,6 +10,7 @@ script.on_configuration_changed(function (stuff_changed)
 		elseif old_version == "0.2.1" then goto v0_2_1
 		elseif old_version == "0.2.2" then goto v0_2_2
 		elseif old_version == "0.2.3" then goto v0_2_3
+		elseif old_version == "0.2.4" then goto v0_2_4
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -75,5 +76,6 @@ script.on_configuration_changed(function (stuff_changed)
 		end
 
 		::v0_2_3::
+		::v0_2_4::
 	end
 end)
