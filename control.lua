@@ -361,3 +361,15 @@ script.on_event(defines.events.on_player_kicked, function (event)
 	send_message(message, "", by_player.chat_color, "global")
 end)
 --#endregion
+
+
+--#region Symbol Exporting for other mods
+remote.add_interface("better-chat", {
+	-- send = send_message, -- TODO: encapsulate with argument checking
+	-- [ ] debug(LocalisedString)
+	-- [ ] print(LocalisedString, color)
+	-- [ ] warn(LocalisedString)
+	-- [ ] error(LocalisedString)
+	-- [ ] clear(player_index)
+})
+--#endregion
