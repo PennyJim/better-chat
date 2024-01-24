@@ -234,15 +234,16 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
 		local new_setting = settings.get_player_settings(event.player_index)[event.setting].value
 		send_message({"chat-localization.bc-player-history-changed", new_setting}, "", nil, "player", event.player_index)
 		ChatHistoryManager.print_chat("player", event.player_index)
-	elseif setting_type == "runtime-per-user" and (
-		event.setting == "bc-color-fade" or
-		event.setting == "bc-default-color" or
-		event.setting == "bc-error-color" or
-		event.setting == "bc-warn-color" or
-		event.setting == "bc-debug-color"
-	) then
+	elseif setting_type == "runtime-per-user" then
 		if not event.player_index then return log("Who changed their setting???") end
-		ChatHistoryManager.print_chat("player", event.player_index)
+		if event.setting == "bc-color-fade"then
+			ChatHistoryManager.print_chat("player", event.player_index)
+		elseif event.setting == "bc-default-color" or
+			event.setting == "bc-error-color" or
+			event.setting == "bc-warn-color" or
+			event.setting == "bc-debug-color" then
+				ChatHistoryManager.reload_colors(player_index)
+		end
 	end
 end)
 

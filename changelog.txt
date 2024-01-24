@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 2024-01-24
+  Changes:
+    - Now stores colors in hsv for better manipulation
+    - color fading is now saturation and brightness override
+---------------------------------------------------------------------------------------------------
 Version: 0.2.6
 Date: 2024-01-24
   Changes:

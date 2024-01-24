@@ -81,5 +81,8 @@ script.on_configuration_changed(function (stuff_changed)
 		::v0_2_4::
 		::v0_2_5::
 		::v0_2_6::
+
+		--Add player colors to global
+		--update all chatHistory to have hsv instead of rgb
 	end
 end)

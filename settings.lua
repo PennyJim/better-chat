@@ -27,14 +27,32 @@ data:extend{
 	-- },
 }
 data:extend{
+	-- {
+	-- 	type = "double-setting",
+	-- 	name = "bc-color-fade",
+	-- 	setting_type = "runtime-per-user",
+	-- 	default_value = 0,
+	-- 	minimum_value = 0,
+	-- 	maximum_value = 1,
+	-- 	order = "player-aa"
+	-- },
 	{
 		type = "double-setting",
-		name = "bc-color-fade",
+		name = "bc-color-saturation-override",
 		setting_type = "runtime-per-user",
 		default_value = 0,
-		minimum_value = 0,
+		minimum_value = -1,
 		maximum_value = 1,
 		order = "player-aa"
+	},
+	{
+		type = "double-setting",
+		name = "bc-color-brightness-override",
+		setting_type = "runtime-per-user",
+		default_value = 0,
+		minimum_value = -1,
+		maximum_value = 1,
+		order = "player-ab"
 	},
 	{
 		type = "int-setting",
