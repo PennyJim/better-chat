@@ -267,6 +267,15 @@ script.on_event(defines.events.on_player_died, function (event)
 	end
 	send_message(message, "", player.chat_color, "global")
 end)
+script.on_event(defines.events.on_player_respawned, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("No one died???") end
+	local message = {
+		"multiplayer.player-respawn",
+		player.name
+	}
+	send_message(message, "", player.chat_color, "global")
+end)
 
 --Research -- TODO: figure out if you can know about queuing
 script.on_event(defines.events.on_research_finished, function (event)

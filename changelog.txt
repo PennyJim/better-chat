@@ -6,8 +6,9 @@ Date: 2024-01-23
       * Players joining
       * Players leaving
       * Players dying
-      * Players promoted
-      * Players demoted
+      * Players respawning
+      * Players promoted (imperfect)
+      * Players demoted (imperfect)
       * Players banned
       * Players unbanned
       * Players kicked
