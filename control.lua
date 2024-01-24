@@ -1,7 +1,6 @@
 ---@alias historyLevel "global"|"force"|"player"
 require("runtime_migrations")
 
-local reloaded = false
 local ChatHistoryManager = require("ChatHistoryManager")
 
 remote.add_interface("emojipack registration", {
@@ -30,23 +29,19 @@ local function replace_all(text, pattern, replaceFun)
 end
 
 ---Clean emojipacks of unloaded mods
-local function clean_emojipacks()
+---@param changes {[string]: ModChangeData}
+local function clean_emojipacks(changes)
 	local defunct_mods = {}
-	for mod_name in pairs(global.emojipacks) do
-		if not script.active_mods[mod_name] then
-			defunct_mods[#defunct_mods+1] = mod_name
+	for mod_name in pairs(changes) do
+		if not changes[mod_name].new_version then
+			global.emojipacks[mod_name] = nil
 		end
-	end
-	for _, defunct_mod in pairs(defunct_mods) do
-		global.emojipacks[defunct_mod] = nil
 	end
 end
 
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
 local function replace_shortcodes(text)
-	if reloaded then clean_emojipacks() end
-
 	return replace_all(text, "%:%S+%:", function (shortcode)
 		local item = nil
 		for _, dictionary in pairs(global.emojipacks) do
@@ -219,8 +214,10 @@ script.on_init(function ()
 	global.emojipacks = {}
 	ChatHistoryManager.init()
 end)
-script.on_load(function ()
-	reloaded = true
+-- script.on_load(function ()
+-- end)
+script.on_configuration_changed(function (change)
+	clean_emojipacks(change.mod_changes)
 end)
 
 --#region Players/Forces Created/Destroyed
