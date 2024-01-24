@@ -149,48 +149,48 @@ manager.add_message = function(messageParams)
 	end
 end
 
+---Prints the chats to the passed player
+---@param player LuaPlayer
+local function print_chats(player)
+	local player_index = player.index
+	local default_color = settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]]
+	local do_color_message = settings.get_player_settings(player_index)["bc-color-message"].value--[[@as boolean]]
+	player.clear_console()
+	for chat in global.PlayerChatLog[player_index]:from() do
+		local color = do_color_message and chat.color or default_color
+		if type(chat.header[1]) == "string" and chat.header[1]:find("chat%-localization") then
+			local header_color = chat.color or default_color
+			chat.header[3] = header_color.r
+			chat.header[4] = header_color.g
+			chat.header[5] = header_color.b
+		end
+		player.print({"", chat.header, chat.msg}, {
+			color = color,
+			sound = defines.print_sound.never,
+			skip = defines.print_skip.never
+		})
+	end
+end
+
 ---Print out all messages for a group
 ---@param chat_level historyLevel
 ---@param chat_index integer?
 manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
 		for _, player in pairs(game.players) do
-			local player_index = player.index
-			player.clear_console()
-			for chat in global.PlayerChatLog[player_index]:from() do
-				player.print({"", chat.header, chat.msg}, {
-					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
-					sound = defines.print_sound.never,
-					skip = defines.print_skip.never
-				})
-			end
+			print_chats(player)
 		end
 	elseif chat_level == "force" then
 		---@cast chat_index integer
 		for _, player in pairs(game.forces[chat_index].players) do
-			local player_index = player.index
-			player.clear_console()
-			for chat in global.PlayerChatLog[player_index]:from() do
-				player.print({"", chat.header, chat.msg}, {
-					color = chat.color or settings.get_player_settings(player_index)["bc-default-color"].value--[[@as Color]],
-					sound = defines.print_sound.never,
-					skip = defines.print_skip.never
-				})
-			end
+			print_chats(player)
 		end
 	elseif chat_level == "player" then
 		---@cast chat_index integer
 		local player = game.get_player(chat_index)
 		-- TODO: improve this error statement
 		if not player then return log("[ERR] Something has gone wrong") end
-		player.clear_console()
-		for chat in global.PlayerChatLog[chat_index]:from() do
-			player.print({"", chat.header, chat.msg}, {
-				color = chat.color or settings.get_player_settings(chat_index)["bc-default-color"].value--[[@as Color]],
-				sound = defines.print_sound.never,
-				skip = defines.print_skip.never
-			})
-		end
+		print_chats(player)
 	else
 		log({"invalid-destination"})
 	end
@@ -199,11 +199,11 @@ end
 ---Initializes Chat History
 manager.init = function()
 	global.GlobalChatLog = newChatLog();
-	global.ForceChatLog = {}
+	global.ForceChatLog = {} --[[@as ChatLog[] ]]
 	for _,force in pairs(game.forces) do
 		global.ForceChatLog[force.index] = newChatLog();
 	end
-	global.PlayerChatLog = {}
+	global.PlayerChatLog = {} --[[@as ChatLog[] ]]
 	for _, player in pairs(game.players) do
 		local player_index = player.index
 		global.PlayerChatLog[player_index] = newChatLog();

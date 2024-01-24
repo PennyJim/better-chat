@@ -366,10 +366,10 @@ end)
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
 	-- send = send_message, -- TODO: encapsulate with argument checking
-	-- [ ] debug(LocalisedString)
+	-- [ ] debug(LocalisedString, isEphemeral)
 	-- [ ] print(LocalisedString, color)
-	-- [ ] warn(LocalisedString)
-	-- [ ] error(LocalisedString)
+	-- [ ] warn(LocalisedString, isEphemeral)
+	-- [ ] error(LocalisedString, isEphemeral)
 	-- [ ] clear(player_index)
 })
 --#endregion
