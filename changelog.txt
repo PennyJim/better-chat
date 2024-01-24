@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.4
+Date: 2024-01-23
+  Changes:
+    - Replaced system messages for:
+      * Players joining
+      * Players leaving
+      * Players dying
+      * Players promoted
+      * Players demoted
+      * Players banned
+      * Players unbanned
+      * Players kicked
+---------------------------------------------------------------------------------------------------
 Version: 0.2.3
 Date: 2024-01-23
   Bugfixes:

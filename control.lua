@@ -205,7 +205,9 @@ script.on_event(defines.events.on_console_command, function (event)
 		local recipient = game.get_player(target);
 
 		if not recipient then
-			return warn(player, {"chat-localization.bc-invalid-recipient", target})
+			-- FIXME: How do I send this *after* the command response?
+			-- Maybe add a delay-send command?
+			return warn(player, {"player-doesnt-exist", target})
 		end
 
 		local message = event.parameters:sub(#target+2);
@@ -233,5 +235,120 @@ script.on_event(defines.events.on_player_removed, function (event)
 end)
 script.on_event(defines.events.on_forces_merged, function (event)
 	ChatHistoryManager.remove_force(event.source_index)
+end)
+--#endregion
+
+-- TODO: also handle command events to replace their error messages
+-- and handle the messages without events, like admin list messages
+--#region System messages
+script.on_event(defines.events.on_player_joined_game, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("No one joined???") end
+	send_message({"player-joined-game", player.name}, "", player.chat_color, "global")
+end)
+script.on_event(defines.events.on_player_left_game, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("No one left???") end
+	send_message({"player-left-game", player.name}, "", player.chat_color, "global")
+end)
+script.on_event(defines.events.on_player_died, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("No one died???") end
+	if not player.character then return log("Player.character doesn't exist on death, change to pre-death") end
+	local message = {
+		"player-died",
+		player.name,
+		player.character.gps_tag --[[@as LocalisedString]]
+	}
+	if event.cause then
+		message[1] = "player-died-by"
+		message[4] = message[3]
+		message[3] = event.cause.localised_name
+	end
+	send_message(message, "", player.chat_color, "global")
+end)
+
+--Research -- TODO: figure out if you can know about queuing
+script.on_event(defines.events.on_research_finished, function (event)
+	if event.by_script then return end
+	send_message({"technology-researched", event.research.localised_name}, "",
+		settings.global["bc-default-color"].value--[[@as Color]], "global")
+end)
+
+--Admin promotion and demotion
+script.on_event(defines.events.on_player_promoted, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("Who was promoted??") end
+	local message = {
+		"player-was-promoted",
+		player.name,
+		"unknown" -- TODO: Figure out how to know this
+	}
+	send_message(message, "", player.chat_color, "global")
+end)
+script.on_event(defines.events.on_player_demoted, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("Who was demoted??") end
+	local message = {
+		"player-was-demoted",
+		player.name,
+		"unknown" -- TODO: Figure out how to know this
+	}
+	send_message(message, "", player.chat_color, "global")
+end)
+
+--Banned and kicked
+script.on_event(defines.events.on_player_banned, function (event)
+	local player = game.get_player(event.by_player)
+	if not player then
+	---@diagnostic disable-next-line: missing-fields
+		player = {
+			name = "console",
+			chat_color = settings.global["bc-default-color"].value --[[@as Color]]
+		}
+	end
+	local message = {
+		"player-was-banned",
+		event.player_name,
+		player.name,
+		event.reason or "unspecified"
+	}
+	if not event.player_index then message[1] = "unknown-was-banned" end
+	send_message(message, "", player.chat_color, "global")
+end)
+script.on_event(defines.events.on_player_unbanned, function (event)
+	local player = game.get_player(event.by_player)
+	if not player then
+	---@diagnostic disable-next-line: missing-fields
+		player = {
+			name = "console",
+			chat_color = settings.global["bc-default-color"].value --[[@as Color]]
+		}
+	end
+	local message = {
+		"player-was-unbanned",
+		event.player_name,
+		player.name
+	}
+	send_message(message, "", player.chat_color, "global")
+end)
+script.on_event(defines.events.on_player_kicked, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return log("No one was kicked???") end
+	local by_player = game.get_player(event.by_player)
+	if not by_player then
+	---@diagnostic disable-next-line: missing-fields
+		by_player = {
+			name = "console",
+			chat_color = settings.global["bc-default-color"].value --[[@as Color]]
+		}
+	end
+	local message = {
+		"player-was-kicked",
+		player.name,
+		by_player.name,
+		event.reason or "unspecified"
+	}
+	send_message(message, "", by_player.chat_color, "global")
 end)
 --#endregion
