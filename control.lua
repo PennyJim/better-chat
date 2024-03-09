@@ -317,26 +317,50 @@ script.on_event(defines.events.on_research_cancelled, function (event)
 end)
 
 --Admin promotion and demotion
-script.on_event(defines.events.on_player_promoted, function (event)
-	local player = game.get_player(event.player_index)
-	if not player then return log("Who was promoted??") end
+command.promote = function (player, event)
+	local target = event.parameters:match("%S+")
+	local promoted_player = game.get_player(target);
+
 	local message = {
 		"player-was-promoted",
-		player.name,
-		"unknown" -- TODO: Figure out how to know this
+		target,
+		player.name
 	}
+
+	-- TODO: figure out how to use `player-is-already-in-admin-list`
+	if promoted_player then
+		message[2] = promoted_player.name
+		if promoted_player.admin then
+			message[1] = "player-is-already-an-admin"
+			return send_message(message, "", nil, "player", player.index)
+		end
+	else
+		message[1] = "player-was-added-to-admin-list"
+	end
 	send_message(message, "", player.chat_color, "global")
-end)
-script.on_event(defines.events.on_player_demoted, function (event)
-	local player = game.get_player(event.player_index)
-	if not player then return log("Who was demoted??") end
+end
+command.demote = function (player, event)
+	local target = event.parameters:match("%S+")
+	local demoted_player = game.get_player(target);
+
 	local message = {
 		"player-was-demoted",
-		player.name,
-		"unknown" -- TODO: Figure out how to know this
+		target,
+		player.name
 	}
+
+	-- TODO: figure out how to use `player-is-not-in-admin-list`
+	if demoted_player then
+		message[2] = demoted_player.name
+		if not demoted_player.admin then
+			message[1] = "player-is-not-an-admin"
+			return send_message(message, "", nil, "player", player.index)
+		end
+	else
+		message[1] = "player-was-removed-from-admin-list"
+	end
 	send_message(message, "", player.chat_color, "global")
-end)
+end
 
 --Banned and kicked
 script.on_event(defines.events.on_player_banned, function (event)
