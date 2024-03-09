@@ -190,25 +190,23 @@ script.on_event(defines.events.on_console_chat, function (event)
 	-- log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
 end)
 
-script.on_event(defines.events.on_console_command, function (event)
-	local player = game.get_player(event.player_index)
-	if not player then return end
-	if event.command == "shout" then
-		shout(player, event.parameters)
-	elseif event.command == "whisper" then
-		local target = event.parameters:match("%S+")
-		local recipient = game.get_player(target);
+local command = {}
+command.shout = function(player, event)
+	shout(player, event.parameters)
+end
+command.whisper = function(player, event)
+	local target = event.parameters:match("%S+")
+	local recipient = game.get_player(target);
 
-		if not recipient then
-			-- FIXME: How do I send this *after* the command response?
-			-- Maybe add a delay-send command?
-			return warn(player, {"player-doesnt-exist", target})
-		end
-
-		local message = event.parameters:sub(#target+2);
-		whisper(player, recipient, message)
+	if not recipient then
+		-- FIXME: How do I send this *after* the command response?
+		-- Maybe add a delay-send command?
+		return warn(player, {"player-doesnt-exist", target})
 	end
-end)
+
+	local message = event.parameters:sub(#target+2);
+	whisper(player, recipient, message)
+end
 
 script.on_init(function ()
 	global.emojipacks = {}
@@ -395,6 +393,15 @@ script.on_event(defines.events.on_player_kicked, function (event)
 	send_message(message, "", by_player.chat_color, "global")
 end)
 --#endregion
+
+-- Catchall for commands
+script.on_event(defines.events.on_console_command, function (event)
+	local player = game.get_player(event.player_index)
+	if not player then return end
+
+	local func = command[event.command]
+	if func then func(player, event) end
+end)
 
 
 --#region Symbol Exporting for other mods
