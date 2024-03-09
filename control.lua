@@ -304,7 +304,7 @@ end)
 script.on_event(defines.events.on_research_finished, function (event)
 	if event.by_script then return end
 	send_message({"technology-researched", event.research.localised_name}, "",
-		settings.global["bc-default-color"].value--[[@as Color]], "global")
+	nil, "force", event.research.force.index)
 end)
 
 --Admin promotion and demotion
