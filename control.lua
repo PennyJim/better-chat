@@ -300,11 +300,22 @@ script.on_event(defines.events.on_player_respawned, function (event)
 	send_message(message, "", player.chat_color, "global")
 end)
 
---Research -- TODO: figure out if you can know about queuing
+--Research Queueing
 script.on_event(defines.events.on_research_finished, function (event)
 	if event.by_script then return end
 	send_message({"technology-researched", event.research.localised_name}, "",
 	nil, "force", event.research.force.index)
+end)
+--Research -- TODO: Get on_research_queued to become a real event
+-- script.on_event(defines.events.on_research_queued, function (event)
+-- 	-- if event.by_script then return end
+-- 	send_message({"player-started-research", {"chat-localization.unknown-player"}, event.research.localised_name}, "",
+-- 		nil, "force", event.research.force.index)
+-- end)
+script.on_event(defines.events.on_research_cancelled, function (event)
+	-- if event.by_script then return end
+	send_message({"player-cancelled-research", {"chat-localization.unknown-player"}, event.research.localised_name}, "",
+		nil, "force", event.force.index)
 end)
 
 --Admin promotion and demotion
