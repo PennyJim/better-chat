@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field
 local ChatHistoryManager = require "ChatHistoryManager"
 
 return function (stuff_changed)
@@ -15,6 +16,7 @@ return function (stuff_changed)
 		elseif old_version == "0.2.6" then goto v0_2_6
 		elseif old_version == "0.2.7" then goto v0_2_7
 		elseif old_version == "0.2.8" then goto v0_2_8
+		elseif old_version == "0.3.0" then goto v0_3_0
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -49,7 +51,7 @@ return function (stuff_changed)
 		end
 		-- Don't need to convert chatlogs as it 
 		--  made them using the internal command
-		goto v0_2_8
+		goto v0_3_0
 
 		::v0_2_0::
 		::v0_2_1::
@@ -86,19 +88,50 @@ return function (stuff_changed)
 		::v0_2_7::
 		if true then --reduce Chat Migration's scope
 			for chat in global.GlobalChatLog:from() do
-				chat.tick = game.tick()
+				chat.tick = game.tick
 			end
 			for _,ChatLog in pairs(global.ForceChatLog) do
 				for chat in ChatLog:from() do
-					chat.tick = game.tick()
+					chat.tick = game.tick
 				end
 			end
 			for _,ChatLog in pairs(global.PlayerChatLog) do
 				for chat in ChatLog:from() do
-					chat.tick = game.tick()
+					chat.tick = game.tick
 				end
 			end
 		end
 		::v0_2_8::
+		if true then --reduce message migration's scope
+			for chat in global.GlobalChatLog:from() do
+				if chat.msg then
+					chat.message = {"", chat.header, chat.msg}
+					chat.msg = nil
+					chat.header = nil
+				end
+			end
+
+			for _,ChatLog in pairs(global.ForceChatLog) do
+				for chat in ChatLog:from() do
+					if chat.msg then
+						chat.message = {"", chat.header, chat.msg}
+						chat.msg = nil
+						chat.header = nil
+					end
+				end
+			end
+
+			for _,ChatLog in pairs(global.PlayerChatLog) do
+				for chat in ChatLog:from() do
+					if chat.msg then
+						chat.message = {"", chat.header, chat.msg}
+						chat.msg = nil
+						chat.header = nil
+					end
+				end
+			end
+		end
+
+		::v0_3_0::
 	end
 end
