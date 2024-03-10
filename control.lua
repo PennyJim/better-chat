@@ -351,6 +351,11 @@ end)
 
 --Admin promotion and demotion
 command.promote = function (player, event)
+	if not player.admin then
+		return send_message({"cant-run-command-not-admin", "promote"},
+			nil, "player", player.index)
+	end
+
 	local target = event.parameters:match("%S+")
 	local promoted_player = game.get_player(target);
 
@@ -373,6 +378,10 @@ command.promote = function (player, event)
 	send_message(message, player.chat_color, "global")
 end
 command.demote = function (player, event)
+	if not player.admin then
+		return send_message({"cant-run-command-not-admin", "promote"},
+			nil, "player", player.index)
+	end
 	local target = event.parameters:match("%S+")
 	local demoted_player = game.get_player(target);
 

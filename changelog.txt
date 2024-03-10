@@ -5,6 +5,7 @@ Date: 2024-03-10
     - Other mods can now use the interface to print messages that won't get deleted
   Bugfixes:
     - General messages now actually use their color
+    - Added admin checking on promote/demote
   Info:
     - Refactored Chats to now just use a localized string instead of a 'header' and 'message'
 ---------------------------------------------------------------------------------------------------
