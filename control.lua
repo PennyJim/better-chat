@@ -143,8 +143,21 @@ local function send_message(message, color, send_level, recipient)
 	-- 	return "Message needs to be a table"
 	-- end
 
-	if send_level ~= "global" and not recipient then
-		return log("Wasn't given a location to send the message!!\n")
+	if send_level ~= "force" and
+		send_level ~= "global" and
+		send_level ~= "player" then
+			error = "Invalid send level"
+	elseif send_level ~= "global" and type(recipient) ~= "number" then
+		error = "Invalid recipient. Must be an index"
+	elseif send_level == "force" and not game.forces[recipient] then
+		error = "Invalid force"
+	elseif send_level == "player" and not game.players[recipient] then
+		error = "Invalid player"
+	end
+
+	if error then
+		log(error)
+		return error
 	end
 
 	ChatHistoryManager.add_message{
