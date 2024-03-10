@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.8
+Date: 2024-03-09
+  Major Features:
+    - Chat now naturally prints a select portion, only for opening chat to print everything
+  Changes:
+    - Improved research queue messages
+    - Now uses command listener for admin promotion so it can respond accurately
+  Bugfixes:
+    - Migration is working again
+  Issues:
+    - Adding to research queue is not an event, so it doesn't work
+    - Removing from research queue does not report the user, so it gets a descriptive "Unknown"
+    - A message being sent while you're in chat, will make chat small again.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.7
 Date: 2024-02-24
   Bugfixes:
