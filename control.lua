@@ -463,7 +463,7 @@ end)
 
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
-	-- send = send_message, -- TODO: encapsulate with argument checking
+	send = send_message,
 	-- [ ] debug(LocalisedString, isEphemeral)
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)

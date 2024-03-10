@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2024-03-10
+  Major Features:
+    - Other mods can now use the interface to print messages that won't get deleted
   Bugfixes:
     - General messages now actually use their color
   Info:
