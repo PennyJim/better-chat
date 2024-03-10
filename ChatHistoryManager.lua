@@ -1,6 +1,5 @@
 ---@class Chat
----@field msg string
----@field header LocalisedString
+---@field message LocalisedString
 ---@field tick integer
 ---@field color Color?
 
@@ -102,8 +101,7 @@ manager.remove_player = function(player_index)
 end
 
 ---@class addMessageParams
----@field message string
----@field header LocalisedString
+---@field message LocalisedString
 ---@field color Color?
 ---@field level historyLevel
 ---@field chat_index integer?
@@ -112,9 +110,8 @@ end
 manager.add_message = function(messageParams)
 	---@type Chat
 	local newChat = {
-		msg = messageParams.message,
+		message = messageParams.message,
 		color = messageParams.color,
-		header = messageParams.header,
 		tick = game.tick
 	}
 
@@ -206,17 +203,20 @@ local function print_chats(player, do_partial_print)
 		--Get general message color
 		local color = process_color(color_processing, chat.color or default_color)
 
+		if type(chat.message) == "table" and chat.message[1] == "" and
+			type(chat.message[2]) == "table" and
+			type(chat.message[2][1]) == "string" and
 		---@diagnostic disable-next-line: param-type-mismatch
-		if type(chat.header[1]) == "string" and chat.header[1]:find("chat%-localization") then
-			---Get header color in messages that have a header
-			local header_color = chat.color or default_color
-			chat.header[3] = header_color.r
-			chat.header[4] = header_color.g
-			chat.header[5] = header_color.b
+			chat.message[2][1]:find("chat%-localization") then
+				---Get header color in messages that use chat's header
+				local header_color = chat.color or default_color
+				chat.message[2][3] = header_color.r
+				chat.message[2][4] = header_color.g
+				chat.message[2][5] = header_color.b
 		end
 
 		--Print the message
-		player.print({"", chat.header, chat.msg}, {
+		player.print(chat.message, {
 			color = color,
 			sound = defines.print_sound.never,
 			skip = defines.print_skip.never

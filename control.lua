@@ -12,7 +12,8 @@ remote.add_interface("emojipack registration", {
 	end
 })
 
---#region functionality
+--#region Functionality
+
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
 ---@param pattern string
@@ -131,14 +132,16 @@ local function processMessage(sender, text)
 end
 
 ---Processes messsage, saves it to history, then sends latest x messages
----@param header LocalisedString
----@param message string
+---@param message LocalisedString
 ---@param color Color?
 ---@param send_level historyLevel
 ---@param recipient integer?
-local function send_message(header, message, color, send_level, recipient)
----@diagnostic disable-next-line: need-check-nil
-	header[1] = header[1] or "chat-localization.bc-empty-header"
+---@return string? Error
+local function send_message(message, color, send_level, recipient)
+	local error = nil
+	-- if type(message) ~= "table" then
+	-- 	return "Message needs to be a table"
+	-- end
 
 	if send_level ~= "global" and not recipient then
 		return log("Wasn't given a location to send the message!!\n")
@@ -146,13 +149,21 @@ local function send_message(header, message, color, send_level, recipient)
 
 	ChatHistoryManager.add_message{
 		message = message,
-		header = header,
 		color = color,
 		level = send_level,
 		chat_index = recipient
 	}
 
 	ChatHistoryManager.print_chat(send_level, recipient, true)
+end
+
+---Turns the arguments into a LocalizedString
+---@param header string
+---@param player string
+---@param message string
+---@return LocalisedString message
+local function msg(header, player, message)
+	return {"", {"chat-localization."..header, player}, message}
 end
 
 ---Sends an ephemeral warning message to player
@@ -169,7 +180,7 @@ end
 ---@param message string
 local function shout(player, message)
 	message = processMessage(player, message)
-	send_message({"chat-localization.bc-shout-header", player.name}, message, player.chat_color, "global")
+	send_message(msg("bc-shout-header", player.name, message), player.chat_color, "global")
 end
 ---Sends a message to a player
 ---@param player LuaPlayer
@@ -177,8 +188,8 @@ end
 ---@param message string
 local function whisper(player, recipient, message)
 	message = processMessage(player, message)
-	send_message({"chat-localization.bc-whisper-to-header", recipient.name}, message, player.chat_color, "player", player.index)
-	send_message({"chat-localization.bc-whisper-from-header", player.name}, message, player.chat_color, "player", recipient.index)
+	send_message(msg("bc-whisper-to-header", recipient.name, message), player.chat_color, "player", player.index)
+	send_message(msg("bc-whisper-from-header", player.name, message), player.chat_color, "player", recipient.index)
 end
 --#endregion
 
@@ -186,7 +197,7 @@ script.on_event(defines.events.on_console_chat, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return end
 	local message = processMessage(player, event.message)
-	send_message({"chat-localization.bc-message-header", player.name}, message, player.chat_color, "force", player.force_index)
+	send_message(msg("bc-message-header", player.name, message), player.chat_color, "force", player.force_index)
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
 	-- log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
 	-- log{"", "player-chat-log", serpent.block(global.PlayerChatLog), "\n"}
@@ -225,16 +236,16 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
 	local setting_type = event.setting_type --[[@as "runtime-per-user"|"runtime-global"]]
 	if event.setting == "bc-global-chat-history" then
 		local new_setting = settings.global[event.setting].value
-		send_message({"chat-localization.bc-global-history-changed", new_setting}, "", nil, "global")
+		send_message({"chat-localization.bc-global-history-changed", new_setting}, nil, "global")
 		ChatHistoryManager.print_chat("global")
 	elseif event.setting == "bc-force-chat-history" then
 		local new_setting = settings.global[event.setting].value
-		send_message({"chat-localization.bc-force-history-changed", new_setting}, "", nil, "global")
+		send_message({"chat-localization.bc-force-history-changed", new_setting}, nil, "global")
 		ChatHistoryManager.print_chat("global")
 	elseif event.setting == "bc-player-chat-history" then
 		if not event.player_index then return log("Who changed their setting???") end
 		local new_setting = settings.get_player_settings(event.player_index)[event.setting].value
-		send_message({"chat-localization.bc-player-history-changed", new_setting}, "", nil, "player", event.player_index)
+		send_message({"chat-localization.bc-player-history-changed", new_setting}, nil, "player", event.player_index)
 		ChatHistoryManager.print_chat("player", event.player_index)
 	elseif setting_type == "runtime-per-user" and (
 		event.setting == "bc-color-fade" or
@@ -274,12 +285,12 @@ end)
 script.on_event(defines.events.on_player_joined_game, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one joined???") end
-	send_message({"multiplayer.player-joined-game", player.name}, "", player.chat_color, "global")
+	send_message({"multiplayer.player-joined-game", player.name}, player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_left_game, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one left???") end
-	send_message({"multiplayer.player-left-game", player.name}, "", player.chat_color, "global")
+	send_message({"multiplayer.player-left-game", player.name}, player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_died, function (event)
 	local player = game.get_player(event.player_index)
@@ -295,7 +306,7 @@ script.on_event(defines.events.on_player_died, function (event)
 		message[4] = message[3]
 		message[3] = event.cause.localised_name
 	end
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_respawned, function (event)
 	local player = game.get_player(event.player_index)
@@ -304,24 +315,24 @@ script.on_event(defines.events.on_player_respawned, function (event)
 		"multiplayer.player-respawn",
 		player.name
 	}
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end)
 
 --Research Queueing
 script.on_event(defines.events.on_research_finished, function (event)
 	if event.by_script then return end
-	send_message({"technology-researched", event.research.localised_name}, "",
-	nil, "force", event.research.force.index)
+	send_message({"technology-researched", event.research.localised_name},
+		nil, "force", event.research.force.index)
 end)
 --Research -- TODO: Get on_research_queued to become a real event
 -- script.on_event(defines.events.on_research_queued, function (event)
 -- 	-- if event.by_script then return end
--- 	send_message({"player-started-research", {"chat-localization.unknown-player"}, event.research.localised_name}, "",
+-- 	send_message({"player-started-research", {"chat-localization.unknown-player"}, event.research.localised_name},
 -- 		nil, "force", event.research.force.index)
 -- end)
 script.on_event(defines.events.on_research_cancelled, function (event)
 	-- if event.by_script then return end
-	send_message({"player-cancelled-research", {"chat-localization.unknown-player"}, event.research.localised_name}, "",
+	send_message({"player-cancelled-research", {"chat-localization.unknown-player"}, event.research.localised_name},
 		nil, "force", event.force.index)
 end)
 
@@ -341,12 +352,12 @@ command.promote = function (player, event)
 		message[2] = promoted_player.name
 		if promoted_player.admin then
 			message[1] = "player-is-already-an-admin"
-			return send_message(message, "", nil, "player", player.index)
+			return send_message(message, nil, "player", player.index)
 		end
 	else
 		message[1] = "player-was-added-to-admin-list"
 	end
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end
 command.demote = function (player, event)
 	local target = event.parameters:match("%S+")
@@ -363,12 +374,12 @@ command.demote = function (player, event)
 		message[2] = demoted_player.name
 		if not demoted_player.admin then
 			message[1] = "player-is-not-an-admin"
-			return send_message(message, "", nil, "player", player.index)
+			return send_message(message, nil, "player", player.index)
 		end
 	else
 		message[1] = "player-was-removed-from-admin-list"
 	end
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end
 
 --Banned and kicked
@@ -388,7 +399,7 @@ script.on_event(defines.events.on_player_banned, function (event)
 		event.reason or "unspecified"
 	}
 	if not event.player_index then message[1] = "unknown-player-was-banned" end
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_unbanned, function (event)
 	local player = game.get_player(event.by_player)
@@ -404,7 +415,7 @@ script.on_event(defines.events.on_player_unbanned, function (event)
 		event.player_name,
 		player.name
 	}
-	send_message(message, "", player.chat_color, "global")
+	send_message(message, player.chat_color, "global")
 end)
 script.on_event(defines.events.on_player_kicked, function (event)
 	local player = game.get_player(event.player_index)
@@ -423,7 +434,7 @@ script.on_event(defines.events.on_player_kicked, function (event)
 		by_player.name,
 		event.reason or "unspecified"
 	}
-	send_message(message, "", by_player.chat_color, "global")
+	send_message(message, by_player.chat_color, "global")
 end)
 --#endregion
 
