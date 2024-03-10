@@ -5,7 +5,7 @@ Date: 2024-03-10
     - Other mods can now use the interface to print messages that won't get deleted
   Bugfixes:
     - General messages now actually use their color
-    - Added admin checking on promote/demote
+    - Added admin checking on promote/demote so it doesn't falsely report something has happened
   Info:
     - Refactored Chats to now just use a localized string instead of a 'header' and 'message'
 ---------------------------------------------------------------------------------------------------
@@ -36,9 +36,8 @@ Date: 2024-01-24
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.5
 Date: 2024-01-23
-  Major Features:
-    - You can now toggle whether or not the full message gets colored
   Minor Features:
+    - You can now toggle whether or not the full message gets colored
     - Now players can fade out user colors in chat
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
