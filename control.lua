@@ -12,6 +12,7 @@ remote.add_interface("emojipack registration", {
 	end
 })
 
+--#region functionality
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
 ---@param pattern string
@@ -151,7 +152,7 @@ local function send_message(header, message, color, send_level, recipient)
 		chat_index = recipient
 	}
 
-	ChatHistoryManager.print_chat(send_level, recipient)
+	ChatHistoryManager.print_chat(send_level, recipient, true)
 end
 
 ---Sends an ephemeral warning message to player
@@ -179,6 +180,7 @@ local function whisper(player, recipient, message)
 	send_message({"chat-localization.bc-whisper-to-header", recipient.name}, message, player.chat_color, "player", player.index)
 	send_message({"chat-localization.bc-whisper-from-header", player.name}, message, player.chat_color, "player", recipient.index)
 end
+--#endregion
 
 script.on_event(defines.events.on_console_chat, function (event)
 	local player = game.get_player(event.player_index)
@@ -208,6 +210,7 @@ command.whisper = function(player, event)
 	whisper(player, recipient, message)
 end
 
+--#region Setup
 script.on_init(function ()
 	global.emojipacks = {}
 	ChatHistoryManager.init()
@@ -258,6 +261,11 @@ script.on_event(defines.events.on_forces_merged, function (event)
 	ChatHistoryManager.remove_force(event.source_index)
 end)
 --#endregion
+--#endregion
+
+script.on_event("bc-print-chat", function (event)
+	ChatHistoryManager.print_chat("player", event.player_index, false)
+end)
 
 -- TODO: also handle command events to replace their error messages
 -- and handle the messages without events, like admin list messages

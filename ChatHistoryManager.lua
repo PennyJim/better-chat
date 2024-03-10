@@ -1,6 +1,7 @@
 ---@class Chat
 ---@field msg string
 ---@field header LocalisedString
+---@field tick integer
 ---@field color Color?
 
 ---@class ChatLog
@@ -19,7 +20,7 @@ local ChatLog = {
 		self.chat_array[self.last_index] = chat
 		if sizeLimit then self:trim(sizeLimit) end
 	end,
-	---Trim elements from linked list until its equal to limit
+	---Trim elements from list until its equal to limit
 	---@param self ChatLog
 	---@param sizeLimit integer
 	trim = function(self, sizeLimit)
@@ -113,7 +114,8 @@ manager.add_message = function(messageParams)
 	local newChat = {
 		msg = messageParams.message,
 		color = messageParams.color,
-		header = messageParams.header
+		header = messageParams.header,
+		tick = game.tick
 	}
 
 	if messageParams.level =="global" then
@@ -183,16 +185,24 @@ end
 
 ---Prints the chats to the passed player
 ---@param player LuaPlayer
-local function print_chats(player)
+---@param do_partial_print boolean?
+local function print_chats(player, do_partial_print)
 	local player_index = player.index
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
+	local message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
 	local color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
 	player.clear_console()
 	for chat in global.PlayerChatLog[player_index]:from() do
+
+		--Skip chat if doesn't need to be logged
+		if do_partial_print and game.tick > chat.tick + message_linger then
+			goto continue -- Skip printing message
+		end
+
 		--Get general message color
 		local color = process_color(color_processing, chat.color or default_color)
 
@@ -211,28 +221,30 @@ local function print_chats(player)
 			sound = defines.print_sound.never,
 			skip = defines.print_skip.never
 		})
+	    ::continue::
 	end
 end
 
 ---Print out all messages for a group
 ---@param chat_level historyLevel
 ---@param chat_index integer?
-manager.print_chat = function(chat_level, chat_index)
+---@param do_partial_print boolean?
+manager.print_chat = function(chat_level, chat_index, do_partial_print)
 	if chat_level == "global" then
 		for _, player in pairs(game.players) do
-			print_chats(player)
+			print_chats(player, do_partial_print)
 		end
 	elseif chat_level == "force" then
 		---@cast chat_index integer
 		for _, player in pairs(game.forces[chat_index].players) do
-			print_chats(player)
+			print_chats(player, do_partial_print)
 		end
 	elseif chat_level == "player" then
 		---@cast chat_index integer
 		local player = game.get_player(chat_index)
 		-- TODO: improve this error statement
 		if not player then return log("[ERR] Something has gone wrong") end
-		print_chats(player)
+		print_chats(player, do_partial_print)
 	else
 		log({"invalid-destination"})
 	end

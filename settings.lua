@@ -46,6 +46,15 @@ data:extend{
 		order = "player-ba"
 	},
 	{
+		type = "double-setting",
+		name = "bc-message-linger",
+		setting_type = "runtime-per-user",
+		default_value = 20,
+		minimum_value = 0,
+		maximum_value = 100,
+		order = "player-ca"
+	},
+	{
 		type = "bool-setting",
 		name = "bc-virtual-signal-icon",
 		setting_type = "runtime-per-user",
