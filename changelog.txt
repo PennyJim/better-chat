@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2024-03-10
+  Bugfixes:
+    - General messages now actually use their color
   Info:
     - Refactored Chats to now just use a localized string instead of a 'header' and 'message'
 ---------------------------------------------------------------------------------------------------

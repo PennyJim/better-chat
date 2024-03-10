@@ -213,6 +213,8 @@ local function print_chats(player, do_partial_print)
 				chat.message[2][3] = header_color.r
 				chat.message[2][4] = header_color.g
 				chat.message[2][5] = header_color.b
+		else
+			color = chat.color
 		end
 
 		--Print the message
