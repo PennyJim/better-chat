@@ -1,5 +1,5 @@
 ---@alias historyLevel "global"|"force"|"player"
-require("runtime_migrations")
+local migrate = require("runtime_migrations")
 
 local ChatHistoryManager = require("ChatHistoryManager")
 
@@ -218,6 +218,7 @@ end)
 -- script.on_load(function ()
 -- end)
 script.on_configuration_changed(function (change)
+	migrate(change)
 	clean_emojipacks(change.mod_changes)
 end)
 script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)

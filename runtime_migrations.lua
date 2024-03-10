@@ -1,6 +1,6 @@
 local ChatHistoryManager = require "ChatHistoryManager"
 
-script.on_configuration_changed(function (stuff_changed)
+return function (stuff_changed)
 	if stuff_changed.mod_changes[script.mod_name] then
 		local old_version = stuff_changed.mod_changes[script.mod_name].old_version
 
@@ -13,6 +13,8 @@ script.on_configuration_changed(function (stuff_changed)
 		elseif old_version == "0.2.4" then goto v0_2_4
 		elseif old_version == "0.2.5" then goto v0_2_5
 		elseif old_version == "0.2.6" then goto v0_2_6
+		elseif old_version == "0.2.7" then goto v0_2_7
+		elseif old_version == "0.2.8" then goto v0_2_8
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -47,7 +49,7 @@ script.on_configuration_changed(function (stuff_changed)
 		end
 		-- Don't need to convert chatlogs as it 
 		--  made them using the internal command
-		goto v0_2_3
+		goto v0_2_8
 
 		::v0_2_0::
 		::v0_2_1::
@@ -81,5 +83,22 @@ script.on_configuration_changed(function (stuff_changed)
 		::v0_2_4::
 		::v0_2_5::
 		::v0_2_6::
+		::v0_2_7::
+		if true then --reduce Chat Migration's scope
+			for chat in global.GlobalChatLog:from() do
+				chat.tick = game.tick()
+			end
+			for _,ChatLog in pairs(global.ForceChatLog) do
+				for chat in ChatLog:from() do
+					chat.tick = game.tick()
+				end
+			end
+			for _,ChatLog in pairs(global.PlayerChatLog) do
+				for chat in ChatLog:from() do
+					chat.tick = game.tick()
+				end
+			end
+		end
+		::v0_2_8::
 	end
-end)
+end
