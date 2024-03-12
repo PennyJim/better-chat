@@ -182,9 +182,10 @@ end
 
 ---Prints the chats to the passed player
 ---@param player LuaPlayer
----@param do_partial_print boolean?
-local function print_chats(player, do_partial_print)
+local function print_chats(player)
 	local player_index = player.index
+	local isChatOpen = global.isChatOpen:check(player_index)
+	log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
@@ -196,7 +197,7 @@ local function print_chats(player, do_partial_print)
 	for chat in global.PlayerChatLog[player_index]:from() do
 
 		--Skip chat if doesn't need to be logged
-		if do_partial_print and game.tick > chat.tick + message_linger then
+		if not isChatOpen and game.tick > chat.tick + message_linger then
 			goto continue -- Skip printing message
 		end
 
@@ -230,8 +231,7 @@ end
 ---Print out all messages for a group
 ---@param chat_level historyLevel
 ---@param chat_index integer?
----@param do_partial_print boolean?
-manager.print_chat = function(chat_level, chat_index, do_partial_print)
+manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
 		for _, player in pairs(game.players) do
 			print_chats(player, do_partial_print)

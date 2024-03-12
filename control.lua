@@ -167,7 +167,7 @@ local function send_message(message, color, send_level, recipient)
 		chat_index = recipient
 	}
 
-	ChatHistoryManager.print_chat(send_level, recipient, true)
+	ChatHistoryManager.print_chat(send_level, recipient)
 end
 
 ---Turns the arguments into a LocalizedString
