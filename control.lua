@@ -37,13 +37,13 @@ script.on_event("bc-exit-chat", function (event)
 end)
 
 --#region Setup
-local isOpenCleared = true
+local isOpenDirty = false
 local chatOpenMeta = {
 	__index = {
 		check = function (self, player_index)
-			if not isOpenCleared then
+			if isOpenDirty then
 				self = {}
-				isOpenCleared = true
+				isOpenDirty = false
 			end
 			return self[player_index]
 		end
@@ -60,11 +60,14 @@ script.on_init(function ()
 	ChatHistoryManager.init()
 end)
 script.on_load(function ()
+	global.isChatOpen = global.isChatOpen or setmetatable({}, chatOpenMeta)
+	global.disabledCommands = global.disabledCommands or {}
+	global.disabledListeners = global.disabledListeners or {}
 	register_enabled_listeners()
 	-- FIXME: Currently, singleplayer can load out of sync
 	-- script.on_nth_tick(1, function (p1)
 	-- 	if not game.is_multiplayer() then
-	-- 		isOpenCleared = false
+	-- 		isOpenDirty = true
 	-- 	end
 	-- 	script.on_nth_tick(p1.nth_tick, nil)
 	-- end)
