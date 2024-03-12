@@ -17,6 +17,13 @@ local function clean_emojipacks(changes)
 		end
 	end
 end
+local function register_enabled_listeners()
+	for event, listener in pairs(events) do
+		if not global.disabledListeners[event] then
+			script.on_event(event, listener, eventFilters[event])
+		end
+	end
+end
 
 script.on_event("bc-toggle-chat", function (event)
 	global.isChatOpen[event.player_index] = not global.isChatOpen:check(event.player_index)
@@ -47,17 +54,21 @@ script.register_metatable("bc-chatOpen",chatOpenMeta)
 script.on_init(function ()
 	global.emojipacks = {}
 	global.isChatOpen = setmetatable({}, chatOpenMeta)
+	global.disabledListeners = {}
+	global.disabledCommands = {}
+	register_enabled_listeners()
 	ChatHistoryManager.init()
 end)
--- FIXME: Currently, singleplayer can load out of sync
--- script.on_load(function ()
--- 	script.on_nth_tick(1, function (p1)
--- 		if not game.is_multiplayer() then
--- 			isOpenCleared = false
--- 		end
--- 		script.on_nth_tick(p1.nth_tick, nil)
--- 	end)
--- end)
+script.on_load(function ()
+	register_enabled_listeners()
+	-- FIXME: Currently, singleplayer can load out of sync
+	-- script.on_nth_tick(1, function (p1)
+	-- 	if not game.is_multiplayer() then
+	-- 		isOpenCleared = false
+	-- 	end
+	-- 	script.on_nth_tick(p1.nth_tick, nil)
+	-- end)
+end)
 script.on_configuration_changed(function (change)
 	migrate(change)
 	clean_emojipacks(change.mod_changes)
@@ -108,6 +119,28 @@ end)
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
 	send = send_message,
+	disable_listener = function (event)
+		if not events[event] then return false end
+		global.disabledListeners[event] = true
+		script.on_event(event, nil)
+		return true
+	end,
+	enable_listener = function (event)
+		if not events[event] then return false end
+		global.disabledListeners[event] = nil
+		script.on_event(event, events[event], eventFilters[event])
+		return true
+	end,
+	disable_command = function (command)
+		if not commands[command] then return false end
+		global.disabledCommands[command] = true
+		return true
+	end,
+	enable_command = function (command)
+		if not commands[command] then return false end
+		global.disabledCommands[command] = nil
+		return true
+	end,
 	-- [ ] debug(LocalisedString, isEphemeral)
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)
