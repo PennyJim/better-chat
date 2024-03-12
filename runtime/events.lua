@@ -1,4 +1,4 @@
-local commands = require("runtime.")
+local commands = require("runtime.commands")
 local handle_messages = require("runtime.handle_messages")
 local msg = handle_messages.msg
 
@@ -12,7 +12,7 @@ events[defines.events.on_console_chat] = function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return end
 
-	local message = handle_messages.processMessage(player, event.message)
+	local message = handle_messages.process_message(player, event.message)
 	handle_messages.send_message(msg("bc-message-header", player.name, message), player.chat_color, "force", player.force_index)
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
 	-- log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
@@ -41,9 +41,14 @@ events[defines.events.on_player_died] = function (event)
 		player.character.gps_tag --[[@as LocalisedString]]
 	}
 	if event.cause then
+		local cause_name = event.cause.localised_name
+		if event.cause.name  == "character" and event.cause.player then
+			cause_name = event.cause.player.name
+		end
+
 		message[1] = "multiplayer.player-died-by"
 		message[4] = message[3]
-		message[3] = event.cause.localised_name
+		message[3] = cause_name
 	end
 	handle_messages.send_message(message, player.chat_color, "global")
 end
