@@ -207,6 +207,7 @@ end
 --#endregion
 
 script.on_event(defines.events.on_console_chat, function (event)
+	global.isChatOpen[event.player_index] = nil
 	local player = game.get_player(event.player_index)
 	if not player then return end
 	local message = processMessage(player, event.message)
@@ -235,11 +236,33 @@ command.whisper = function(player, event)
 end
 
 --#region Setup
+local isOpenCleared = true
+local chatOpenMeta = {
+	__index = {
+		check = function (self, player_index)
+			if not isOpenCleared then
+				self = {}
+				isOpenCleared = true
+			end
+			return self[player_index]
+		end
+	}
+}
+script.register_metatable("bc-chatOpen",chatOpenMeta)
+
 script.on_init(function ()
 	global.emojipacks = {}
+	global.isChatOpen = setmetatable({}, chatOpenMeta)
 	ChatHistoryManager.init()
 end)
+-- FIXME: Currently, singleplayer can load out of sync
 -- script.on_load(function ()
+-- 	script.on_nth_tick(1, function (p1)
+-- 		if not game.is_multiplayer() then
+-- 			isOpenCleared = false
+-- 		end
+-- 		script.on_nth_tick(p1.nth_tick, nil)
+-- 	end)
 -- end)
 script.on_configuration_changed(function (change)
 	migrate(change)
@@ -288,8 +311,15 @@ end)
 --#endregion
 --#endregion
 
-script.on_event("bc-print-chat", function (event)
-	ChatHistoryManager.print_chat("player", event.player_index, false)
+script.on_event("bc-toggle-chat", function (event)
+	global.isChatOpen[event.player_index] = not global.isChatOpen:check(event.player_index)
+	ChatHistoryManager.print_chat("player", event.player_index)
+	log("Toggle Chat")
+end)
+script.on_event("bc-exit-chat", function (event)
+	global.isChatOpen[event.player_index] = nil
+	ChatHistoryManager.print_chat("player", event.player_index)
+	log("Exit Chat")
 end)
 
 -- TODO: also handle command events to replace their error messages
@@ -304,6 +334,7 @@ script.on_event(defines.events.on_player_left_game, function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one left???") end
 	send_message({"multiplayer.player-left-game", player.name}, player.chat_color, "global")
+	global.isChatOpen[event.player_index] = nil
 end)
 script.on_event(defines.events.on_player_died, function (event)
 	local player = game.get_player(event.player_index)
