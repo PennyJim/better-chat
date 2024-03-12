@@ -1,5 +1,5 @@
 ---@diagnostic disable: inject-field
-local ChatHistoryManager = require "ChatHistoryManager"
+local ChatHistoryManager = require "runtime.ChatHistoryManager"
 
 return function (stuff_changed)
 	if stuff_changed.mod_changes[script.mod_name] then
@@ -17,6 +17,7 @@ return function (stuff_changed)
 		elseif old_version == "0.2.7" then goto v0_2_7
 		elseif old_version == "0.2.8" then goto v0_2_8
 		elseif old_version == "0.3.0" then goto v0_3_0
+		elseif old_version == "0.3.1" then goto v0_3_1
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -133,5 +134,13 @@ return function (stuff_changed)
 		end
 
 		::v0_3_0::
+		if true then
+			global.isChatOpen = {} -- HACK: Probably doesn't work properly
+		end
+		::v0_3_1::
+		if true then
+			global.disabledCommands = {}
+			global.disabledListeners = {}
+		end
 	end
 end

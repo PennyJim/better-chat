@@ -185,7 +185,7 @@ end
 local function print_chats(player)
 	local player_index = player.index
 	local isChatOpen = global.isChatOpen:check(player_index)
-	log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
+	-- log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
