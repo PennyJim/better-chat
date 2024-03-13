@@ -1,3 +1,5 @@
+---@alias CommandFunctionDict {[string]:fun(LuaPlayer, EventData.on_console_command)}
+---@type CommandFunctionDict
 local commands = {}
 
 local handle_messages = require("runtime.handle_messages")
@@ -45,4 +47,7 @@ commands.whisper = function(player, event)
 	whisper(player, recipient, message)
 end
 
+script.on_event(defines.events.on_console_command, function (test)
+	
+end)
 return commands

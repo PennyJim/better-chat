@@ -2,7 +2,11 @@ local commands = require("runtime.commands")
 local handle_messages = require("runtime.handle_messages")
 local msg = handle_messages.msg
 
+---@alias EventFunctionDict {[defines.events]: fun(EventData)}
+---@type EventFunctionDict
 local events = {}
+---@alias EventFilterDict {[defines.events]: EventFilter}
+---@type EventFilter
 local eventFilters = {}
 
 
@@ -202,6 +206,9 @@ events[defines.events.on_console_command] = function (event)
 	if func and enabled then func(player, event) end
 end
 
+---@class EventData
+---@field events EventFunctionDict
+---@field eventFilters EventFilterDict
 return {
 	events = events,
 	eventFilters = eventFilters,

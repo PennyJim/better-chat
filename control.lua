@@ -43,10 +43,10 @@ local chatOpenMeta = {
 script.register_metatable("bc-chatOpen",chatOpenMeta)
 
 script.on_init(function ()
-	global.emojipacks = {}
-	global.isChatOpen = setmetatable({}, chatOpenMeta)
-	global.disabledListeners = {}
-	global.disabledCommands = {}
+	global.emojipacks = {} --[[@as {[string]:{[string]:string}} ]]
+	global.isChatOpen = setmetatable({}, chatOpenMeta) --[[@as {[integer]: boolean, check:fun(this, integer)}]]
+	global.disabledListeners = {} --[[@as {[defines.events]: string[]}]]
+	global.disabledCommands = {} --[[@as {[string]: string[]}]]
 	disableFunctions.register_enabled_listeners()
 	ChatHistoryManager.init()
 end)

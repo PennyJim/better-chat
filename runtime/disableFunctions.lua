@@ -4,6 +4,10 @@ local events = eventData.events
 local eventFilters = eventData.eventFilters
 
 local listener = {
+	---Marks the listener for the given event as disabled
+	---@param mod_name string
+	---@param event defines.events
+	---@return boolean success
 	disable = function (mod_name, event)
 		if not script.active_mods[mod_name] then return false end
 		if not events[event] then return false end
@@ -16,6 +20,10 @@ local listener = {
 		end
 		return true
 	end,
+	---Unmarks the listener for the given event as disabled
+	---@param mod_name string
+	---@param event defines.events
+	---@return boolean success
 	enable = function (mod_name, event)
 		if not script.active_mods[mod_name] then return false end
 		if not events[event] then return false end
@@ -40,6 +48,10 @@ local listener = {
 	end
 }
 local command = {
+	---Marks the handler for the given command as disabled
+	---@param mod_name string
+	---@param command string
+	---@return boolean success
 	disable = function (mod_name, command)
 		if not script.active_mods[mod_name] then return false end
 		if not commands[command] then return false end
@@ -51,6 +63,10 @@ local command = {
 		end
 		return true
 	end,
+	---Unmarks the handler for the given command as disabled
+	---@param mod_name string
+	---@param command string
+	---@return boolean success
 	enable = function (mod_name, command)
 		if not script.active_mods[mod_name] then return false end
 		if not commands[command] then return false end
@@ -74,6 +90,7 @@ local command = {
 	end
 }
 
+---Register all listeners not in global.disabledListeners
 local function register_enabled_listeners()
 	for event, handler in pairs(events) do
 		if not global.disabledListeners[event] then
@@ -81,6 +98,8 @@ local function register_enabled_listeners()
 		end
 	end
 end
+---Re-enable all Listeners that are in global.disabledListeners from disabled mods
+---@param changes {[string]: ModChangeData}
 local function reenable(changes)
 	for mod_name, change in pairs(changes) do
 		if not change.new_version then
