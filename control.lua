@@ -51,9 +51,6 @@ script.on_init(function ()
 	ChatHistoryManager.init()
 end)
 script.on_load(function ()
-	global.isChatOpen = global.isChatOpen or setmetatable({}, chatOpenMeta)
-	global.disabledCommands = global.disabledCommands or {}
-	global.disabledListeners = global.disabledListeners or {}
 	disableFunctions.register_enabled_listeners()
 	-- FIXME: Currently, singleplayer can load out of sync
 	-- script.on_nth_tick(1, function (p1)

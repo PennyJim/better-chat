@@ -134,6 +134,13 @@ return function (stuff_changed)
 		end
 
 		::v0_3_0::
+		if true then
+			global.isChatOpen = {} -- HACK: Probably doesn't work properly
+		end
 		::v0_3_1::
+		if true then
+			global.disabledCommands = {}
+			global.disabledListeners = {}
+		end
 	end
 end
