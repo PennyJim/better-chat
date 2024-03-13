@@ -1,4 +1,4 @@
-local ChatHistoryManager = require("runtime.ChatHistoryManager")
+local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string

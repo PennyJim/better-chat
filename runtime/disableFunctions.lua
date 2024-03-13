@@ -1,5 +1,5 @@
-local commands = require("runtime.commands")
-local eventData = require("runtime.events")
+local commands = require("__better-chat__.runtime.commands")
+local eventData = require("__better-chat__.runtime.events")
 local events = eventData.events
 local eventFilters = eventData.eventFilters
 

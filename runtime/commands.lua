@@ -2,7 +2,7 @@
 ---@type CommandFunctionDict
 local commands = {}
 
-local handle_messages = require("runtime.handle_messages")
+local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
 
 --- TODO: Change entirely!

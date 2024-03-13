@@ -1,5 +1,5 @@
 ---@diagnostic disable: inject-field
-local ChatHistoryManager = require "runtime.ChatHistoryManager"
+local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
 return function (stuff_changed)
 	if stuff_changed.mod_changes[script.mod_name] then

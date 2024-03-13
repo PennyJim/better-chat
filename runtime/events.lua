@@ -1,5 +1,5 @@
-local commands = require("runtime.commands")
-local handle_messages = require("runtime.handle_messages")
+local commands = require("__better-chat__.runtime.commands")
+local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
 
 ---@alias EventFunctionDict {[defines.events]: fun(EventData)}

@@ -1,8 +1,8 @@
 ---@alias historyLevel "global"|"force"|"player"
-local migrate = require("runtime_migrations")
-local ChatHistoryManager = require("runtime.ChatHistoryManager")
-local send_message = require("runtime.handle_messages").send_message
-local disableFunctions = require("runtime.disableFunctions")
+local migrate = require("__better-chat__.runtime_migrations")
+local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+local send_message = require("__better-chat__.runtime.handle_messages").send_message
+local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 
 
 ---Clean emojipacks of unloaded mods
