@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.1
+Date: 2024-03-12
+  Bugfixes:
+    - Fixed CHARACTER always being the killer. Still might happen with edge cases
+    - 0.3.0 migration now works. Will go back and fix old versions with broken migrations if requested
+  Info:
+    - Refactored most functional code to be in separate files
+  Scripting:
+    - Added an interface to disable event(/command) handlers so you can implement your own
+---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2024-03-10
   Major Features:
