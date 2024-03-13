@@ -1,7 +1,7 @@
 ---@diagnostic disable: inject-field
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
-return function (stuff_changed)
+return function (stuff_changed, metatables)
 	if stuff_changed.mod_changes[script.mod_name] then
 		local old_version = stuff_changed.mod_changes[script.mod_name].old_version
 
@@ -52,7 +52,7 @@ return function (stuff_changed)
 		end
 		-- Don't need to convert chatlogs as it 
 		--  made them using the internal command
-		goto v0_3_0
+		goto v0_2_8
 
 		::v0_2_0::
 		::v0_2_1::
@@ -135,7 +135,7 @@ return function (stuff_changed)
 
 		::v0_3_0::
 		if true then
-			global.isChatOpen = {} -- HACK: Probably doesn't work properly
+			global.isChatOpen = setmetatable({}, metatables[1])
 		end
 		::v0_3_1::
 		if true then

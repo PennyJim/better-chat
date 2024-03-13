@@ -93,7 +93,7 @@ local command = {
 ---Register all listeners not in global.disabledListeners
 local function register_enabled_listeners()
 	for event, handler in pairs(events) do
-		if not global.disabledListeners[event] then
+		if not global.disabledListeners or not global.disabledListeners[event] then
 			script.on_event(event, handler, eventFilters[event])
 		end
 	end
