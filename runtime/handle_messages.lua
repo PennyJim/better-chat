@@ -111,8 +111,9 @@ end
 ---@param color Color?
 ---@param send_level historyLevel
 ---@param recipient integer?
+---@param clear boolean? Whether or not the chat is cleared, `true` by default
 ---@return string? Error
-local function send_message(message, color, send_level, recipient)
+local function send_message(message, color, send_level, recipient, clear)
 	local error = nil
 	-- if type(message) ~= "table" then
 	-- 	return "Message needs to be a table"
@@ -142,7 +143,25 @@ local function send_message(message, color, send_level, recipient)
 		chat_index = recipient
 	}
 
-	ChatHistoryManager.print_chat(send_level, recipient)
+	--Clear chat if `clear` is true or nil
+	if clear ~= false then
+		ChatHistoryManager.print_chat(send_level, recipient)
+
+	else -- FIXME: use the internal print function rather than this hacked together one
+		---@type LuaGameScript|LuaForce|LuaPlayer
+		local printer
+		if send_level == "global" then
+			printer = game
+		elseif send_level == "force" then
+			printer = game.forces[recipient]
+		else
+			printer = game.players[recipient]
+		end
+		printer.print(message, {
+			color = color,
+			skip = defines.print_skip.never
+		})
+	end
 end
 
 ---Turns the arguments into a LocalizedString
