@@ -236,19 +236,19 @@ end
 manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
 		for _, player in pairs(game.players) do
-			print_chats(player, do_partial_print)
+			print_chats(player)
 		end
 	elseif chat_level == "force" then
 		---@cast chat_index integer
 		for _, player in pairs(game.forces[chat_index].players) do
-			print_chats(player, do_partial_print)
+			print_chats(player)
 		end
 	elseif chat_level == "player" then
 		---@cast chat_index integer
 		local player = game.get_player(chat_index)
 		-- TODO: improve this error statement
 		if not player then return log("[ERR] Something has gone wrong") end
-		print_chats(player, do_partial_print)
+		print_chats(player)
 	else
 		log({"invalid-destination"})
 	end
