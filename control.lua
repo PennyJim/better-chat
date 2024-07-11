@@ -3,6 +3,12 @@ local migrate = require("__better-chat__.runtime_migrations")
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
+---@class BetterChatGlobal
+---@field emojipacks table<string,table<string,string>>
+---@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
+---@field disabledListeners table<defines.events, string[]>
+---@field disabledCommands table<string, string[]>
+global = {}
 
 
 ---Clean emojipacks of unloaded mods
@@ -43,9 +49,9 @@ local chatOpenMeta = {
 script.register_metatable("bc-chatOpen",chatOpenMeta)
 
 script.on_init(function ()
-	global.emojipacks = {} --[[@as {[string]:{[string]:string}} ]]
-	global.isChatOpen = setmetatable({}, chatOpenMeta) --[[@as {[integer]: boolean, check:fun(this, integer)}]]
-	global.disabledListeners = {} --[[@as {[defines.events]: string[]}]]
+	global.emojipacks = {}
+	global.isChatOpen = setmetatable({}, chatOpenMeta)
+	global.disabledListeners = {}
 	global.disabledCommands = {} --[[@as {[string]: string[]}]]
 	disableFunctions.register_enabled_listeners()
 	ChatHistoryManager.init()

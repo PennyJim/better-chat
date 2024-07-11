@@ -1,6 +1,8 @@
 ---@diagnostic disable: inject-field
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
+---@param stuff_changed ConfigurationChangedData
+---@param metatables table[]
 return function (stuff_changed, metatables)
 	if stuff_changed.mod_changes[script.mod_name] then
 		local old_version = stuff_changed.mod_changes[script.mod_name].old_version

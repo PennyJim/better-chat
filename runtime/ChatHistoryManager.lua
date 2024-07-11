@@ -130,19 +130,21 @@ manager.add_message = function(messageParams)
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 	elseif messageParams.level == "force" then
+		local force_index = messageParams.chat_index --[[@as integer]]
 		-- Add message to the force and players in the force
-		global.ForceChatLog[messageParams.chat_index]
+		global.ForceChatLog[force_index]
 			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as integer]])
 
-		for _,player in pairs(game.forces[messageParams.chat_index].players) do
+		for _,player in pairs(game.forces[force_index].players) do
 			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 	elseif messageParams.level == "player" then
+		local player_index = messageParams.chat_index --[[@as integer]]
 		-- Add message to the player
 		global.PlayerChatLog[messageParams.chat_index]
-			:add(newChat, settings.get_player_settings(messageParams.chat_index)["bc-player-chat-history"].value--[[@as integer]])
+			:add(newChat, settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]])
 	else
 		log({"", {"bc-invalid-chat-level"}, serpent.line(messageParams), "\n"})
 	end
@@ -252,14 +254,19 @@ manager.print_chat = function(chat_level, chat_index)
 	end
 end
 
+---@class BetterChatGlobal
+---@field GlobalChatLog ChatLog
+---@field ForceChatLog table<integer, ChatLog>
+---@field PlayerChatLog table<integer, ChatLog>
+
 ---Initializes Chat History
 manager.init = function()
 	global.GlobalChatLog = newChatLog();
-	global.ForceChatLog = {} --[[@as ChatLog[] ]]
+	global.ForceChatLog = {}
 	for _,force in pairs(game.forces) do
 		global.ForceChatLog[force.index] = newChatLog();
 	end
-	global.PlayerChatLog = {} --[[@as ChatLog[] ]]
+	global.PlayerChatLog = {}
 	for _, player in pairs(game.players) do
 		local player_index = player.index
 		global.PlayerChatLog[player_index] = newChatLog();
