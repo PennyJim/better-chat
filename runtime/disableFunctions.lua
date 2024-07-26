@@ -92,6 +92,9 @@ local command = {
 
 ---Register all listeners not in global.disabledListeners
 local function register_enabled_listeners()
+	eventData.get_remote_events()
+
+	---@cast events table<defines.events,fun(e:EventData)>
 	for event, handler in pairs(events) do
 		if not global.disabledListeners or not global.disabledListeners[event] then
 			script.on_event(event, handler, eventFilters[event])

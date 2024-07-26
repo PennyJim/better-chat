@@ -242,10 +242,25 @@ events[defines.events.on_console_command] = function (event)
 	if func and enabled then func(player, event) end
 end
 
----@class EventData
+---@type {[string]:fun(events:event_handler.events, commands:CommandFunctionDict)}
+local remote_event_handlers = {
+	["pvp"] = require("__better-chat__.runtime.remote_events.pvp")
+}
+
+local function remote_events()
+	local interfaces = remote.interfaces
+	for remote_interface, value in pairs(remote_event_handlers) do
+		if interfaces[remote_interface] then
+			value(events, commands)
+		end
+	end
+end
+
+---@class events
 ---@field events EventFunctionDict
 ---@field eventFilters EventFilterDict
 return {
 	events = events,
 	eventFilters = eventFilters,
+	get_remote_events = remote_events()
 }
