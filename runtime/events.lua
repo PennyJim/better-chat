@@ -25,7 +25,7 @@ events[defines.events.on_console_chat] = function (event)
 		color = player.chat_color,
 		process_color = true,
 		send_level = "force",
-		recipeint = player.force_index
+		recipient = player.force_index
 	}
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
 	-- log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
@@ -107,7 +107,7 @@ events[defines.events.on_research_finished] = function (event)
 		-- color = force.color,
 		-- process_color = true,
 		send_level = "force",
-		recipeint = force.index
+		recipient = force.index
 	}
 	for _, other_force in pairs(game.forces) do
 		if other_force ~= force
@@ -117,7 +117,7 @@ events[defines.events.on_research_finished] = function (event)
 				color = force.color,
 				process_color = true,
 				send_level = "force",
-				recipeint = other_force.index
+				recipient = other_force.index
 			}
 		end
 	end
@@ -137,7 +137,7 @@ events[defines.events.on_research_cancelled] = function (event)
 		-- color = force.color,
 		-- process_color = true,
 		send_level = "force",
-		recipeint = force.index
+		recipient = force.index
 	}
 	-- Broadcast it to friendly forces
 	for _, other_force in pairs(game.forces) do
@@ -148,7 +148,7 @@ events[defines.events.on_research_cancelled] = function (event)
 				color = force.color,
 				process_color = true,
 				send_level = "force",
-				recipeint = other_force.index
+				recipient = other_force.index
 			}
 		end
 	end

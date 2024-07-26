@@ -52,13 +52,21 @@ local function process_message(sender, text)
 	return message
 end
 
----@class messageParams
+---@class messageParams.base
 ---@field message LocalisedString The message
 ---@field color Color? The general color of the message
 ---@field process_color boolean? Whether or not the message is faded out by the player's settings
----@field send_level historyLevel How broad this is broadcast
----@field recipient integer? Either the player or force that recieves it if the send_level was not global
+---@field send_level historyLevel
 ---@field clear boolean? Whether or not the chat is cleared, `true` by default
+
+---@class messageParams.global : messageParams.base
+---@field send_level "global" How broad this is broadcast
+
+---@class messageParams.recipient : messageParams.base
+---@field send_level "force"|"player"
+---@field recipient integer? Either the player or force that recieves it if the send_level was not global
+
+---@alias messageParams messageParams.global|messageParams.recipient
 
 ---Processes messsage, saves it to history, then sends latest x messages
 ---@param message messageParams
