@@ -20,7 +20,7 @@ end
 local function shout(player, message)
 	message = handle_messages.process_message(player, message)
 	handle_messages.send_message{
-		message = msg("bc-shout-header", player.name, player.chat_color, message),
+		message = msg("bc-shout-header", player, message),
 		color = player.chat_color,
 		process_color = true,
 		send_level = "global",
@@ -33,14 +33,14 @@ end
 local function whisper(player, recipient, message)
 	message = handle_messages.process_message(player, message)
 	handle_messages.send_message{
-		message = msg("bc-whisper-to-header", recipient.name, player.chat_color, message),
+		message = msg("bc-whisper-to-header", recipient, message),
 		color = player.chat_color,
 		process_color = true,
 		send_level = "player",
 		recipient = player.index
 	}
 	handle_messages.send_message{
-		message = msg("bc-whisper-from-header", player.name, player.chat_color, message),
+		message = msg("bc-whisper-from-header", player, message),
 		color = player.chat_color,
 		process_color = true,
 		send_level = "player",

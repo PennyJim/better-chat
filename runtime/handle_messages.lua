@@ -131,22 +131,26 @@ end
 
 ---Turns the arguments into a LocalizedString
 ---@param header string
----@param player string
----@param player_color Color
+---@param player LuaPlayer
 ---@param message string
 ---@return LocalisedString message
-local function msg(header, player, player_color, message)
+local function msg(header, player, message)
+	local name = player.name
+	if player.tag then
+		name = name.." "..player.tag
+	end
+	local color = player.chat_color
 	return {
 		"",
 		{
 			"chat-localization.colored-text",
 			{
 				"chat-localization."..header,
-				player
+				name
 			},
-			player_color[1] or player_color.r,
-			player_color[2] or player_color.g,
-			player_color[3] or player_color.b,
+			color[1] or color.r,
+			color[2] or color.g,
+			color[3] or color.b,
 		},
 		message
 	}

@@ -21,7 +21,7 @@ events[defines.events.on_console_chat] = function (event)
 
 	local message = handle_messages.process_message(player, event.message)
 	handle_messages.send_message{
-		message = msg("bc-message-header", player.name, player.chat_color, message),
+		message = msg("bc-message-header", player, message),
 		color = player.chat_color,
 		process_color = true,
 		send_level = "force",
