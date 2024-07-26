@@ -259,8 +259,9 @@ end
 ---@class events
 ---@field events EventFunctionDict
 ---@field eventFilters EventFilterDict
+---@field get_remote_events fun()
 return {
 	events = events,
 	eventFilters = eventFilters,
-	get_remote_events = remote_events()
+	get_remote_events = remote_events
 }
