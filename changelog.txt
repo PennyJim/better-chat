@@ -7,6 +7,7 @@ Date: ????
     - Added a parameter to send_message to skip clearing the chat.
       This also makes the message actually make a sound when printed since it's not piggy-backing on the entire chat print which is silent by necessity
     - Can now handle colors that are arrays rather than objects
+    - send_message can now take a table of parameters instead. Old method of parameters remains for compatibility
   Issues:
     - The direct-printing of not clearing the chat uses a hacked-together method of printing the messsage. Leading to times where it might print incorrectly because it doesn't do the pre-processing that is done for internal use.
 ---------------------------------------------------------------------------------------------------

@@ -114,9 +114,31 @@ end)
 --#endregion
 --#endregion
 
+---@param message LocalisedString|messageParams
+---@param color Color?
+---@param send_level historyLevel
+---@param recipient integer?
+---@param clear boolean? Whether or not the chat is cleared, `true` by default
+local function compatibility_send(message, color, send_level, recipient, clear)
+	if type(message) == "table" and message[1] then
+		---@cast message LocalisedString
+		return send_message{
+			message = message,
+			color = color,
+			send_level = send_level,
+			recipient = recipient,
+			clear = clear,
+		}
+
+	else
+		---@cast message messageParams
+		return send_message(message)
+	end
+end
+
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
-	send = send_message,
+	send = compatibility_send,
 	disable_listener = disableFunctions.listener.disable,
 	enable_listener = disableFunctions.listener.enable,
 	disable_command = disableFunctions.command.disable,
