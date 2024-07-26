@@ -1,6 +1,10 @@
 ---@diagnostic disable: inject-field
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
+-- TODO: Make this *actual* migrations goddamn
+-- HACK: This works, but also it is not the right way
+-- FIXME: Just to get as much attention on this issue as I can
+
 ---@param stuff_changed ConfigurationChangedData
 ---@param metatables table[]
 return function (stuff_changed, metatables)
@@ -26,7 +30,7 @@ return function (stuff_changed, metatables)
 		end
 
 		::v0_1_0::
-		if true then -- block reduce oldHistory's scope
+		do -- block reduce oldHistory's scope
 			local oldHistory = global.chatHistory
 			global.chatHistory = nil;
 
@@ -59,7 +63,7 @@ return function (stuff_changed, metatables)
 		::v0_2_0::
 		::v0_2_1::
 		::v0_2_2::
-		if true then --block to redue linkedListMigration's scope
+		do --block to redue linkedListMigration's scope
 			local function linkedListMigration(list)
 				local log = ChatHistoryManager.__newChatLog()
 				local array = log.chat_array
@@ -89,7 +93,7 @@ return function (stuff_changed, metatables)
 		::v0_2_5::
 		::v0_2_6::
 		::v0_2_7::
-		if true then --reduce Chat Migration's scope
+		do --reduce Chat Migration's scope
 			for chat in global.GlobalChatLog:from() do
 				chat.tick = game.tick
 			end
@@ -105,7 +109,7 @@ return function (stuff_changed, metatables)
 			end
 		end
 		::v0_2_8::
-		if true then --reduce message migration's scope
+		do --reduce message migration's scope
 			for chat in global.GlobalChatLog:from() do
 				if chat.msg then
 					chat.message = {"", chat.header, chat.msg}
@@ -136,11 +140,11 @@ return function (stuff_changed, metatables)
 		end
 
 		::v0_3_0::
-		if true then
+		do
 			global.isChatOpen = setmetatable({}, metatables[1])
 		end
 		::v0_3_1::
-		if true then
+		do
 			global.disabledCommands = {}
 			global.disabledListeners = {}
 		end
