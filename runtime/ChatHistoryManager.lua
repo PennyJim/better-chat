@@ -104,6 +104,7 @@ end
 ---@class addMessageParams
 ---@field message LocalisedString
 ---@field color Color?
+---@field process_color boolean?
 ---@field level historyLevel
 ---@field chat_index integer?
 ---Adds a message to chat history
@@ -113,6 +114,7 @@ manager.add_message = function(messageParams)
 	local newChat = {
 		message = messageParams.message,
 		color = messageParams.color,
+		process_color = messageParams.process_color,
 		tick = game.tick
 	}
 
