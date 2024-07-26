@@ -51,6 +51,7 @@ end
 commands.shout = function(player, event)
 	shout(player, event.parameters)
 end
+commands.s = commands.shout
 commands.whisper = function(player, event)
 	local target = event.parameters:match("%S+")
 	local recipient = game.get_player(target);
@@ -64,6 +65,7 @@ commands.whisper = function(player, event)
 	local message = event.parameters:sub(#target+2);
 	whisper(player, recipient, message)
 end
+commands.w = commands.whisper
 
 
 
