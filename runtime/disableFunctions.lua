@@ -84,7 +84,7 @@ local command = {
 		table.remove(disabled, mod_index)
 
 		if #disabled == 0 then
-			global.disabledListeners[command] = nil
+			global.disabledCommands[command] = nil
 		end
 		return true
 	end
