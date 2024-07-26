@@ -52,18 +52,21 @@ local function process_message(sender, text)
 	return message
 end
 
+---@class messageParams
+---@field message LocalisedString The message
+---@field color Color? The general color of the message
+---@field process_color boolean? Whether or not the message is faded out by the player's settings
+---@field send_level historyLevel How broad this is broadcast
+---@field recipient integer? Either the player or force that recieves it if the send_level was not global
+---@field clear boolean? Whether or not the chat is cleared, `true` by default
+
 ---Processes messsage, saves it to history, then sends latest x messages
----@param message LocalisedString
----@param color Color?
----@param send_level historyLevel
----@param recipient integer?
----@param clear boolean? Whether or not the chat is cleared, `true` by default
+---@param message messageParams
 ---@return string? Error
-local function send_message(message, color, send_level, recipient, clear)
+local function send_message(message)
 	local error = nil
-	-- if type(message) ~= "table" then
-	-- 	return "Message needs to be a table"
-	-- end
+	local send_level = message.send_level
+	local recipient = message.recipient
 
 	if send_level ~= "force" and
 		send_level ~= "global" and
@@ -82,15 +85,21 @@ local function send_message(message, color, send_level, recipient, clear)
 		return error
 	end
 
+	local msg = message.message
+	local color = message.color
+	local process_color = message.process_color
+	local clear = message.clear ~= false
+
 	ChatHistoryManager.add_message{
-		message = message,
+		message = msg,
 		color = color,
+		process_color = process_color,
 		level = send_level,
 		chat_index = recipient
 	}
 
 	--Clear chat if `clear` is true or nil
-	if clear ~= false then
+	if clear then
 		ChatHistoryManager.print_chat(send_level, recipient)
 
 	else -- FIXME: use the internal print function rather than this hacked together one
@@ -105,7 +114,7 @@ local function send_message(message, color, send_level, recipient, clear)
 			---@cast recipient -?
 			printer = game.players[recipient]
 		end
-		printer.print(message, {
+		printer.print(msg, {
 			color = color,
 			skip = defines.print_skip.never
 		})
@@ -115,10 +124,40 @@ end
 ---Turns the arguments into a LocalizedString
 ---@param header string
 ---@param player string
+---@param player_color Color
 ---@param message string
 ---@return LocalisedString message
-local function msg(header, player, message)
-	return {"", {"chat-localization."..header, player}, message}
+local function msg(header, player, player_color, message)
+	return {
+		"",
+		{
+			"chat-localization.colored-text",
+			{
+				"chat-localization."..header,
+				player
+			},
+			player_color[1] or player_color.r,
+			player_color[2] or player_color.g,
+			player_color[3] or player_color.b,
+		},
+		message
+	}
+end
+
+---Wraps the given LocalisedString or string in a LocalisedString
+---that colors the text. Mostly just a shorthand to avoid
+---turning the color objects into the argument array all the time
+---@param string LocalisedString
+---@param color Color
+---@return LocalisedString
+local function color(string, color)
+	return {
+		"chat-localization.colored-text",
+		string,
+		color[1] or color.r,
+		color[2] or color.g,
+		color[3] or color.b,
+	}
 end
 
 -- TODO: Add Nicknames?
@@ -128,4 +167,5 @@ return {
 	send_message = send_message,
 	process_message = process_message,
 	msg = msg,
+	color = color,
 }

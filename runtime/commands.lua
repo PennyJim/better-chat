@@ -4,6 +4,7 @@ local commands = {}
 
 local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
+local color = handle_messages.color
 
 --- TODO: Change entirely!
 ---Sends an ephemeral warning message to player
@@ -18,7 +19,12 @@ end
 ---@param message string
 local function shout(player, message)
 	message = handle_messages.process_message(player, message)
-	handle_messages.send_message(msg("bc-shout-header", player.name, message), player.chat_color, "global")
+	handle_messages.send_message{
+		message = msg("bc-shout-header", player.name, player.chat_color, message),
+		color = player.chat_color,
+		process_color = true,
+		send_level = "global",
+	}
 end
 ---Sends a message to a player
 ---@param player LuaPlayer
@@ -26,8 +32,20 @@ end
 ---@param message string
 local function whisper(player, recipient, message)
 	message = handle_messages.process_message(player, message)
-	handle_messages.send_message(msg("bc-whisper-to-header", recipient.name, message), player.chat_color, "player", player.index)
-	handle_messages.send_message(msg("bc-whisper-from-header", player.name, message), player.chat_color, "player", recipient.index)
+	handle_messages.send_message{
+		message = msg("bc-whisper-to-header", recipient.name, player.chat_color, message),
+		color = player.chat_color,
+		process_color = true,
+		send_level = "player",
+		recipient = player.index
+	}
+	handle_messages.send_message{
+		message = msg("bc-whisper-from-header", player.name, player.chat_color, message),
+		color = player.chat_color,
+		process_color = true,
+		send_level = "player",
+		recipient = recipient.index
+	}
 end
 
 commands.shout = function(player, event)
@@ -52,15 +70,18 @@ end
 --Admin promotion and demotion
 commands.promote = function (player, event)
 	if not player.admin then
-		return handle_messages.send_message({"cant-run-command-not-admin", "promote"},
-			nil, "player", player.index)
+		return handle_messages.send_message{
+			message = {"cant-run-command-not-admin", "promote"},
+			send_level = "player",
+			recipient = player.index
+		}
 	end
 
 	local target = event.parameters:match("%S+")
 	local promoted_player = game.get_player(target);
 
 	---@type LocalisedString
-	local message = {
+	local msg = {
 		"player-was-promoted",
 		target,
 		player.name
@@ -68,20 +89,32 @@ commands.promote = function (player, event)
 
 	-- TODO: figure out how to use `player-is-already-in-admin-list`
 	if promoted_player then
-		message[2] = promoted_player.name
+		msg[2] = color(promoted_player.name, promoted_player.chat_color)
 		if promoted_player.admin then
-			message[1] = "player-is-already-an-admin"
-			return handle_messages.send_message(message, nil, "player", player.index)
+			msg[1] = "player-is-already-an-admin"
+			return handle_messages.send_message{
+				message = msg,
+				send_level = "player",
+				recipient = player.index
+			}
 		end
 	else
-		message[1] = "player-was-added-to-admin-list"
+		msg[1] = "player-was-added-to-admin-list"
 	end
-	handle_messages.send_message(message, player.chat_color, "global")
+	handle_messages.send_message{
+		message = msg,
+		color = player.chat_color,
+		process_color = true,
+		send_level = "global",
+	}
 end
 commands.demote = function (player, event)
 	if not player.admin then
-		return handle_messages.send_message({"cant-run-command-not-admin", "promote"},
-			nil, "player", player.index)
+		return handle_messages.send_message{
+			message = {"cant-run-command-not-admin", "promote"},
+			send_level = "player",
+			recipient = player.index
+		}
 	end
 	local target = event.parameters:match("%S+")
 	local demoted_player = game.get_player(target);
@@ -94,15 +127,24 @@ commands.demote = function (player, event)
 
 	-- TODO: figure out how to use `player-is-not-in-admin-list`
 	if demoted_player then
-		message[2] = demoted_player.name
+		message[2] = color(demoted_player.name, demoted_player.chat_color)
 		if not demoted_player.admin then
 			message[1] = "player-is-not-an-admin"
-			return handle_messages.send_message(message, nil, "player", player.index)
+			return handle_messages.send_message{
+				message = message,
+				send_level = "player",
+				recipient = player.index
+			}
 		end
 	else
 		message[1] = "player-was-removed-from-admin-list"
 	end
-	handle_messages.send_message(message, player.chat_color, "global")
+	handle_messages.send_message{
+		message = message,
+		color = player.chat_color,
+		process_color = true,
+		send_level = "global"
+	}
 end
 
 -- script.on_event(defines.events.on_console_command, function (test)
