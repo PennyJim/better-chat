@@ -168,15 +168,15 @@ end
 ---@return Color
 local function process_color(color_settings, color)
 	local new_color = {
-		r = color.r,
-		g = color.g,
-		b = color.b
+		color[1] or color.r,
+		color[2] or color.g,
+		color[3] or color.b
 	}
 	--Brighten
 	local brighten_inverse = 1/(1-color_settings.brighten_percent)
-	new_color.r = new_color.r/brighten_inverse+color_settings.brighten_percent
-	new_color.g = new_color.g/brighten_inverse+color_settings.brighten_percent
-	new_color.b = new_color.b/brighten_inverse+color_settings.brighten_percent
+	new_color[1] = new_color[1]/brighten_inverse+color_settings.brighten_percent
+	new_color[2] = new_color[2]/brighten_inverse+color_settings.brighten_percent
+	new_color[3] = new_color[3]/brighten_inverse+color_settings.brighten_percent
 
 
 	return new_color
