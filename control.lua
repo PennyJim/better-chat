@@ -75,16 +75,26 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
 	local setting_type = event.setting_type --[[@as "runtime-per-user"|"runtime-global"]]
 	if event.setting == "bc-global-chat-history" then
 		local new_setting = settings.global[event.setting].value
-		send_message({"chat-localization.bc-global-history-changed", new_setting}, nil, "global")
+		send_message{
+			message = {"chat-localization.bc-global-history-changed", new_setting},
+			send_level = "global"
+		}
 		ChatHistoryManager.print_chat("global")
 	elseif event.setting == "bc-force-chat-history" then
 		local new_setting = settings.global[event.setting].value
-		send_message({"chat-localization.bc-force-history-changed", new_setting}, nil, "global")
+		send_message{
+			message = {"chat-localization.bc-force-history-changed", new_setting},
+			send_level = "global"
+		}
 		ChatHistoryManager.print_chat("global")
 	elseif event.setting == "bc-player-chat-history" then
 		if not event.player_index then return log("Who changed their setting???") end
 		local new_setting = settings.get_player_settings(event.player_index)[event.setting].value
-		send_message({"chat-localization.bc-player-history-changed", new_setting}, nil, "player", event.player_index)
+		send_message{
+			message = {"chat-localization.bc-player-history-changed", new_setting},
+			send_level = "player",
+			recipient = event.player_index
+		}
 		ChatHistoryManager.print_chat("player", event.player_index)
 	elseif setting_type == "runtime-per-user" and (
 		event.setting == "bc-color-fade" or
