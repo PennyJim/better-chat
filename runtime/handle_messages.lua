@@ -4,7 +4,7 @@ local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 ---@param text string
 ---@param pattern string
 ---@param replaceFun fun(match:string):string
----@return unknown
+---@return string
 local function replace_all(text, pattern, replaceFun)
 	local output = text
 	for match in text:gmatch(pattern) do
@@ -18,7 +18,9 @@ end
 
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
+---@return string
 local function replace_shortcodes(text)
+	--- FIXME: Only replaces the first shortcode..
 	return replace_all(text, "%:%S+%:", function (shortcode)
 		local item = nil
 		for _, dictionary in pairs(global.emojipacks) do
@@ -33,64 +35,8 @@ end
 ---@param text string
 ---@return string
 local function process_message(sender, text)
-	-- local fullMessage = ""
-
-	-- -- Add player name
-	-- fullMessage = fullMessage..sender.name..": "
-
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
-
-	--- Dropdown based icon settings
-	-- ---@alias icon-replacement-setting "bc-icon-none"|"bc-icon-signals"|"bc-icon-items"|"bc-icon-entities"|"bc-icon-almost-everything"|"bc-icon-everything"
-	-- local replacement_level = settings.get_player_settings(sender)["bc-icon-replacement"].value --[[@as icon-replacement-setting]]
-
-	-- if replacement_level == "bc-icon-everything" then goto everything
-	-- elseif replacement_level == "bc-icon-almost-everything" then goto almost_everything
-	-- elseif replacement_level == "bc-icon-entities" then goto entities
-	-- elseif replacement_level =="bc-icon-items" then goto items
-	-- elseif replacement_level == "bc-icon-signals" then goto signals
-	-- elseif replacement_level == "bc-icon-none" then goto none
-	-- end
-
-	-- ::everything::
-	-- message = replace_all(message, "%[achievement=%S+]", function (match)
-	-- 	return "[img=achievement."..match:sub(9)
-	-- end)
-	-- message = replace_all(message, "%[tile=%S+]", function (match)
-	-- 	return "[img=tile."..match:sub(9)
-	-- end)
-	-- message = replace_all(message, "%[item-group=%S+]", function (match)
-	-- 	return "[img=item-group."..match:sub(9)
-	-- end)
-
-	-- ::almost_everything::
-	-- message = replace_all(message, "%[technology=%S+]", function (match)
-	-- 	return "[img=technology."..match:sub(9)
-	-- end)
-	-- message = replace_all(message, "%[recipe=%S+]", function (match)
-	-- 	return "[img=recipe."..match:sub(9)
-	-- end)
-
-	-- ::entities::
-	-- message = replace_all(message, "%[entity=%S+]", function (match)
-	-- 	return "[img=entity."..match:sub(9)
-	-- end)
-
-	-- ::items::
-	-- message = replace_all(message, "%[item=%S+]", function (match)
-	-- 	return "[img=item."..match:sub(7)
-	-- end)
-	-- message = replace_all(message, "%[fluid=%S+]", function (match)
-	-- 	return "[img=fluid."..match:sub(8)
-	-- end)
-
-	-- ::signals::
-	-- message = replace_all(message, "%[virtual%-signal=%S+]", function (match)
-	-- 	return "[img=virtual-signal."..match:sub(17)
-	-- end)
-
-	-- ::none::
 
 	--- Toggle based icon settings
 	local player_settings = settings.get_player_settings(sender)
@@ -153,8 +99,10 @@ local function send_message(message, color, send_level, recipient, clear)
 		if send_level == "global" then
 			printer = game
 		elseif send_level == "force" then
+			---@cast recipient -?
 			printer = game.forces[recipient]
 		else
+			---@cast recipient -?
 			printer = game.players[recipient]
 		end
 		printer.print(message, {

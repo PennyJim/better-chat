@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: ????
+  Bugfixes:
+    - Research events are now sent to friendly forces
   Scripting:
     - Added a parameter to send_message to skip clearing the chat.
       This also makes the message actually make a sound when printed since it's not piggy-backing on the entire chat print which is silent by necessity
