@@ -2,6 +2,7 @@
 ---@field message LocalisedString
 ---@field tick integer
 ---@field color Color?
+---@field process_color boolean?
 
 ---@class ChatLog
 ---@field chat_array Chat[]
@@ -204,20 +205,10 @@ local function print_chats(player)
 		end
 
 		--Get general message color
-		local color = process_color(color_processing, chat.color or default_color)
+		local color = chat.color or default_color
 
-		if type(chat.message) == "table" and chat.message[1] == "" and
-			type(chat.message[2]) == "table" and
-			type(chat.message[2][1]) == "string" and
-		---@diagnostic disable-next-line: param-type-mismatch
-			chat.message[2][1]:find("chat%-localization") then
-				---Get header color in messages that use chat's header
-				local header_color = chat.color or default_color
-				chat.message[2][3] = header_color.r
-				chat.message[2][4] = header_color.g
-				chat.message[2][5] = header_color.b
-		else
-			color = chat.color
+		if chat.process_color then
+				color = process_color(color_processing, color)
 		end
 
 		--Print the message
