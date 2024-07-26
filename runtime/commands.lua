@@ -54,6 +54,7 @@ end
 commands.s = commands.shout
 commands.whisper = function(player, event)
 	local target = event.parameters:match("%S+")
+	if not target then return end
 	local recipient = game.get_player(target);
 
 	if not recipient then
