@@ -202,7 +202,8 @@ local function print_chats(player)
 	for chat in global.PlayerChatLog[player_index]:from() do
 
 		--Skip chat if doesn't need to be logged
-		if not isChatOpen and game.tick > chat.tick + message_linger then
+		if not (isChatOpen or player.controller_type == defines.controllers.spectator)
+		and game.tick > chat.tick + message_linger then
 			goto continue -- Skip printing message
 		end
 
