@@ -136,7 +136,7 @@ end
 ---@return LocalisedString message
 local function msg(header, player, message)
 	local name = player.name
-	if player.tag then
+	if player.tag and #player.tag > 0 then
 		name = name.." "..player.tag
 	end
 	local color = player.chat_color
