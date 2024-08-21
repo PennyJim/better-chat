@@ -6,6 +6,7 @@ Date: ????
   Commands:
     - Replicated /seed
     - Replicated /evolution
+    - Replicated /time
   Bugfixes:
     - /w and /s now actually work
     - Whispering now can't crash if there's no recipient passed

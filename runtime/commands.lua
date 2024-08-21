@@ -90,6 +90,55 @@ commands.evolution = function (player)
   }
 end
 
+commands.time = function (player)
+  local total_seconds = math.floor(game.ticks_played / 60)
+  local seconds = total_seconds % 60
+  local minutes = math.floor(total_seconds / 60) % 60
+  local hours = math.floor(total_seconds / 3600) % 24
+  local days = math.floor(total_seconds / 86400)
+
+  local added_time = false
+  ---@type LocalisedString
+  local message = {""}
+  if days > 0 then
+    message[#message+1] = {"days", days}
+    added_time = true
+  end
+
+  if hours > 0 then
+    if added_time then
+      message[#message+1] = ", "
+    end
+    message[#message+1] = {"hours", hours}
+    added_time = true
+  end
+
+  if minutes > 0 then
+    if added_time then
+      message[#message+1] = ", "
+    end
+    message[#message+1] = {"minutes", minutes}
+    added_time = true
+  end
+
+  if seconds > 0 then
+    if added_time then
+      message[#message+1] = ", "
+    end
+    message[#message+1] = {"seconds", seconds}
+    added_time = true
+  end
+
+  if #message > 2 then
+    message[#message-1] = {""," ",{"and"}," ",}
+  end
+
+  handle_messages.send_message{
+    message = message,
+    send_level = "player",
+    recipient = player.index
+  }
+end
 
 
 --Admin promotion and demotion
