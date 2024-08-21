@@ -70,13 +70,6 @@ script.on_init(function ()
 end)
 script.on_load(function ()
 	disableFunctions.register_enabled_listeners()
-	-- FIXME: Currently, singleplayer can load out of sync
-	-- script.on_nth_tick(1, function (p1)
-	-- 	if not game.is_multiplayer() then
-	-- 		isOpenDirty = true
-	-- 	end
-	-- 	script.on_nth_tick(p1.nth_tick, nil)
-	-- end)
 end)
 script.on_configuration_changed(function (change)
 	migrate(change, {chatOpenMeta})

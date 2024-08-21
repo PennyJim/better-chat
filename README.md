@@ -17,6 +17,9 @@ The arguments are:
 4. The id of the recipient force or player. (ignored for global broadcast)
 
 ## Todo List:
-- [ ] ~~Add toggleable chat timestamps?~~
+- [ ] Use *Proper* migrations
+- [ ] Add toggleable chat timestamps?
+  - They will be in hh:mm:ss format
+  - Start using game.ticks_played instead of game.tick?
 - [ ] Add moderation filters
 - [ ] Add nicknames

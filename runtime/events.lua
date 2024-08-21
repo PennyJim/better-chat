@@ -97,6 +97,9 @@ events[defines.events.on_player_respawned] = function (event)
 	}
 end
 
+-- TODO: Move the friendly broadcast into handle_messages
+-- FIXME: The friendly broadcast does not broadcast to the correct forces
+
 --Research Queueing
 events[defines.events.on_research_finished] = function (event)
 	if event.by_script then return end
