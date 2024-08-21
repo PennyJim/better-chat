@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field
+---@diagnostic disable: inject-field, no-unknown
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
 -- TODO: Make this *actual* migrations goddamn
