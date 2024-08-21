@@ -23,11 +23,17 @@ local function clean_emojipacks(changes)
 end
 
 script.on_event("bc-toggle-chat", function (event)
+  if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
+    return
+  end
 	global.isChatOpen[event.player_index] = not global.isChatOpen:check(event.player_index)
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Toggle Chat")
 end)
 script.on_event("bc-exit-chat", function (event)
+  if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
+    return
+  end
 	global.isChatOpen[event.player_index] = nil
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Exit Chat")
@@ -72,40 +78,49 @@ script.on_configuration_changed(function (change)
 	disableFunctions.reenable(change.mod_changes)
 end)
 script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
-	local setting_type = event.setting_type --[[@as "runtime-per-user"|"runtime-global"]]
-	if event.setting == "bc-global-chat-history" then
-		local new_setting = settings.global[event.setting].value
-		send_message{
-			message = {"chat-localization.bc-global-history-changed", new_setting},
-			send_level = "global"
-		}
-		ChatHistoryManager.print_chat("global")
-	elseif event.setting == "bc-force-chat-history" then
-		local new_setting = settings.global[event.setting].value
-		send_message{
-			message = {"chat-localization.bc-force-history-changed", new_setting},
-			send_level = "global"
-		}
-		ChatHistoryManager.print_chat("global")
-	elseif event.setting == "bc-player-chat-history" then
-		if not event.player_index then return log("Who changed their setting???") end
-		local new_setting = settings.get_player_settings(event.player_index)[event.setting].value
-		send_message{
-			message = {"chat-localization.bc-player-history-changed", new_setting},
-			send_level = "player",
-			recipient = event.player_index
-		}
-		ChatHistoryManager.print_chat("player", event.player_index)
-	elseif setting_type == "runtime-per-user" and (
-		event.setting == "bc-color-fade" or
-		event.setting == "bc-default-color" or
-		event.setting == "bc-error-color" or
-		event.setting == "bc-warn-color" or
-		event.setting == "bc-debug-color"
-	) then
-		if not event.player_index then return log("Who changed their setting???") end
-		ChatHistoryManager.print_chat("player", event.player_index)
-	end
+  local setting = event.setting
+  if event.setting_type == "runtime-global" then
+    if setting == "bc-global-chat-history"
+    or setting == "bc-force-chat-history" then
+      -- Send a message to notify the setting change
+      -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
+      local message = setting == "bc-global-chat-history" and
+        "chat-localization.bc-global-history-changed" or "chat-localization.bc-force-history-changed"
+      local new_setting = settings.global[setting].value
+      send_message{
+        message = {message, new_setting},
+        send_level = "global"
+      }
+      ChatHistoryManager.print_chat("global")
+    end
+  else
+    local player_index = event.player_index
+    if not player_index then return log("Who changed their setting???") end
+    if setting == "bc-player-chat-history" then
+      -- Send a message to notify the setting change
+      -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
+      local new_setting = settings.get_player_settings(event.player_index)[setting].value
+      send_message{
+        message = {"chat-localization.bc-player-history-changed", new_setting},
+        send_level = "player",
+        recipient = event.player_index
+      }
+      ChatHistoryManager.print_chat("player", event.player_index)
+    elseif setting == "bc-player-closeable-chat" then
+      -- Clear opened value when closeable is disabled
+      -- Also does it when enabled, but they should just be in main menu
+      global.isChatOpen[player_index--[[@as int]]] = nil
+    elseif (
+      setting == "bc-color-fade" or
+      setting == "bc-default-color" or
+      setting == "bc-error-color" or
+      setting == "bc-warn-color" or
+      setting == "bc-debug-color"
+    ) then
+      -- Reprint chat to update the the printed chat
+      ChatHistoryManager.print_chat("player", event.player_index)
+    end
+  end
 end)
 
 --#region Players/Forces Created/Destroyed

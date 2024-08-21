@@ -193,6 +193,7 @@ local function print_chats(player)
 	-- log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
+  local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
 	local message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
 	local color_processing = get_color_process_settings(player_settings)
@@ -202,7 +203,7 @@ local function print_chats(player)
 	for chat in global.PlayerChatLog[player_index]:from() do
 
 		--Skip chat if doesn't need to be logged
-		if not (isChatOpen or player.controller_type == defines.controllers.spectator)
+		if closeable and not (isChatOpen or player.controller_type == defines.controllers.spectator)
 		and game.tick > chat.tick + message_linger then
 			goto continue -- Skip printing message
 		end

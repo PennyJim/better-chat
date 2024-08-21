@@ -27,6 +27,13 @@ data:extend{
 	-- },
 }
 data:extend{
+  {
+    type = "bool-setting",
+    name = "bc-player-closeable-chat",
+    setting_type = "runtime-per-user",
+    default_value = true,
+    order = "player-aa",
+  },
 	{
 		type = "double-setting",
 		name = "bc-color-fade",
@@ -34,7 +41,7 @@ data:extend{
 		default_value = 0,
 		minimum_value = 0,
 		maximum_value = 1,
-		order = "player-aa"
+		order = "player-ab",
 	},
 	{
 		type = "int-setting",
