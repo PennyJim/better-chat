@@ -98,17 +98,19 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
     if setting == "bc-player-chat-history" then
       -- Send a message to notify the setting change
       -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
-      local new_setting = settings.get_player_settings(event.player_index)[setting].value
+      local new_setting = settings.get_player_settings(player_index)[setting].value
       send_message{
         message = {"chat-localization.bc-player-history-changed", new_setting},
         send_level = "player",
-        recipient = event.player_index
+        recipient = player_index
       }
-      ChatHistoryManager.print_chat("player", event.player_index)
+      ChatHistoryManager.print_chat("player", player_index)
     elseif setting == "bc-player-closeable-chat" then
       -- Clear opened value when closeable is disabled
       -- Also does it when enabled, but they should just be in main menu
       global.isChatOpen[player_index--[[@as int]]] = nil
+      -- Update chat to now match the openness it Should be now
+      ChatHistoryManager.print_chat("player", player_index)
     elseif (
       setting == "bc-color-fade" or
       setting == "bc-default-color" or
@@ -117,7 +119,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
       setting == "bc-debug-color"
     ) then
       -- Reprint chat to update the the printed chat
-      ChatHistoryManager.print_chat("player", event.player_index)
+      ChatHistoryManager.print_chat("player", player_index)
     end
   end
 end)
