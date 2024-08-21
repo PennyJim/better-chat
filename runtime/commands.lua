@@ -11,6 +11,7 @@ local color = handle_messages.color
 ---@param player LuaPlayer
 ---@param message LocalisedString
 local function warn(player, message)
+  handle_messages.clear_ephemeral(player.index)
 	player.print(message, settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]])
 end
 
@@ -53,13 +54,10 @@ commands.shout = function(player, event)
 end
 commands.s = commands.shout
 commands.whisper = function(player, event)
-	local target = event.parameters:match("%S+")
-	if not target then return end
+	local target = event.parameters:match("%S+")--[[@as string?]] or ""
 	local recipient = game.get_player(target);
 
 	if not recipient then
-		-- FIXME: How do I send this *after* the command response?
-		-- Maybe add a delay-send command?
 		return warn(player, {"player-doesnt-exist", target})
 	end
 
