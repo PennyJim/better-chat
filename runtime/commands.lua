@@ -47,6 +47,7 @@ local function whisper(player, recipient, message)
 		send_level = "player",
 		recipient = recipient.index
 	}
+  global.lastWhispered[recipient.index] = player.index
 end
 
 commands.shout = function(player, event)
@@ -65,6 +66,12 @@ commands.whisper = function(player, event)
 	whisper(player, recipient, message)
 end
 commands.w = commands.whisper
+commands.reply = function (player, event)
+  local recipient = game.get_player(global.lastWhispered[player.index] or "")
+  if not recipient then return end
+  whisper(player, recipient, event.parameters)
+end
+commands.r = commands.reply
 
 commands.seed = function (player)
   handle_messages.send_message{

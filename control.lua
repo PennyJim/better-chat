@@ -8,6 +8,7 @@ local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 ---@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
 ---@field disabledListeners table<defines.events, string[]>
 ---@field disabledCommands table<string, string[]>
+---@field lastWhispered table<int,int?>
 global = {}
 
 
@@ -59,6 +60,7 @@ local function setupGlobal()
 	global.isChatOpen = global.isChatOpen or setmetatable({}, chatOpenMeta)
 	global.disabledListeners = global.disabledListeners or {}
 	global.disabledCommands = global.disabledCommands or {}
+  global.lastWhispered = global.lastWhispered or {}
 end
 
 script.on_init(function ()

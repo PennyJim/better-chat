@@ -24,6 +24,7 @@ return function (stuff_changed, metatables)
 		elseif old_version == "0.2.8" then goto v0_2_8
 		elseif old_version == "0.3.0" then goto v0_3_0
 		elseif old_version == "0.3.1" then goto v0_3_1
+		elseif old_version == "0.3.2" then goto v0_3_2
 		else
 			game.print("Better Chat migrating from invalid version. Continue at your own risk")
 			return
@@ -182,5 +183,10 @@ return function (stuff_changed, metatables)
 				end
 			end
 		end
+
+		::v0_3_2::
+    do
+      global.lastWhispered = global.lastWhispered or {}
+    end
 	end
 end
