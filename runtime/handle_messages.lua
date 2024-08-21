@@ -1,4 +1,6 @@
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+---@class handle_messages
+local handle_messages = {}
 
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
@@ -34,7 +36,7 @@ end
 ---@param sender LuaPlayer
 ---@param text string
 ---@return string
-local function process_message(sender, text)
+function handle_messages.process_message(sender, text)
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
 
@@ -71,7 +73,7 @@ end
 ---Processes messsage, saves it to history, then sends latest x messages
 ---@param message messageParams
 ---@return string? Error
-local function send_message(message)
+function handle_messages.send_message(message)
 	local error = nil
 	local send_level = message.send_level
 	local recipient = message.recipient
@@ -134,7 +136,7 @@ end
 ---@param player LuaPlayer
 ---@param message string
 ---@return LocalisedString message
-local function msg(header, player, message)
+function handle_messages.msg(header, player, message)
 	local name = player.name
 	if player.tag and #player.tag > 0 then
 		name = name.." "..player.tag
@@ -162,7 +164,7 @@ end
 ---@param string LocalisedString
 ---@param color Color
 ---@return LocalisedString
-local function color(string, color)
+function handle_messages.color(string, color)
 	return {
 		"chat-localization.colored-text",
 		string,
@@ -175,9 +177,4 @@ end
 -- TODO: Add Nicknames?
 
 
-return {
-	send_message = send_message,
-	process_message = process_message,
-	msg = msg,
-	color = color,
-}
+return handle_messages
