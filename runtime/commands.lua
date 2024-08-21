@@ -6,7 +6,6 @@ local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
 local color = handle_messages.color
 
---- TODO: Change entirely!
 ---Sends an ephemeral warning message to player
 ---@param player LuaPlayer
 ---@param message LocalisedString
