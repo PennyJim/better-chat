@@ -74,6 +74,22 @@ commands.seed = function (player)
   }
 end
 
+commands.evolution = function (player)
+  local enemy_force = game.forces["enemy"]
+  local evolution_factor = enemy_force.evolution_factor
+  handle_messages.send_message{
+    message = {
+      "evolution-message",
+      string.format("%.4f", evolution_factor),
+      string.format("%d", enemy_force.evolution_factor_by_time / evolution_factor * 100),
+      string.format("%d", enemy_force.evolution_factor_by_pollution / evolution_factor * 100),
+      string.format("%d", enemy_force.evolution_factor_by_killing_spawners / evolution_factor * 100)
+    },
+    send_level = "player",
+    recipient = player.index
+  }
+end
+
 
 
 --Admin promotion and demotion
