@@ -3,6 +3,8 @@ Version: 0.3.3
 Date: ????
   Features:
     - You can now disable the 'closed' chat. This is intended to combat the latency issues with it without entirely removing it.
+  Commands:
+    - Replicated /seed
   Bugfixes:
     - /w and /s now actually work
     - Whispering now can't crash if there's no recipient passed

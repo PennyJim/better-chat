@@ -66,6 +66,14 @@ commands.whisper = function(player, event)
 end
 commands.w = commands.whisper
 
+commands.seed = function (player)
+  handle_messages.send_message{
+    message = game.surfaces["nauvis"].map_gen_settings.seed,
+    send_level = "player",
+    recipient = player.index
+  }
+end
+
 
 
 --Admin promotion and demotion
