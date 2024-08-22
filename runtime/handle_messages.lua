@@ -23,9 +23,9 @@ end
 ---@return string
 local function replace_shortcodes(text)
 	return replace_all(text, ":[^%s:]+:", function (shortcode)
-		local item = nil
+		local shortenedcode, item = shortcode:sub(2,-2), nil
 		for _, dictionary in pairs(global.emojipacks) do
-			item = dictionary[shortcode:sub(2,-2)] or item
+			item = dictionary[shortenedcode] or item
 		end
 		return item or shortcode
 	end)
