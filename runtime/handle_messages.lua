@@ -22,8 +22,7 @@ end
 ---@param text string
 ---@return string
 local function replace_shortcodes(text)
-	--- FIXME: Only replaces the first shortcode..
-	return replace_all(text, "%:%S+%:", function (shortcode)
+	return replace_all(text, ":[^%s:]+:", function (shortcode)
 		local item = nil
 		for _, dictionary in pairs(global.emojipacks) do
 			item = dictionary[shortcode:sub(2,-2)] or item
@@ -46,7 +45,7 @@ function handle_messages.process_message(sender, text)
 
 	for _,icon in pairs(icons) do
 		if(player_settings["bc-"..icon.."-icon"].value) then
-			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=%S+]", function (match)
+			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=%S-]", function (match)
 				return "[img="..icon.."."..match:sub(3+#icon)
 			end)
 		end
