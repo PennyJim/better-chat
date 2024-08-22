@@ -26,21 +26,18 @@ local ChatLog = {
 	trim = function(self, sizeLimit)
 		for i = self.top_index, self.last_index-sizeLimit, 1 do
 			self.top_index = i + 1
+			self.size = self.size - 1
 			self.chat_array[i] = nil
 		end
 	end,
 	---Return an iterator for every element in linked list
 	---@param self ChatLog
 	---@param first_index int?
-	---@return fun():Chat?
+	---@return fun(table:table<int,Chat>,index:int):int?,Chat?
+	---@return Chat[]
+	---@return int?
 	from = function(self, first_index)
-		local chat_array = self.chat_array
-		local i = first_index or self.top_index
-		i = i-1
-		return function()
-			i = 1 + i
-			return chat_array[i]
-		end
+		return next, self.chat_array, first_index
 	end
 }
 
@@ -59,7 +56,7 @@ local function newChatLog(oldLog, log_type)
 	}, chatMetatable)
 	if not oldLog then return newLog end
 
-	for chat in oldLog:from() do
+	for _,chat in oldLog:from() do
 		newLog:add(chat)
 	end
 	if (log_type=="force") then
@@ -199,14 +196,14 @@ local function print_chats(player)
 	-- log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
-  local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
+	local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
 	local message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
 	local color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
 	player.clear_console()
-	for chat in global.PlayerChatLog[player_index]:from() do
+	for _,chat in global.PlayerChatLog[player_index]:from() do
 
 		--Skip chat if doesn't need to be logged
 		if closeable and not (isChatOpen or player.controller_type == defines.controllers.spectator)
@@ -227,7 +224,7 @@ local function print_chats(player)
 			sound = defines.print_sound.never,
 			skip = defines.print_skip.never
 		})
-	    ::continue::
+			::continue::
 	end
 end
 

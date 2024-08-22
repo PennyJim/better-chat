@@ -3,9 +3,6 @@
 if global.disabledCommands then return log("skipping") end
 
 
--- global.disabledCommands = {}
--- global.disabledListeners = {}
-
 ---@param chat Chat
 local function process_message(chat)
   if type(chat.message) == "table" and chat.message[1] == ""
@@ -26,16 +23,16 @@ local function process_message(chat)
   end
 end
 
-for chat in global.GlobalChatLog:from() do
+for _,chat in global.GlobalChatLog:from() do
   process_message(chat)
 end
 for _,ChatLog in pairs(global.ForceChatLog) do
-  for chat in ChatLog:from() do
+  for _,chat in ChatLog:from() do
     process_message(chat)
   end
 end
 for _,ChatLog in pairs(global.PlayerChatLog) do
-  for chat in ChatLog:from() do
+  for _,chat in ChatLog:from() do
     process_message(chat)
   end
 end
