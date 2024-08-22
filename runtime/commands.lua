@@ -6,6 +6,22 @@ local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
 local color = handle_messages.color
 
+---Splits a string at 'sep'
+---@param str string
+---@param sep string?
+---@return string[]
+function string.split(str, sep)
+	---@type string[]
+	local fields = {}
+
+	sep = sep or " "
+	local pattern = string.format("([^%s]+)", sep)
+---@diagnostic disable-next-line: discard-returns
+	string.gsub(str, pattern, function(c) fields[#fields + 1] = c end)
+
+	return fields
+end
+
 ---Sends an ephemeral warning message to player
 ---@param player LuaPlayer
 ---@param message LocalisedString
