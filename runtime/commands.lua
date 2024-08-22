@@ -67,7 +67,9 @@ end
 commands.w = commands.whisper
 commands.reply = function (player, event)
   local recipient = game.get_player(global.lastWhispered[player.index] or "")
-  if not recipient then return end
+  if not recipient then
+    return warn(player, {"noone-to-reply"})
+  end
   whisper(player, recipient, event.parameters)
 end
 commands.r = commands.reply
