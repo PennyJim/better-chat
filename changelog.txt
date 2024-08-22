@@ -16,6 +16,7 @@ Date: ????
     - Whispering now can't crash if there's no recipient passed
     - Intentional ephemeral messages now actually replace system messages
     - Back to Back replaceables now work properly
+    - Technology messages should be sent to all friendly forces, not every force except the one who unlocked it
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2024-07-26

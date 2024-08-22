@@ -105,25 +105,13 @@ events[defines.events.on_research_finished] = function (event)
 	if event.by_script then return end
 	local research = event.research
 	local force = research.force
-	handle_messages.send_message{
+	handle_messages.broadcast_friendly{
 		message = {"technology-researched", research.localised_name},
-		-- color = force.color,
-		-- process_color = true,
+		color = force.color,
+		process_color = true,
 		send_level = "force",
 		recipient = force.index
 	}
-	for _, other_force in pairs(game.forces) do
-		if other_force ~= force
-		or other_force.is_friend(force) then
-			handle_messages.send_message{
-				message = {"technology-researched", research.localised_name},
-				color = force.color,
-				process_color = true,
-				send_level = "force",
-				recipient = other_force.index
-			}
-		end
-	end
 end
 --Research -- TODO: Get on_research_queued to become a real event
 -- events[defines.events.on_research_queued] = function (event)
@@ -135,26 +123,13 @@ events[defines.events.on_research_cancelled] = function (event)
 	-- if event.by_script then return end
 	local research = event.research
 	local force = event.force
-	handle_messages.send_message{
+	handle_messages.broadcast_friendly{
 		message = {"player-cancelled-research", {"chat-localization.unknown-player"}, research.localised_name},
-		-- color = force.color,
-		-- process_color = true,
+		color = force.color,
+		process_color = true,
 		send_level = "force",
 		recipient = force.index
 	}
-	-- Broadcast it to friendly forces
-	for _, other_force in pairs(game.forces) do
-		if other_force ~= force
-		or other_force.is_friend(force) then
-			handle_messages.send_message{
-				message = {"player-cancelled-research", {"chat-localization.unknown-player"}, research.localised_name},
-				color = force.color,
-				process_color = true,
-				send_level = "force",
-				recipient = other_force.index
-			}
-		end
-	end
 end
 
 --Banned and kicked

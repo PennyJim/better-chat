@@ -130,6 +130,22 @@ function handle_messages.send_message(message)
 	end
 end
 
+---Send a force-leve message and bcc every force
+---that considers this force friendly
+---Why not the other way round? Dunno. It's how base game does it :)
+---@param message messageParams.recipient
+function handle_messages.broadcast_friendly(message)
+  if message.send_level ~= "force" then error("This should *only* be for force level communications") end
+  local force_index = message.recipient--[[@as int]]
+
+	for _, other_force in pairs(game.forces) do
+		if other_force.is_friend(force_index) then
+      message.recipient = other_force.index
+			handle_messages.send_message(message)
+		end
+	end
+end
+
 ---Turns the arguments into a LocalizedString
 ---@param header string
 ---@param player LuaPlayer
