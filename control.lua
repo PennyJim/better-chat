@@ -1,5 +1,4 @@
 ---@alias historyLevel "global"|"force"|"player"
-local migrate = require("__better-chat__.runtime_migrations")
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
@@ -10,6 +9,8 @@ local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 ---@field disabledCommands table<string, string[]>
 ---@field lastWhispered table<int,int?>
 global = {}
+---@type {[string]:metatable}
+metatables = {}
 
 
 ---Clean emojipacks of unloaded mods
@@ -42,7 +43,7 @@ end)
 
 --#region Setup
 local isOpenDirty = false
-local chatOpenMeta = {
+metatables.chatOpenMeta = {
 	__index = {
 		check = function (self, player_index)
 			if isOpenDirty then
@@ -53,11 +54,11 @@ local chatOpenMeta = {
 		end
 	}
 }
-script.register_metatable("bc-chatOpen",chatOpenMeta)
+script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
 
 local function setupGlobal()
 	global.emojipacks = global.emojipacks or {}
-	global.isChatOpen = global.isChatOpen or setmetatable({}, chatOpenMeta)
+	global.isChatOpen = global.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
 	global.disabledListeners = global.disabledListeners or {}
 	global.disabledCommands = global.disabledCommands or {}
   global.lastWhispered = global.lastWhispered or {}
@@ -72,7 +73,7 @@ script.on_load(function ()
 	disableFunctions.register_enabled_listeners()
 end)
 script.on_configuration_changed(function (change)
-	migrate(change, {chatOpenMeta})
+  setupGlobal()
 	clean_emojipacks(change.mod_changes)
 	disableFunctions.reenable(change.mod_changes)
 end)

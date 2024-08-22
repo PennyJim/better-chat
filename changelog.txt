@@ -3,6 +3,8 @@ Version: 0.3.3
 Date: ????
   Features:
     - You can now disable the 'closed' chat. This is intended to combat the latency issues with it without entirely removing it.
+  Changes:
+    - Now uses real migrations instead of jank on_configuration_changed migrations.
   Commands:
     - Replicated /seed
     - Replicated /evolution
