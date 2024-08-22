@@ -90,6 +90,91 @@ commands.reply = function (player, event)
 end
 commands.r = commands.reply
 
+---@enum valid_colors
+local valid_colors = {
+  ["default"] = true,
+  ["red"] = true,
+  ["green"] = true,
+  ["blue"] = true,
+  ["orange"] = true,
+  ["yellow"] = true,
+  ["pink"] = true,
+  ["purple"] = true,
+  ["white"] = true,
+  ["black"] = true,
+  ["gray"] = true,
+  ["brown"] = true,
+  ["cyan"] = true,
+  ["acid"] = true,
+}
+
+commands.color = function (player, event)
+  local color_str = event.parameters
+  local values = color_str:split()
+  local num_values = #values
+
+  -- The game lets people define less than
+  -- 3 numbers, so we have to as well
+  values[2] = values[2] or "0"
+  values[3] = values[3] or "0"
+
+  -- Don't let sine-parameters through if they're
+  -- not valid colors or hexadecimal
+  if num_values == 1
+  and not valid_colors[color_str]
+  and not color_str:match("^#%x%x%x%x%x%x$")
+  and not color_str:match("^#%x%x%x%x%x%x%x%x$") then
+    return warn(player, {"unknown-color", color_str})
+  end
+
+  -- Don't let negative numbers through
+  if color_str:match("%-") then
+    return warn(player, {"unknown-color", color_str})
+  end
+
+  -- Make sure each number is a valid number
+  -- Unfilled ones already default to "0"
+  -- But we do have to worry about whether
+  -- the fourth exists or not
+  if not tonumber(values[1])
+  and not tonumber(values[2])
+  and not tonumber(values[3])
+  and (num_values ~= 4 or not tonumber(values[4])) then
+    return warn(player, {"unknown-color", color_str})
+  end
+
+
+  -- player-changed-color=__1__'s color is now __2__.
+  -- player-changed-color-singleplayer=Your color is now __1__.
+  ---@type historyLevel, int?
+  local send_level, recipient
+  ---@type LocalisedString
+  local message = {"player-changed-color", color_str}
+  ---@cast message -?
+
+  -- Change the message (and set a recipient)
+  -- depending on if it's multiplayer or not
+
+  -- Disabled because base game no longer does so??
+  -- if game.is_multiplayer() then
+    send_level = "global"
+    message[3] = message[2]
+    message[2] = color(player.name, player.chat_color)
+  -- else
+  --   send_level = "player"
+  --   message[1] = message[1].."-singleplayer"
+  --   recipient = player.index
+  -- end
+
+
+  handle_messages.send_message{
+    message = message,
+    color = player.chat_color,
+    send_level = send_level,
+    recipient = recipient,
+  }
+end
+
 commands.seed = function (player)
   handle_messages.send_message{
     message = game.surfaces["nauvis"].map_gen_settings.seed,
