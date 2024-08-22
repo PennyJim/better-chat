@@ -42,6 +42,18 @@ events[defines.events.on_player_joined_game] = function (event)
 		process_color = true,
 		send_level = "global"
 	}
+
+  if game.is_multiplayer() then
+    local setting = settings.get_player_settings(player)
+    if setting["bc-player-closeable-chat"].value then
+      handle_messages.send_message{
+        message = {"chat-localization.bc-latency-warning"},
+        color = setting["bc-warn-color"].value --[[@as Color]],
+        send_level = "player",
+        recipient = event.player_index
+      }
+    end
+  end
 end
 events[defines.events.on_player_left_game] =  function (event)
 	local player = game.get_player(event.player_index)
