@@ -1,19 +1,19 @@
 ---@class Chat
 ---@field message LocalisedString
----@field tick integer
+---@field tick int
 ---@field color Color?
 ---@field process_color boolean?
 
 ---@class ChatLog
 ---@field chat_array Chat[]
----@field size integer
----@field top_index integer
----@field last_index integer
+---@field size int
+---@field top_index int
+---@field last_index int
 local ChatLog = {
 	---Add a new element in the linked list
 	---@param self ChatLog
 	---@param chat Chat
-	---@param sizeLimit integer?
+	---@param sizeLimit int?
 	add = function(self, chat, sizeLimit)
 		self.size = self.size + 1
 		self.last_index = self.last_index + 1
@@ -22,7 +22,7 @@ local ChatLog = {
 	end,
 	---Trim elements from list until its equal to limit
 	---@param self ChatLog
-	---@param sizeLimit integer
+	---@param sizeLimit int
 	trim = function(self, sizeLimit)
 		for i = self.top_index, self.last_index-sizeLimit, 1 do
 			self.top_index = i + 1
@@ -31,7 +31,7 @@ local ChatLog = {
 	end,
 	---Return an iterator for every element in linked list
 	---@param self ChatLog
-	---@param first_index integer?
+	---@param first_index int?
 	---@return fun():Chat?
 	from = function(self, first_index)
 		local chat_array = self.chat_array
@@ -63,9 +63,9 @@ local function newChatLog(oldLog, log_type)
 		newLog:add(chat)
 	end
 	if (log_type=="force") then
-		newLog:trim(settings.global["bc-force-chat-history"].value--[[@as integer]])
+		newLog:trim(settings.global["bc-force-chat-history"].value--[[@as int]])
 	else
-		newLog:trim(settings.player["bc-player-chat-history"].value--[[@as integer]])
+		newLog:trim(settings.player["bc-player-chat-history"].value--[[@as int]])
 	end
 	return newLog
 end
@@ -74,7 +74,7 @@ end
 local manager = {}
 
 ---Adds a new chatlog for force_index if it didn't exist before
----@param force_index integer
+---@param force_index int
 manager.add_force = function(force_index)
 	if global.ForceChatLog[force_index] then return end
 	global.ForceChatLog[force_index] = newChatLog(
@@ -82,7 +82,7 @@ manager.add_force = function(force_index)
 	)
 end
 ---Adds a new chatlog for player_index if it didn't exist before
----@param player_index integer
+---@param player_index int
 manager.add_player = function(player_index)
 	if global.PlayerChatLog[player_index] then return end
 	global.PlayerChatLog[player_index] = newChatLog(
@@ -91,12 +91,12 @@ manager.add_player = function(player_index)
 end
 
 ---Removes a chatlog for deleted force
----@param force_index integer
+---@param force_index int
 manager.remove_force = function(force_index)
 	global.ForceChatLog[force_index] = nil
 end
 ---Removes a chatlog for removed player
----@param player_index integer
+---@param player_index int
 manager.remove_player = function(player_index)
 	global.PlayerChatLog[player_index] = nil
 end
@@ -106,7 +106,7 @@ end
 ---@field color Color?
 ---@field process_color boolean?
 ---@field level historyLevel
----@field chat_index integer?
+---@field chat_index int?
 ---Adds a message to chat history
 ---@param messageParams addMessageParams
 manager.add_message = function(messageParams)
@@ -120,34 +120,40 @@ manager.add_message = function(messageParams)
 
 	if messageParams.level =="global" then
 		-- Add message to global chat, every force, and every player
-		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value--[[@as integer]])
+		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value--[[@as int]])
 
-		local force_chat_history = settings.global["bc-force-chat-history"].value--[[@as integer]]
+		local force_chat_history = settings.global["bc-force-chat-history"].value--[[@as int]]
 		for _,force in pairs(game.forces) do
 			global.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
 
 		for _, player in pairs(game.players) do
 			local player_index = player.index
-			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
+			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
+
+
 	elseif messageParams.level == "force" then
-		local force_index = messageParams.chat_index --[[@as integer]]
+		local force_index = messageParams.chat_index --[[@as int]]
 		-- Add message to the force and players in the force
 		global.ForceChatLog[force_index]
-			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as integer]])
+			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as int]])
 
 		for _,player in pairs(game.forces[force_index].players) do
 			local player_index = player.index
-			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]]
+			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
 			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
+
+
 	elseif messageParams.level == "player" then
-		local player_index = messageParams.chat_index --[[@as integer]]
+		local player_index = messageParams.chat_index --[[@as int]]
 		-- Add message to the player
 		global.PlayerChatLog[messageParams.chat_index]
-			:add(newChat, settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as integer]])
+			:add(newChat, settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]])
+
+
 	else
 		log({"", {"bc-invalid-chat-level"}, serpent.line(messageParams), "\n"})
 	end
@@ -227,19 +233,19 @@ end
 
 ---Print out all messages for a group
 ---@param chat_level historyLevel
----@param chat_index integer?
+---@param chat_index int?
 manager.print_chat = function(chat_level, chat_index)
 	if chat_level == "global" then
 		for _, player in pairs(game.players) do
 			print_chats(player)
 		end
 	elseif chat_level == "force" then
-		---@cast chat_index integer
+		---@cast chat_index int
 		for _, player in pairs(game.forces[chat_index].players) do
 			print_chats(player)
 		end
 	elseif chat_level == "player" then
-		---@cast chat_index integer
+		---@cast chat_index int
 		local player = game.get_player(chat_index)
 		-- TODO: improve this error statement
 		if not player then return log("[ERR] Something has gone wrong") end
@@ -251,8 +257,8 @@ end
 
 ---@class BetterChatGlobal
 ---@field GlobalChatLog ChatLog
----@field ForceChatLog table<integer, ChatLog>
----@field PlayerChatLog table<integer, ChatLog>
+---@field ForceChatLog table<int, ChatLog>
+---@field PlayerChatLog table<int, ChatLog>
 
 ---Initializes Chat History
 manager.init = function()
