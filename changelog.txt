@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.3
-Date: ????
+Date: 2024-08-23
   Features:
     - A large portion of the Factorio Discord's emotes now have shortcodes available by default. Specifically the ones that are just in-game items.
     - You can now disable the 'closed' chat. This is intended to combat the latency issues with it without entirely removing it.
