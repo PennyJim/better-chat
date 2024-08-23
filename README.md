@@ -11,7 +11,7 @@ This functions by other mods calling `remote.call("emojipack registration", "add
 ## Scripting
 To print a permanent message instead of letting Better Chat clear it away, use `remote.call("better-chat", "send")`
 The arguments are:
-1. The `LocalizedString` that is the message
+1. The `LocalisedString` that is the message
 2. The `Color` of the message
 3. Whether the message is intended for `"global"` broadcast, a `"force"` level message, or a `"player"` specific message.
 4. The id of the recipient force or player. (ignored for global broadcast)
