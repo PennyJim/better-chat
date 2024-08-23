@@ -1,5 +1,6 @@
 ---@alias historyLevel "global"|"force"|"player"
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 ---@class BetterChatGlobal
@@ -16,12 +17,15 @@ metatables = {}
 ---Clean emojipacks of unloaded mods
 ---@param changes {[string]: ModChangeData}
 local function clean_emojipacks(changes)
-	local defunct_mods = {}
+	-- Remove emojipacks of unloaded mods
 	for mod_name in pairs(changes) do
 		if not changes[mod_name].new_version then
 			global.emojipacks[mod_name] = nil
 		end
 	end
+
+  --- Update the default emojipack
+  global.emojipacks[script.mod_name] = default_emojipack
 end
 
 script.on_event("bc-toggle-chat", function (event)
@@ -57,7 +61,9 @@ metatables.chatOpenMeta = {
 script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
 
 local function setupGlobal()
-	global.emojipacks = global.emojipacks or {}
+	global.emojipacks = global.emojipacks or {
+    [script.mod_name] = default_emojipack
+  }
 	global.isChatOpen = global.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
 	global.disabledListeners = global.disabledListeners or {}
 	global.disabledCommands = global.disabledCommands or {}
@@ -179,7 +185,7 @@ remote.add_interface("better-chat", {
 remote.add_interface("emojipack registration", {
 	add = function (mod_name, shortcode_dictionary)
 		if not script.active_mods[mod_name] then return end
-		global.emojipacks = global.emojipacks or {}
+		-- global.emojipacks = global.emojipacks or {}
 
 		global.emojipacks[mod_name] = shortcode_dictionary
 	end
