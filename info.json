@@ -9,7 +9,10 @@
 		"base >= 1.1.100"
 	],
 	"package": {
-		"ignore": [".git*"],
+		"ignore": [
+      ".git*",
+      "*.xcf"
+    ],
 		"readme": "README.md",
 		"sync_portal_details": true
 	}
