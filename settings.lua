@@ -38,7 +38,7 @@ data:extend{
 		type = "double-setting",
 		name = "bc-color-fade",
 		setting_type = "runtime-per-user",
-		default_value = 0,
+		default_value = 0.8,
 		minimum_value = 0,
 		maximum_value = 1,
 		order = "player-ab",
