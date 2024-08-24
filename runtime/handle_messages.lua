@@ -27,6 +27,14 @@ local function replace_shortcodes(text)
 		for _, dictionary in pairs(global.emojipacks) do
 			item = dictionary[shortenedcode] or item
 		end
+
+-- look into using https://gist.github.com/Badgerati/3261142
+-- with this?
+-- https://mx.hehe.si/articles/speeding-up-levenshtein.html
+-- https://www.logarithmic.net/pfh/blog/01164790008
+-- modified to shortcut if the distance is too large. 
+-- this'll reduce the difficulty of typos with the fact
+-- that you can't tab to auto-complete
 		return item or shortcode
 	end)
 end
