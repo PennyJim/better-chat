@@ -47,8 +47,10 @@ return {
   ["compilatron"] = "[img=entity.compilatron]",
   ["concrete"] = "[img=item.concrete]",
   ["constant_combinator"] = "[img=item.constant-combinator]",
-  ["construction_robot"] = "[img=item.construction-robot]",
-  -- ["construction_robot~1"] = "[img=utility/not_enough_construction_robots_icon]", -- FIXME: Support multiple shortcodes
+  ["construction_robot"] = {
+    "[img=item.construction-robot]",
+    "[img=utility/not_enough_construction_robots_icon]"
+  },
   ["copper_cable"] = "[img=item.copper-cable]",
   ["copper_ore"] = "[img=item.copper-ore]",
   ["copper_plate"] = "[img=item.copper-plate]",

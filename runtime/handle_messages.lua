@@ -23,9 +23,38 @@ end
 ---@return string
 local function replace_shortcodes(text)
 	return replace_all(text, ":[^%s:]+:", function (shortcode)
-		local shortenedcode, item = shortcode:sub(2,-2), nil
+		local shortenedcode = shortcode:sub(2,-2)
+    ---@type int|string?
+    local variation, count = shortenedcode:match("~%d+$"), 0
+
+    if variation then
+      ---@cast variation string
+      shortenedcode = shortenedcode:sub(1, -1-#variation)
+      variation = tonumber(variation:sub(2)) --[[@as int]] + 1
+    else
+      variation = 1
+    end
+
 		for _, dictionary in pairs(global.emojipacks) do
-			item = dictionary[shortenedcode] or item
+      local result = dictionary[shortenedcode]
+      if result then
+
+        if type(result) == "string" then
+          -- If it's the result
+          count = count + 1
+          if count == variation then
+            return result
+          end
+        else
+
+          -- If it's an array of results
+          local new_count = count + #result
+          if new_count >= variation then
+            return result[variation - count]
+          end
+          count = new_count
+        end
+      end
 		end
 
 -- look into using https://gist.github.com/Badgerati/3261142
@@ -35,7 +64,7 @@ local function replace_shortcodes(text)
 -- modified to shortcut if the distance is too large. 
 -- this'll reduce the difficulty of typos with the fact
 -- that you can't tab to auto-complete
-		return item or shortcode
+		return shortcode
 	end)
 end
 

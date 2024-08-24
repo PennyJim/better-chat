@@ -4,7 +4,7 @@ local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 ---@class BetterChatGlobal
----@field emojipacks table<string,table<string,string>>
+---@field emojipacks table<string,table<string,string[]|string>>
 ---@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
 ---@field disabledListeners table<defines.events, string[]>
 ---@field disabledCommands table<string, string[]>
