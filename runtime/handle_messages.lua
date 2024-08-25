@@ -18,6 +18,66 @@ local function replace_all(text, pattern, replaceFun)
 	return output
 end
 
+---Whether the string is closer than min_distance
+---
+---TODO: use [Levenshtein Automation](https://en.wikipedia.org/wiki/Levenshtein_automaton)
+---@param str1 string
+---@param str2 string
+---@param min_distance int
+---@return boolean is_closer
+---@return int? distance is returned when it is closer
+local function closer_test(str1, str2, min_distance)
+  local len1, len2 = #str1, #str2
+  ---@type table<int,table<int, int>>
+  local matrix, cost = {}, 0
+
+  local len_difference = math.abs(len1 - len2)
+  if (len_difference > min_distance) then
+    return false
+  end
+
+  -- initialise the base matrix values
+  for y = 0, len1, 1 do
+    matrix[y] = {}
+    matrix[y][0] = y
+  end
+  for x = 0, len2, 1 do
+    matrix[0][x] = x
+  end
+
+  local min = math.min
+  -- actual Levenshtein algorithm
+  for i = 1, len1, 1 do
+    for j = 1, len2, 1 do
+      if (str1:byte(i) == str2:byte(j)) then
+        cost = 0
+      else
+        cost = 1
+      end
+
+      matrix[i][j] = min(
+        matrix[i-1][j] + 1,
+        matrix[i][j-1] + 1,
+        matrix[i-1][j-1] + cost
+      )
+    end
+
+    if i >= min_distance then
+      cost = min(table.unpack(matrix[i]))
+      if cost > min_distance then
+        return false
+      end
+    end
+  end
+
+  cost = matrix[len1][len2]
+  if cost >= min_distance then
+    return false
+  else
+    return true, cost
+  end
+end
+
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
 ---@return string
@@ -60,14 +120,36 @@ local function replace_shortcodes(text)
       end
 		end
 
--- look into using https://gist.github.com/Badgerati/3261142
--- with this?
--- https://mx.hehe.si/articles/speeding-up-levenshtein.html
--- https://www.logarithmic.net/pfh/blog/01164790008
--- modified to shortcut if the distance is too large. 
--- this'll reduce the difficulty of typos with the fact
--- that you can't tab to auto-complete
-		return shortcode
+
+    -- Wasn't found, let's try a code that's levenshteinly close
+    -- unlesss a variation is specified or on a server
+    -- It is not optimized enough for that :P
+    if not game.is_multiplayer() and variation == 1 then
+
+      ---@type string[]|string?, int
+      local closest, closest_distance = nil, 3
+      ---@type boolean, int?
+      local is_closer, closer_distance = false, nil
+
+      for _, dictionary in pairs(global.emojipacks) do
+        for shortcode, replacement in pairs(dictionary) do
+          is_closer, closer_distance = closer_test(shortenedcode, shortcode, closest_distance)
+          if is_closer then
+            ---@cast closer_distance int
+            if closer_distance == 1 then
+              return type(replacement) == "string" and replacement or replacement[1]
+            end
+            closest = replacement
+            closest_distance = closer_distance
+          end
+        end
+      end
+
+      if closest then
+        return type(closest) == "string" and closest or closest[1]
+      end
+    end
+    return shortcode
 	end)
 end
 
