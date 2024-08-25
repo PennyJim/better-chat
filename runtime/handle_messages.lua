@@ -35,8 +35,11 @@ local function replace_shortcodes(text)
       variation = 1
     end
 
+    -- Define variables outside the loop
+    ---@type string[]|string, int
+    local result, new_count
 		for _, dictionary in pairs(global.emojipacks) do
-      local result = dictionary[shortenedcode]
+      result = dictionary[shortenedcode]
       if result then
 
         if type(result) == "string" then
@@ -48,7 +51,7 @@ local function replace_shortcodes(text)
         else
 
           -- If it's an array of results
-          local new_count = count + #result
+          new_count = count + #result
           if new_count >= variation then
             return result[variation - count]
           end
