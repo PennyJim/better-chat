@@ -21,57 +21,57 @@ end
 ---Whether the string is closer than min_distance
 ---
 ---TODO: use [Levenshtein Automation](https://en.wikipedia.org/wiki/Levenshtein_automaton)
----@param str1 string
----@param str2 string
----@param min_distance int
+---@param strY string
+---@param strX string
+---@param max_cost int
 ---@return boolean is_closer
 ---@return int? distance is returned when it is closer
-local function closer_test(str1, str2, min_distance)
-  local len1, len2 = #str1, #str2
+local function closer_test(strY, strX, max_cost)
+  local lenY, lenX = #strY, #strX
   ---@type table<int,table<int, int>>
   local matrix, cost = {}, 0
 
-  local len_difference = math.abs(len1 - len2)
-  if (len_difference > min_distance) then
+  local len_difference = math.abs(lenY - lenX)
+  if (len_difference > max_cost) then
     return false
   end
 
   -- initialise the base matrix values
-  for y = 0, len1, 1 do
+  for y = 1, lenY+1, 1 do
     matrix[y] = {}
-    matrix[y][0] = y
+    matrix[y][1] = y
   end
-  for x = 0, len2, 1 do
-    matrix[0][x] = x
+  for x = 1, lenX+1, 1 do
+    matrix[1][x] = x
   end
 
-  local min = math.min
+  local min, unpack = math.min, table.unpack
   -- actual Levenshtein algorithm
-  for i = 1, len1, 1 do
-    for j = 1, len2, 1 do
-      if (str1:byte(i) == str2:byte(j)) then
+  for y = 1, lenY, 1 do
+    for x = 1, lenX, 1 do
+      if (strY:byte(y) == strX:byte(x)) then
         cost = 0
       else
         cost = 1
       end
 
-      matrix[i][j] = min(
-        matrix[i-1][j] + 1,
-        matrix[i][j-1] + 1,
-        matrix[i-1][j-1] + cost
+      matrix[y+1][x+1] = min(
+        matrix[y][x+1] + 1,
+        matrix[y+1][x] + 1,
+        matrix[y][x] + cost
       )
     end
 
-    if i >= min_distance then
-      cost = min(table.unpack(matrix[i]))
-      if cost > min_distance then
+    if y >= max_cost then
+      cost = min(unpack(matrix[y]))
+      if cost > max_cost then
         return false
       end
     end
   end
 
-  cost = matrix[len1][len2]
-  if cost >= min_distance then
+  cost = matrix[lenY+1][lenX+1]
+  if cost >= max_cost then
     return false
   else
     return true, cost
