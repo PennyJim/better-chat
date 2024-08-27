@@ -2,6 +2,8 @@ local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 ---@class handle_messages
 local handle_messages = {}
 
+--MARK: Local functions
+
 ---Replaces all instances of a pattern with the output of the provided function
 ---@param text string
 ---@param pattern string
@@ -152,6 +154,8 @@ local function replace_shortcodes(text)
     return shortcode
 	end)
 end
+
+--MARK: public functions
 
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
