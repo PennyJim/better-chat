@@ -80,6 +80,66 @@ local function closer_test(strY, strX, max_cost)
   end
 end
 
+---Loop through the dictionaries to find the nth
+---instance of the given shortcode
+---@param given_code string
+---@param variation int
+---@return string?
+local function find_shortcode(given_code, variation)
+  -- Define variables outside the loop
+  local count = 0
+  ---@type string[]|string, int
+  local result, new_count
+  for _, dictionary in pairs(global.emojipacks) do
+    result = dictionary[given_code]
+    if result then
+
+      if type(result) == "string" then
+        -- If it's the result
+        count = count + 1
+        if count == variation then
+          return result
+        end
+      else
+
+        -- If it's an array of results
+        new_count = count + #result
+        if new_count >= variation then
+          return result[variation - count]
+        end
+        count = new_count
+      end
+    end
+  end
+end
+
+---Use the levenshtein algorithm to find the closest
+---shortcode to the text given
+---@param given_code string
+---@return string?
+local function Levenshtein_shortcodes(given_code)
+  ---@type string[]|string?, int
+  local closest, closest_distance = nil, 3
+  ---@type boolean, int?
+  local is_closer, closer_distance = false, nil
+
+  for _, dictionary in pairs(global.emojipacks) do
+    for shortcode, replacement in pairs(dictionary) do
+      is_closer, closer_distance = closer_test(given_code, shortcode, closest_distance)
+      if is_closer then
+        ---@cast closer_distance int
+        if closer_distance == 1 then
+          return type(replacement) == "string" and replacement or replacement[1]
+        end
+        closest = replacement
+        closest_distance = closer_distance
+      end
+    end
+  end
+
+  return type(closest) == "table" and closest[1] or closest --[[@as string?]]
+end
+
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
 ---@return string
@@ -87,7 +147,7 @@ local function replace_shortcodes(text)
 	return replace_all(text, ":[^%s:]+:", function (shortcode)
 		local shortenedcode = shortcode:sub(2,-2)
     ---@type int|string?
-    local variation, count = shortenedcode:match("~%d+$"), 0
+    local variation = shortenedcode:match("~%d+$")
 
     if variation then
       ---@cast variation string
@@ -97,61 +157,18 @@ local function replace_shortcodes(text)
       variation = 1
     end
 
-    -- Define variables outside the loop
-    ---@type string[]|string, int
-    local result, new_count
-		for _, dictionary in pairs(global.emojipacks) do
-      result = dictionary[shortenedcode]
-      if result then
-
-        if type(result) == "string" then
-          -- If it's the result
-          count = count + 1
-          if count == variation then
-            return result
-          end
-        else
-
-          -- If it's an array of results
-          new_count = count + #result
-          if new_count >= variation then
-            return result[variation - count]
-          end
-          count = new_count
-        end
-      end
-		end
-
+    local item = find_shortcode(shortenedcode, variation)
+    if item then
+      return item
+    end
 
     -- Wasn't found, let's try a code that's levenshteinly close
     -- unlesss a variation is specified or on a server
     -- It is not optimized enough for that :P
     if not game.is_multiplayer() and variation == 1 then
-
-      ---@type string[]|string?, int
-      local closest, closest_distance = nil, 3
-      ---@type boolean, int?
-      local is_closer, closer_distance = false, nil
-
-      for _, dictionary in pairs(global.emojipacks) do
-        for shortcode, replacement in pairs(dictionary) do
-          is_closer, closer_distance = closer_test(shortenedcode, shortcode, closest_distance)
-          if is_closer then
-            ---@cast closer_distance int
-            if closer_distance == 1 then
-              return type(replacement) == "string" and replacement or replacement[1]
-            end
-            closest = replacement
-            closest_distance = closer_distance
-          end
-        end
-      end
-
-      if closest then
-        return type(closest) == "string" and closest or closest[1]
-      end
+      item = Levenshtein_shortcodes(shortenedcode)
     end
-    return shortcode
+    return item or shortcode
 	end)
 end
 
