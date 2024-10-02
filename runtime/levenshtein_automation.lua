@@ -98,7 +98,8 @@ end
 
 ---@param state Levenshtein.state
 ---@param state_lookup Levenshtein.state_lookup.base
----@return int
+---@return int state_index
+---@return boolean is_cached
 local function find_lookup(state, state_lookup)
   ---@type Levenshtein.state_lookup, Levenshtein.state_lookup?
   local cur_table, next_table = state_lookup, nil
@@ -111,12 +112,12 @@ local function find_lookup(state, state_lookup)
 
   local state_id = cur_table.state
   if state_id then
-    return state_id
+    return state_id, true
   else
     local counter = state_lookup.counter + 1
     state_lookup.counter = counter
     cur_table.state = counter
-    return counter
+    return counter, false
   end
 end
 
@@ -131,15 +132,13 @@ end
 
 ---@param self Levenshtein.self
 ---@param state Levenshtein.state
----@param states Levenshtein.state[]
 ---@param state_lookup Levenshtein.state_lookup.base
 ---@param transitions Levenshtein.transition
 ---@param matches table<int,Levenshtein.match>
 ---@return integer
-local function explore(self, state, states, state_lookup, transitions, matches)
-  local state_index = find_lookup(state, state_lookup) --somehow hash?
-  if states[state_index] then return state_index end
-  states[state_index] = state
+local function explore(self, state, state_lookup, transitions, matches)
+  local state_index, is_cached = find_lookup(state, state_lookup) --somehow hash?
+  if is_cached then return state_index end
 
   local cur_match_distance = is_match(self, state)
   if cur_match_distance then
@@ -151,7 +150,7 @@ local function explore(self, state, states, state_lookup, transitions, matches)
   local next_state, next_index
   for _, character in pairs(next_chars) do
     next_state = step(self, state, character)
-    next_index = explore(self, next_state, states, state_lookup, transitions, matches)
+    next_index = explore(self, next_state, state_lookup, transitions, matches)
     insert(transitions, {state_index, next_index, character})
   end
   return state_index
@@ -173,7 +172,7 @@ function automation.generate_tree(input)
   ---@type Levenshtein.transition[], table<int,Levenshtein.match>
   local transitions, matches = {}, {}
 
-  explore(self, start(self), {}, {counter=0}, transitions, matches)
+  explore(self, start(self), {counter=0}, transitions, matches)
 
   ---@type Levenshtein.tree
   local tree = {
@@ -242,15 +241,13 @@ end
 
 ---@param trees Levenshtein.tree[]
 ---@param state Levenshtein.state
----@param state_list table<int,Levenshtein.state>
 ---@param states_lookup Levenshtein.state_lookup.base
 ---@param transitions Levenshtein.transition[]
 ---@param matching table<int,Levenshtein.match>
-local function merge_explore(trees, state, state_list, states_lookup, transitions, matching)
+local function merge_explore(trees, state, states_lookup, transitions, matching)
   -- Cache the state
-  local state_index = find_lookup(state, states_lookup)
-  if state_list[state_index] then return state_index end
-  state_list[state_index] = state
+  local state_index, is_cached = find_lookup(state, states_lookup)
+  if is_cached then return state_index end
 
   --- Keep variable allocation out of the loop
   ---@type table<int,Levenshtein.match>, table<int,true>
@@ -292,7 +289,7 @@ local function merge_explore(trees, state, state_list, states_lookup, transition
   local next_state, next_state_index
   for next_character in pairs(next_characters) do
     next_state = merge_step(trees, state, next_character)
-    next_state_index = merge_explore(trees, next_state, state_list, states_lookup, transitions, matching)
+    next_state_index = merge_explore(trees, next_state, states_lookup, transitions, matching)
     insert(transitions, {state_index, next_state_index, next_character})
   end
 
@@ -314,7 +311,7 @@ function automation.merge_trees(trees)
     initial_state[index] = 1
   end
 
-  merge_explore(trees, initial_state, {}, {counter=0}, transitions, matching)
+  merge_explore(trees, initial_state, {counter=0}, transitions, matching)
 
   ---@type Levenshtein.tree
   local new_tree = {
