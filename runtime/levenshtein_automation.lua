@@ -1,5 +1,6 @@
 --MARK: Setup
 local min, insert, unpack = math.min, table.insert, table.unpack
+local any_character = (":"):byte()
 
 ---@class Levenshtein.state : {[int]:int}
 
@@ -75,7 +76,7 @@ local function get_transitions(self, state)
   local set, cost = {}, 0
   ---@type {[int]:true}
   local chars, char = {}, 0
-  insert(set, 1,  ('*'):byte(1))
+  insert(set, 1,  any_character)
   for i = 1, #string, 1 do
     if state[i] <= max_cost then
       char = string:byte(i)
@@ -95,14 +96,15 @@ end
 -- ---@type {[int]:int}, {[int]:string}
 -- local match_distance, match_value = {}, {}
 
+---@class Levenshtein.state_lookup.base : Levenshtein.state_lookup
+---@field counter int
 ---@class Levenshtein.state_lookup : {[uint]: Levenshtein.state_lookup}
----@field [-1] int
+---@field state int?
 
 ---@param state Levenshtein.state
----@param state_lookup Levenshtein.state_lookup
----@param counter int
+---@param state_lookup Levenshtein.state_lookup.base
 ---@return int
-local function find_lookup(state, state_lookup, counter)
+local function find_lookup(state, state_lookup)
   ---@type Levenshtein.state_lookup, Levenshtein.state_lookup?
   local cur_table, next_table = state_lookup, nil
   for _, state_value in pairs(state) do
@@ -112,12 +114,13 @@ local function find_lookup(state, state_lookup, counter)
     cur_table = next_table
   end
 
-  local state_id = cur_table[-1]--[[@as int]]
+  local state_id = cur_table.state
   if state_id then
     return state_id
   else
-    counter = counter + 1
-    cur_table[-1] = counter
+    local counter = state_lookup.counter + 1
+    state_lookup.counter = counter
+    cur_table.state = counter
     return counter
   end
 end
@@ -127,24 +130,25 @@ end
 ---@field [2] int The next state
 ---@field [3] int The byte value of the character
 
+---@class Levenshtein.match
+---@field [1] string The matching value
+---@field [2] int The distance to the match
+
 ---@param self Levenshtein.self
 ---@param state Levenshtein.state
 ---@param states Levenshtein.state[]
----@param counter int
----@param state_lookup Levenshtein.state_lookup
+---@param state_lookup Levenshtein.state_lookup.base
 ---@param transitions Levenshtein.transition
----@param match_distance table<int,int>
----@param match_value table<int,string>
+---@param matches table<int,Levenshtein.match>
 ---@return integer
-local function explore(self, state, states, counter, state_lookup, transitions, match_distance, match_value)
-  local state_index = find_lookup(state, state_lookup, counter) --somehow hash?
+local function explore(self, state, states, state_lookup, transitions, matches)
+  local state_index = find_lookup(state, state_lookup) --somehow hash?
   if states[state_index] then return state_index end
   states[state_index] = state
 
   local cur_match_distance = is_match(self, state)
-  if cur_match_distance and cur_match_distance < (match_distance[state_index] or math.huge) then
-    match_distance[state_index] = cur_match_distance
-    match_value[state_index] = self.string
+  if cur_match_distance then
+    matches[state_index] = {self.string, cur_match_distance}
   end
 
   local next_chars = get_transitions(self, state)
@@ -152,29 +156,11 @@ local function explore(self, state, states, counter, state_lookup, transitions, 
   local next_state, next_index
   for _, character in pairs(next_chars) do
     next_state = step(self, state, character)
-    next_index = explore(self, next_state, states, counter, state_lookup, transitions, match_distance, match_value)
+    next_index = explore(self, next_state, states, state_lookup, transitions, matches)
     insert(transitions, {state_index, next_index, character})
   end
   return state_index
 end
-
--- ---@return { [int]: { [int]: int  }}
--- function convert_to_tree()
---   ---@type {[int]:{[int]:int}}
---   local tree = {}
---   for _, transition in pairs(transitions) do
---     local node = tree[transition[1]] or {}
---     tree[transition[1]] = node
-
---     if node[transition[3]] then
---       error("The same transitions lead to different states?")
---     end
-
---     node[transition[3]] = transition[2]
-    
---   end
---   return tree
--- end
 
 --MARK: External functions
 
@@ -182,25 +168,21 @@ end
 local automation = {}
 
 ---@class Levenshtein.tree : {[int]:table<int,int>}
----@field length int
----@field matching table<int,int>
+---@field matching table<int,Levenshtein.match>
 
 ---Add values to the tree, the keys of a table
 ---@param input string
+---@return Levenshtein.tree
 function automation.generate_tree(input)
-  local self = __init__(input, 3)
-  ---@type Levenshtein.transition[]
-  local transitions = {}
-  ---@type {[int]:int}, {[int]:string}
-  local match_distance, match_value = {}, {}
+  local self = __init__(input, 2)
+  ---@type Levenshtein.transition[], table<int,Levenshtein.match>
+  local transitions, matches = {}, {}
 
-  explore(self, start(self), {}, 0, {}, transitions, match_distance, match_value)
-
+  explore(self, start(self), {}, {counter=0}, transitions, matches)
 
   ---@type Levenshtein.tree
   local tree = {
-    length = #input,
-    matching = match_distance
+    matching = matches
   }
   for _, transition in pairs(transitions) do
     local node = tree[transition[1]] or {}
@@ -210,10 +192,10 @@ function automation.generate_tree(input)
   return tree
 end
 
----comment
+---Get which string in the tree the input is closest to
 ---@param input string
 ---@param tree Levenshtein.tree
----@return int? distance
+---@return Levenshtein.match?
 ---@nodiscard
 function automation.match(input, tree)
   local state_index = 1
