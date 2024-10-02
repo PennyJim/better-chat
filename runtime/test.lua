@@ -17,7 +17,7 @@ local default_tree = automation.merge_trees(default_trees)
 print(string.format("Done in %ss", time()-start))
 default_trees = nil
 collectgarbage()
-print(automation.to_graphviz("default", default_tree))
+automation.to_graphviz("default.gv", default_tree)
 
 
 print("Making twemoji trees..."); start = time()
@@ -32,14 +32,14 @@ local twemoji_tree = automation.merge_trees(twemoji_trees)
 print(string.format("Done in %ss", time()-start))
 twemoji_trees = nil
 collectgarbage()
-print(automation.to_graphviz("twemoji", default_tree))
+automation.to_graphviz("twemoji.gv", twemoji_tree)
 
 print("Merging both"); start = time()
 local tree = automation.merge_trees{default_tree, twemoji_tree}
 print(string.format("Done in %ss", time()-start))
 default_tree, twemoji_tree = nil, nil
 collectgarbage()
-print(automation.to_graphviz("both", tree))
+automation.to_graphviz("default_plus_twemoji.gv", tree)
 
 ---Whether the string is closer than min_distance
 ---

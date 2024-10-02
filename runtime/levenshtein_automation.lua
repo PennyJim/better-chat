@@ -318,7 +318,7 @@ local function merge_explore(trees)
 
     ::merge_continue::
     -- print("Job "..job_index..": "..current_job[4].."("..current_job[1]..") -> "..next_path.."("..state_index..")")
-    io.stderr:write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
+    io.write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
 
     local key = current_job[1]..":"..state_index
     if transitions[key] then
@@ -331,15 +331,13 @@ local function merge_explore(trees)
     jobs[job_index] = nil
     job_index, current_job = inext(jobs, job_index)
 
-    if not current_job then
-      print("Finished??")
-    end
-
     -- Reset tables
     possible_matches, next_characters = {}, {[any_character]=true}
     min_match, min_distance = nil, huge
   end
 
+  -- Exit the line we've been rewriting with io.write
+  print("")
   -- First transition is a dummy transition.
   transitions["0:1"] = nil
 
@@ -373,16 +371,17 @@ end
 
 --MARK: Debug visualizer
 
----@param graph_name string
+---@param file_path string
 ---@param tree Levenshtein.tree
-function automation.to_graphviz(graph_name, tree)
-  local output = {'digraph "'..graph_name..'" {'}
+function automation.to_graphviz(file_path, tree)
+  local file = io.open("file_path", "w")
+  file:write("digraph G {\n")
 
   for start_node, transition in pairs(tree) do
     if type(start_node) ~= "number" then goto continue end
 
     for character, end_node in pairs(transition) do
-      insert(output, string.format('%s->%s[label="%s"]', start_node, end_node, string.char(character)))
+      file:write(string.format('%s->%s[label="%s"]\n', start_node, end_node, string.char(character)))
     end
 
     ::continue::
@@ -407,10 +406,10 @@ function automation.to_graphviz(graph_name, tree)
       result_to_color[match[1]] = last_used_color
       color = last_used_color
     end
-    insert(output, string.format('%s[label="%s:%s"color="%s"style=filled]', state, match[1], match[2], colors[color]))
+    file:write(string.format('%s[label="%s:%s"color="%s"style=filled]\n', state, match[1], match[2], colors[color]))
   end
-  insert(output, "}")
-  return concat(output, "\n")
+  file:write("}")
+  file:close()
 end
 
 -- local dynamic = automation.generate_tree("dynamic")
