@@ -89,12 +89,7 @@ local function get_transitions(self, state)
   return set
 end
 
--- ---@type {[int]:Levenshtein.state}, int
--- local states, counter = {}, 0
--- ---@type {[1]:int,[2]:int,[3]:int}[]
--- local transitions = {}
--- ---@type {[int]:int}, {[int]:string}
--- local match_distance, match_value = {}, {}
+--MARK: Single Tree
 
 ---@class Levenshtein.state_lookup.base : Levenshtein.state_lookup
 ---@field counter int
@@ -210,96 +205,170 @@ function automation.match(input, tree)
   return tree.matching[state_index]
 end
 
+---MARK: Multi-Tree
 
-
-
-
-
-
-
-
-
-
-local words = {
-  "woof",
-  "Another string",
-  "For more testing",
-  "Because I need lots of words",
-  "construction_robot",
-  "wood",
-}
-
-local mispelling = {
-  "wof",
-  "woof",
-  "wppf",
-  "Anotherstring",
-  "another strings",
-  "becuase I need lots of words",
-  "because I need lots if words",
-  "bcause I need ltos of words",
-  "construction_rbot",
-  "construction_bot",
-  "constuction_rbot",
-  "construction_robots",
-  "wood",
-  "Woog",
-  "wod",
-  "wppd",
-
-}
-
-for _, word in pairs(mispelling) do
-  local tree = automation.generate_tree(word)
-  local min_distance, cur_word = math.huge, nil
-  for _, query in pairs(words) do
-    if #query + 3 >= tree.length
-    or #query - 3 <= tree.length then
-      local distance = automation.match(query, tree)
-      if distance and distance < min_distance then
-        min_distance = distance
-        cur_word = query
-      end
+---@param trees Levenshtein.tree[]
+---@param cur_state Levenshtein.state
+---@param character int
+---@return table<int,int> new_state
+local function merge_step(trees, cur_state, character)
+  ---@type table<int,int>
+  local new_states = {}
+  ---@type table<int,int>, int?
+  local individual_steps, individual_state
+  for index, cur_state in pairs(cur_state) do
+    -- If the state is invalid, set it and skip
+    if cur_state == -10 then
+      new_states[index] = -10
+      goto continue
     end
-  end
 
-  print(min_distance, word, "->", cur_word)
+    -- Increment the state
+    individual_steps = trees[index][cur_state]
+    individual_state = individual_steps[character]
+    -- Default to `any_character` if the given character does not have a transition
+    if not individual_state then individual_state = individual_steps[any_character] end
+    -- And only use the new state if it's not looping
+    if individual_state ~= cur_state then
+      new_states[index] = individual_state
+    else
+      new_states[index] = -10
+    end
+
+    ::continue::
+  end
+  return new_states
 end
 
+---@param trees Levenshtein.tree[]
+---@param state Levenshtein.state
+---@param state_list table<int,Levenshtein.state>
+---@param states_lookup Levenshtein.state_lookup.base
+---@param transitions Levenshtein.transition[]
+---@param matching table<int,Levenshtein.match>
+local function merge_explore(trees, state, state_list, states_lookup, transitions, matching)
+  -- Cache the state
+  local state_index = find_lookup(state, states_lookup)
+  if state_list[state_index] then return state_index end
+  state_list[state_index] = state
 
--- local tree = convert_to_tree()
+  --- Keep variable allocation out of the loop
+  ---@type table<int,Levenshtein.match>, table<int,true>
+  local possible_matches, next_characters = {}, {[any_character]=true}
+  ---@type Levenshtein.tree, {[1]:string,[2]:int}
+  local cur_tree, match
 
--- print(automation.find("wand", tree))
--- print(automation.find("wood", tree))
+  for index, individual_state in pairs(state) do
+    -- Skip and ignore invalid states
+    if individual_state == -10 then goto continue end
 
--- print(automation.find("wand", tree))
--- print(automation.find("wood", tree))
--- print(automation.find("woog", tree))
--- print(automation.find("another sure", tree))
--- print(automation.find("fer more testing", tree))
--- print(automation.find("MORE", tree))
--- print(automation.find("Because I kind of assume that to be untrue...", tree))
+    cur_tree = trees[index]
+    -- Check if it now matches
+    match = cur_tree.matching[individual_state]
+    if match then
+      possible_matches[index] = match
+    end
 
--- table.sort(transitions, function (a, b)
---   if a[1] ~= b[1] then return a[1] < b[1] end
---   if a[3] ~= b[3] then return a[3] < b[3] end
---   return a[2] < b[2]
--- end)
+    -- Record all possible steps forward
+    for character in pairs(cur_tree[individual_state]) do
+      next_characters[character] = true
+    end
 
--- for index, transition in pairs(transitions) do
---   while table.compare(transition, transitions[index+1] or {}) do
---     table.remove(transitions, index+1)
---   end
--- end
+    ::continue::
+  end
 
--- print("digraph G {")
--- for _, transition in pairs(transitions) do
---   print(string.format('%s -> %s [label=" %s "]', transition[1]-1, transition[2]-1, transition[3]))
--- end
--- for _, match in pairs(match_distance) do
---   print(string.format('%s [style=filled]', match-1))
--- end
--- print("}")
+  -- Choose the closest match
+  local min_match, min_distance = nil, math.huge
+  for index, match in pairs(possible_matches) do
+    if match[2] < min_distance then
+      min_match, min_distance = match[1], match[2]
+    end
+  end
+  if min_match then
+    matching[state_index] = {min_match, min_distance}
+  end
 
+  ---@type Levenshtein.state, int
+  local next_state, next_state_index
+  for next_character in pairs(next_characters) do
+    next_state = merge_step(trees, state, next_character)
+    next_state_index = merge_explore(trees, next_state, state_list, states_lookup, transitions, matching)
+    insert(transitions, {state_index, next_state_index, next_character})
+  end
+
+  return state_index
+end
+
+---Merge an array of given trees into a single tree
+---@param trees Levenshtein.tree[]
+function automation.merge_trees(trees)
+
+  ---For exploring
+  ---@type table<int,Levenshtein.match>, Levenshtein.transition[]
+  local matching, transitions = {}, {}
+
+  --Make the new initial state
+  ---@type Levenshtein.state
+  local initial_state = {}
+  for index in pairs(trees) do
+    initial_state[index] = 1
+  end
+
+  merge_explore(trees, initial_state, {}, {counter=0}, transitions, matching)
+
+  ---@type Levenshtein.tree
+  local new_tree = {
+    -- length = #input,
+    matching = matching
+  }
+  for _, transition in pairs(transitions) do
+    local node = new_tree[transition[1]] or {}
+    new_tree[transition[1]] = node
+    node[transition[3]] = transition[2]
+  end
+  return new_tree
+end
+
+--MARK: Debug visualizer
+
+---@param graph_name string
+---@param tree Levenshtein.tree
+function automation.to_graphviz(graph_name, tree)
+  local output = {'digraph "'..graph_name..'" {'}
+
+  for start_node, transition in pairs(tree) do
+    if type(start_node) ~= "number" then goto continue end
+
+    for character, end_node in pairs(transition) do
+      insert(output, string.format('%s -> %s [label=" %s "]', start_node, end_node, string.char(character)))
+    end
+
+    ::continue::
+  end
+
+  ---@type table<string,int>
+  result_to_color = {}
+  colors = {
+    "#00ff00",
+    "#0000ff",
+    "#ff0000",
+    "#ff00ff",
+    "#ffff00",
+    "#00ffff",
+  }
+  last_used_color = 0
+
+  for state, match in pairs(tree.matching) do
+    local color = result_to_color[match[1]]
+    if not color then
+      last_used_color = last_used_color + 1
+      result_to_color[match[1]] = last_used_color
+      color = last_used_color
+    end
+    insert(output, string.format('%s [label="%s:%s" color="%s" style=filled]', state, match[1], match[2], colors[color]))
+  end
+  insert(output, "}")
+  return table.concat(output, "\n")
+end
 
 return automation
