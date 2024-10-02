@@ -1,5 +1,5 @@
 --MARK: Setup
-local min, insert, unpack = math.min, table.insert, table.unpack
+local min, insert, unpack, concat = math.min, table.insert, table.unpack, table.concat
 local any_character = (":"):byte()
 
 ---@class Levenshtein.state : {[int]:int}
@@ -91,32 +91,23 @@ end
 
 --MARK: Single Tree
 
----@class Levenshtein.state_lookup.base : Levenshtein.state_lookup
+---@class Levenshtein.state_lookup : {[string]: int?}
 ---@field counter int
----@class Levenshtein.state_lookup : {[uint]: Levenshtein.state_lookup}
----@field state int?
 
 ---@param state Levenshtein.state
----@param state_lookup Levenshtein.state_lookup.base
+---@param state_lookup Levenshtein.state_lookup
 ---@return int state_index
 ---@return boolean is_cached
 local function find_lookup(state, state_lookup)
-  ---@type Levenshtein.state_lookup, Levenshtein.state_lookup?
-  local cur_table, next_table = state_lookup, nil
-  for _, state_value in pairs(state) do
-    next_table = cur_table[state_value]--[[@as Levenshtein.state_lookup?]] or {}
-    cur_table[state_value] = next_table
+  local index = concat(state, ":")
+  local state_id = state_lookup[index]
 
-    cur_table = next_table
-  end
-
-  local state_id = cur_table.state
   if state_id then
     return state_id, true
   else
     local counter = state_lookup.counter + 1
     state_lookup.counter = counter
-    cur_table.state = counter
+    state_lookup[index] = counter
     return counter, false
   end
 end
@@ -132,7 +123,7 @@ end
 
 ---@param self Levenshtein.self
 ---@param state Levenshtein.state
----@param state_lookup Levenshtein.state_lookup.base
+---@param state_lookup Levenshtein.state_lookup
 ---@param transitions Levenshtein.transition
 ---@param matches table<int,Levenshtein.match>
 ---@return integer
@@ -241,7 +232,7 @@ end
 
 ---@param trees Levenshtein.tree[]
 ---@param state Levenshtein.state
----@param states_lookup Levenshtein.state_lookup.base
+---@param states_lookup Levenshtein.state_lookup
 ---@param transitions Levenshtein.transition[]
 ---@param matching table<int,Levenshtein.match>
 local function merge_explore(trees, state, states_lookup, transitions, matching)
@@ -284,13 +275,19 @@ local function merge_explore(trees, state, states_lookup, transitions, matching)
   if min_match then
     matching[state_index] = {min_match, min_distance}
   end
-
+  
+  local start_memory = collectgarbage("count")
   ---@type Levenshtein.state, int
   local next_state, next_state_index
   for next_character in pairs(next_characters) do
     next_state = merge_step(trees, state, next_character)
     next_state_index = merge_explore(trees, next_state, states_lookup, transitions, matching)
     insert(transitions, {state_index, next_state_index, next_character})
+  end
+  local end_memory = collectgarbage("count")
+  if end_memory - start_memory > 1e6 then
+    print(end_memory - start_memory)
+    collectgarbage()
   end
 
   return state_index
@@ -311,7 +308,11 @@ function automation.merge_trees(trees)
     initial_state[index] = 1
   end
 
+  
+  -- collectgarbage("setstepmul", 2e9)
+  collectgarbage("generational")
   merge_explore(trees, initial_state, {counter=0}, transitions, matching)
+  collectgarbage("incremental")
 
   ---@type Levenshtein.tree
   local new_tree = {
@@ -365,7 +366,7 @@ function automation.to_graphviz(graph_name, tree)
     insert(output, string.format('%s [label="%s:%s" color="%s" style=filled]', state, match[1], match[2], colors[color]))
   end
   insert(output, "}")
-  return table.concat(output, "\n")
+  return concat(output, "\n")
 end
 
 return automation

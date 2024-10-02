@@ -2,17 +2,13 @@ local default_shortcodes = require("better-chat/runtime/default_shortcodes")
 local twemoji_shortcodes = require("twemoji-in-factorio/assets/shortcodes/joypixels") --[[@as table<string,string>]]
 local automation = require("better-chat/runtime/levenshtein_automation")
 local insert, time, start = table.insert, os.time--[[@as fun():int]], 0
+
+
 print("Making default trees..."); start = time()
 ---@type Levenshtein.tree[]
 local default_trees = {}
 for code in pairs(default_shortcodes) do
 	insert(default_trees, automation.generate_tree(code))
-end
-print(string.format("Done in %ss", time()-start))
-print("Making twemoji trees..."); start = time()
-local twemoji_trees = {}
-for code in pairs(twemoji_shortcodes) do
-	insert(twemoji_trees, automation.generate_tree(code))
 end
 print(string.format("Done in %ss", time()-start))
 
@@ -21,11 +17,21 @@ local default_tree = automation.merge_trees(default_trees)
 print(string.format("Done in %ss", time()-start))
 default_trees = nil
 collectgarbage()
+
+
+print("Making twemoji trees..."); start = time()
+local twemoji_trees = {}
+for code in pairs(twemoji_shortcodes) do
+	insert(twemoji_trees, automation.generate_tree(code))
+end
+print(string.format("Done in %ss", time()-start))
+
 print("Merging twemoji trees into one..."); start = time()
 local twemoji_tree = automation.merge_trees(twemoji_trees)
 print(string.format("Done in %ss", time()-start))
 twemoji_trees = nil
 collectgarbage()
+
 print("Merging both"); start = time()
 local tree = automation.merge_trees{default_tree, twemoji_tree}
 print(string.format("Done in %ss", time()-start))
