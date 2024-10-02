@@ -1,5 +1,5 @@
 --MARK: Setup
-local min, insert, unpack, concat = math.min, table.insert, table.unpack, table.concat
+local min, insert, unpack, concat, huge = math.min, table.insert, table.unpack, table.concat, math.huge
 local any_character = (":"):byte()
 
 ---@class Levenshtein.state : {[int]:int}
@@ -231,98 +231,142 @@ local function merge_step(trees, cur_state, character)
 end
 
 ---@param trees Levenshtein.tree[]
----@param state Levenshtein.state
----@param states_lookup Levenshtein.state_lookup
----@param transitions Levenshtein.transition[]
----@param matching table<int,Levenshtein.match>
-local function merge_explore(trees, state, states_lookup, transitions, matching)
-  -- Cache the state
-  local state_index, is_cached = find_lookup(state, states_lookup)
-  if is_cached then return state_index end
+---@return table<string,int> transitions
+---@return Levenshtein.match[] matching
+local function merge_explore(trees)
+  ---@type Levenshtein.state_lookup
+  local states_lookup = {counter=0}
+  ---@type table<string,int>
+  local transitions = {}
+  ---@type table<int,Levenshtein.match>
+  local matching = {}
+
+  --Make the initial state
+  ---@type Levenshtein.state, Levenshtein.state
+  local state, next_state = {}, {}
+  for index in pairs(trees) do
+    state[index] = 1
+  end
+
+  ---@class Levenshtein.job : Levenshtein.transition
+  ---@field [2] Levenshtein.state Current State
+  ---@field [4] string Source path
+  ---@type string
+  local next_path = ""
+  ---@type Levenshtein.job[]
+  local jobs, num_jobs = {
+    {0, state, 0, ""}
+  }, 1
+  local inext = ipairs(jobs)
+  local job_index, current_job = inext(jobs, 0)
+
 
   --- Keep variable allocation out of the loop
+
+  ---@type int, boolean
+  local state_index, is_cached
+
   ---@type table<int,Levenshtein.match>, table<int,true>
   local possible_matches, next_characters = {}, {[any_character]=true}
   ---@type Levenshtein.tree, {[1]:string,[2]:int}
   local cur_tree, match
+  local min_match, min_distance = nil, huge
 
-  for index, individual_state in pairs(state) do
-    -- Skip and ignore invalid states
-    if individual_state == -10 then goto continue end
-
-    cur_tree = trees[index]
-    -- Check if it now matches
-    match = cur_tree.matching[individual_state]
-    if match then
-      possible_matches[index] = match
+  while current_job do
+    state = current_job[2]
+    state_index, is_cached = find_lookup(state, states_lookup)
+    if is_cached then
+      goto merge_continue --Merge Continue also adds the transition
     end
 
-    -- Record all possible steps forward
-    for character in pairs(cur_tree[individual_state]) do
-      next_characters[character] = true
-    end
+    -- Process each state
+    for index, individual_state in pairs(state) do
+      -- Skip and ignore invalid states
+      if individual_state == -10 then goto individual_continue end
 
-    ::continue::
-  end
+      cur_tree = trees[index]
+      -- Check if it now matches
+      match = cur_tree.matching[individual_state]
+      if match then
+        possible_matches[index] = match
+      end
+
+      -- Record all possible steps forward
+      for character in pairs(cur_tree[individual_state]) do
+        next_characters[character] = true
+      end
+
+      ::individual_continue::
+    end
 
   -- Choose the closest match
-  local min_match, min_distance = nil, math.huge
-  for index, match in pairs(possible_matches) do
-    if match[2] < min_distance then
-      min_match, min_distance = match[1], match[2]
+    for index, match in pairs(possible_matches) do
+      if match[2] < min_distance then
+        min_match, min_distance = match[1], match[2]
+      end
     end
-  end
-  if min_match then
-    matching[state_index] = {min_match, min_distance}
-  end
-  
-  local start_memory = collectgarbage("count")
-  ---@type Levenshtein.state, int
-  local next_state, next_state_index
-  for next_character in pairs(next_characters) do
-    next_state = merge_step(trees, state, next_character)
-    next_state_index = merge_explore(trees, next_state, states_lookup, transitions, matching)
-    insert(transitions, {state_index, next_state_index, next_character})
-  end
-  local end_memory = collectgarbage("count")
-  if end_memory - start_memory > 1e6 then
-    print(end_memory - start_memory)
-    collectgarbage()
+    if min_match then
+      matching[state_index] = {min_match, min_distance}
+    end
+
+    next_path = current_job[4]..string.char(current_job[3])
+    for next_character in pairs(next_characters) do
+      next_state = merge_step(trees, state, next_character)
+      num_jobs = num_jobs + 1
+      jobs[num_jobs] = {state_index, next_state, next_character, next_path}
+    end
+
+    ::merge_continue::
+    -- print("Job "..job_index..": "..current_job[4].."("..current_job[1]..") -> "..next_path.."("..state_index..")")
+    io.stderr:write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
+
+    local key = current_job[1]..":"..state_index
+    if transitions[key] then
+      transitions[key] = any_character
+    else
+      transitions[key] = current_job[3]
+    end
+
+    -- Remove job from list and get the next job
+    jobs[job_index] = nil
+    job_index, current_job = inext(jobs, job_index)
+
+    if not current_job then
+      print("Finished??")
+    end
+
+    -- Reset tables
+    possible_matches, next_characters = {}, {[any_character]=true}
+    min_match, min_distance = nil, huge
   end
 
-  return state_index
+  -- First transition is a dummy transition.
+  transitions["0:1"] = nil
+
+  return transitions, matching
 end
 
 ---Merge an array of given trees into a single tree
 ---@param trees Levenshtein.tree[]
 function automation.merge_trees(trees)
 
-  ---For exploring
-  ---@type table<int,Levenshtein.match>, Levenshtein.transition[]
-  local matching, transitions = {}, {}
-
-  --Make the new initial state
-  ---@type Levenshtein.state
-  local initial_state = {}
-  for index in pairs(trees) do
-    initial_state[index] = 1
-  end
-
-  
-  -- collectgarbage("setstepmul", 2e9)
-  collectgarbage("generational")
-  merge_explore(trees, initial_state, {counter=0}, transitions, matching)
-  collectgarbage("incremental")
+  -- collectgarbage("generational")
+  local transitions, matching = merge_explore(trees)
+  -- collectgarbage("incremental")
 
   ---@type Levenshtein.tree
   local new_tree = {
-    -- length = #input,
     matching = matching
   }
-  for _, transition in pairs(transitions) do
-    local node = new_tree[transition[1]] or {}
-    new_tree[transition[1]] = node
-    node[transition[3]] = transition[2]
+  ---@type int, int, int
+  local colon, start, destination
+  for transition, character in pairs(transitions) do
+    colon = transition:find(":") --[[@as int]]
+    start = tonumber(transition:sub(1, colon-1))--[[@as int]]
+    destination = tonumber(transition:sub(colon+1))--[[@as int]]
+    local node = new_tree[start] or {}
+    new_tree[start] = node
+    node[character] = destination
   end
   return new_tree
 end
@@ -338,7 +382,7 @@ function automation.to_graphviz(graph_name, tree)
     if type(start_node) ~= "number" then goto continue end
 
     for character, end_node in pairs(transition) do
-      insert(output, string.format('%s -> %s [label=" %s "]', start_node, end_node, string.char(character)))
+      insert(output, string.format('%s->%s[label="%s"]', start_node, end_node, string.char(character)))
     end
 
     ::continue::
@@ -363,10 +407,18 @@ function automation.to_graphviz(graph_name, tree)
       result_to_color[match[1]] = last_used_color
       color = last_used_color
     end
-    insert(output, string.format('%s [label="%s:%s" color="%s" style=filled]', state, match[1], match[2], colors[color]))
+    insert(output, string.format('%s[label="%s:%s"color="%s"style=filled]', state, match[1], match[2], colors[color]))
   end
   insert(output, "}")
   return concat(output, "\n")
 end
+
+-- local dynamic = automation.generate_tree("dynamic")
+-- local dynamo = automation.generate_tree("dynamo")
+-- local terrific = automation.generate_tree("terrific")
+
+-- print(automation.to_graphviz("G", automation.merge_trees{
+--   dynamic, dynamo, terrific
+-- }))
 
 return automation
