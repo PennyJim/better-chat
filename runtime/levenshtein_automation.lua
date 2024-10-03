@@ -272,6 +272,8 @@ local function merge_explore(trees)
   local cur_tree, match
   local min_match, min_distance = nil, huge
 
+  local last_printed_percentage = -1000
+
   while current_job do
     state = current_job[2]
     state_index, is_cached = find_lookup(state, states_lookup)
@@ -318,7 +320,10 @@ local function merge_explore(trees)
 
     ::merge_continue::
     -- print("Job "..job_index..": "..current_job[4].."("..current_job[1]..") -> "..next_path.."("..state_index..")")
-    io.write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
+    if (job_index - last_printed_percentage) >= 1000 then
+      last_printed_percentage = job_index
+      io.write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
+    end
 
     local key = current_job[1]..":"..state_index
     if transitions[key] then
