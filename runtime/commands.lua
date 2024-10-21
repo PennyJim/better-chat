@@ -27,7 +27,7 @@ end
 ---@param message LocalisedString
 local function warn(player, message)
   handle_messages.clear_ephemeral(player.index)
-	player.print(message, settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]])
+	player.print(message, {color=settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]]})
 end
 
 ---Sends a message globally
@@ -185,14 +185,15 @@ end
 
 commands.evolution = function (player)
   local enemy_force = game.forces["enemy"]
-  local evolution_factor = enemy_force.evolution_factor
+  local surface_index = player.surface_index
+  local evolution_factor = enemy_force.get_evolution_factor(surface_index)
   handle_messages.send_message{
     message = {
       "evolution-message",
       string.format("%.4f", evolution_factor),
-      string.format("%d", enemy_force.evolution_factor_by_time / evolution_factor * 100),
-      string.format("%d", enemy_force.evolution_factor_by_pollution / evolution_factor * 100),
-      string.format("%d", enemy_force.evolution_factor_by_killing_spawners / evolution_factor * 100)
+      string.format("%d", enemy_force.get_evolution_factor_by_time(surface_index) / evolution_factor * 100),
+      string.format("%d", enemy_force.get_evolution_factor_by_pollution(surface_index) / evolution_factor * 100),
+      string.format("%d", enemy_force.get_evolution_factor_by_killing_spawners(surface_index) / evolution_factor * 100)
     },
     send_level = "player",
     recipient = player.index
