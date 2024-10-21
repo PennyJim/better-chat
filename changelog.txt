@@ -3,6 +3,11 @@ Version: 0.3.4
 Date: ????
   Changes:
     - Made compatible with 2.0
+  Features:
+    - You can now specify a shortcode variation (eg `:wood~1:`) for instances of conflicting shortcodes.
+      A variation of 0 is the same as no variation.
+    - Now, in singleplayer, replaces shortcodes within a levenshtein distance of 2 to account for typos. This does not work if you specify a variety other than 0 (the default)
+      This is limited to singleplayer because it still hitches badly. I will gladly welcome people who know more than me optimizing it!
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.3
 Date: 2024-08-23
