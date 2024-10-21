@@ -185,7 +185,7 @@ end
 function automation.match(input, tree)
   local state_index = 1
   for _, character in pairs{input:byte()} do
-    state_index = tree[state_index][character]
+    state_index = tree[state_index]--[[@as table<int,int>]][character]
 
     if not state_index then
       return
@@ -197,188 +197,197 @@ end
 
 ---MARK: Multi-Tree
 
----@param trees Levenshtein.tree[]
----@param cur_state Levenshtein.state
----@param character int
----@return table<int,int> new_state
-local function merge_step(trees, cur_state, character)
-  ---@type table<int,int>
-  local new_states = {}
-  ---@type table<int,int>, int?
-  local individual_steps, individual_state
-  for index, cur_state in pairs(cur_state) do
-    -- If the state is invalid, set it and skip
-    if cur_state == -10 then
-      new_states[index] = -10
-      goto continue
-    end
+-- ---@param trees Levenshtein.tree[]
+-- ---@param cur_state Levenshtein.state
+-- ---@param character int
+-- ---@return table<int,int> new_state
+-- local function merge_step(trees, cur_state, character)
+--   ---@type table<int,int>
+--   local new_states = {}
+--   ---@type table<int,int>, int?
+--   local individual_steps, individual_state
+--   for index, cur_state in pairs(cur_state) do
+--     -- If the state is invalid, set it and skip
+--     if cur_state == -10 then
+--       new_states[index] = -10
+--       goto continue
+--     end
 
-    -- Increment the state
-    individual_steps = trees[index][cur_state]
-    individual_state = individual_steps[character]
-    -- Default to `any_character` if the given character does not have a transition
-    if not individual_state then individual_state = individual_steps[any_character] end
-    -- And only use the new state if it's not looping
-    if individual_state ~= cur_state then
-      new_states[index] = individual_state
-    else
-      new_states[index] = -10
-    end
+--     -- Increment the state
+--     individual_steps = trees[index][cur_state]
+--     individual_state = individual_steps[character]
+--     -- Default to `any_character` if the given character does not have a transition
+--     if not individual_state then individual_state = individual_steps[any_character] end
+--     -- And only use the new state if it's not looping
+--     if individual_state ~= cur_state then
+--       new_states[index] = individual_state
+--     else
+--       new_states[index] = -10
+--     end
 
-    ::continue::
-  end
-  return new_states
-end
+--     ::continue::
+--   end
+--   return new_states
+-- end
 
----@param trees Levenshtein.tree[]
----@return table<string,int> transitions
----@return Levenshtein.match[] matching
-local function merge_explore(trees)
-  ---@type Levenshtein.state_lookup
-  local states_lookup = {counter=0}
-  ---@type table<string,int>
-  local transitions = {}
-  ---@type table<int,Levenshtein.match>
-  local matching = {}
+-- ---@param trees Levenshtein.tree[]
+-- ---@return table<string,int> transitions
+-- ---@return Levenshtein.match[] matching
+-- local function merge_explore(trees)
+--   ---@type Levenshtein.state_lookup
+--   local states_lookup = {counter=0}
+--   ---@type table<string,int>
+--   local transitions = {}
+--   ---@type table<int,Levenshtein.match>
+--   local matching = {}
 
-  --Make the initial state
-  ---@type Levenshtein.state, Levenshtein.state
-  local state, next_state = {}, {}
-  for index in pairs(trees) do
-    state[index] = 1
-  end
+--   --Make the initial state
+--   ---@type Levenshtein.state, Levenshtein.state
+--   local state, next_state = {}, {}
+--   for index in pairs(trees) do
+--     state[index] = 1
+--   end
 
-  ---@class Levenshtein.job : Levenshtein.transition
-  ---@field [2] Levenshtein.state Current State
-  ---@field [4] string Source path
-  ---@type string
-  local next_path = ""
-  ---@type Levenshtein.job[]
-  local jobs, num_jobs = {
-    {0, state, 0, ""}
-  }, 1
-  local inext = ipairs(jobs)
-  local job_index, current_job = inext(jobs, 0)
+--   ---@class Levenshtein.job : Levenshtein.transition
+--   ---@field [2] Levenshtein.state Current State
+--   ---@field [4] string Source path
+--   ---@type string
+--   local next_path = ""
+--   ---@type Levenshtein.job[]
+--   local jobs, num_jobs = {
+--     {0, state, 0, ""}
+--   }, 1
+--   local inext = ipairs(jobs)
+--   local job_index, current_job = inext(jobs, 0)
 
 
-  --- Keep variable allocation out of the loop
+--   --- Keep variable allocation out of the loop
 
-  ---@type int, boolean
-  local state_index, is_cached
+--   ---@type int, boolean
+--   local state_index, is_cached
 
-  ---@type table<int,Levenshtein.match>, table<int,true>
-  local possible_matches, next_characters = {}, {[any_character]=true}
-  ---@type Levenshtein.tree, {[1]:string,[2]:int}
-  local cur_tree, match
-  local min_match, min_distance = nil, huge
+--   ---@type table<int,Levenshtein.match>, table<int,true>
+--   local possible_matches, next_characters = {}, {[any_character]=true}
+--   ---@type Levenshtein.tree, {[1]:string,[2]:int}
+--   local cur_tree, match
+--   local min_match, min_distance = nil, huge
 
-  local last_printed_percentage = -1000
+--   local last_printed_percentage = -1000
 
-  while current_job do
-    state = current_job[2]
-    state_index, is_cached = find_lookup(state, states_lookup)
-    if is_cached then
-      goto merge_continue --Merge Continue also adds the transition
-    end
+--   while current_job do
+--     state = current_job[2]
+--     state_index, is_cached = find_lookup(state, states_lookup)
+--     if is_cached then
+--       goto merge_continue --Merge Continue also adds the transition
+--     end
 
-    -- Process each state
-    for index, individual_state in pairs(state) do
-      -- Skip and ignore invalid states
-      if individual_state == -10 then goto individual_continue end
+--     -- Process each state
+--     for index, individual_state in pairs(state) do
+--       -- Skip and ignore invalid states
+--       if individual_state == -10 then goto individual_continue end
 
-      cur_tree = trees[index]
-      -- Check if it now matches
-      match = cur_tree.matching[individual_state]
-      if match then
-        possible_matches[index] = match
-      end
+--       cur_tree = trees[index]
+--       -- Check if it now matches
+--       match = cur_tree.matching[individual_state]
+--       if match then
+--         possible_matches[index] = match
+--       end
 
-      -- Record all possible steps forward
-      for character in pairs(cur_tree[individual_state]) do
-        next_characters[character] = true
-      end
+--       -- Record all possible steps forward
+--       for character in pairs(cur_tree[individual_state]) do
+--         next_characters[character] = true
+--       end
 
-      ::individual_continue::
-    end
+--       ::individual_continue::
+--     end
 
-  -- Choose the closest match
-    for index, match in pairs(possible_matches) do
-      if match[2] < min_distance then
-        min_match, min_distance = match[1], match[2]
-      end
-    end
-    if min_match then
-      matching[state_index] = {min_match, min_distance}
-    end
+--   -- Choose the closest match
+--     for index, match in pairs(possible_matches) do
+--       if match[2] < min_distance then
+--         min_match, min_distance = match[1], match[2]
+--       end
+--     end
+--     if min_match then
+--       matching[state_index] = {min_match, min_distance}
+--     end
 
-    next_path = current_job[4]..string.char(current_job[3])
-    for next_character in pairs(next_characters) do
-      next_state = merge_step(trees, state, next_character)
-      num_jobs = num_jobs + 1
-      jobs[num_jobs] = {state_index, next_state, next_character, next_path}
-    end
+--     next_path = current_job[4]..string.char(current_job[3])
+--     for next_character in pairs(next_characters) do
+--       next_state = merge_step(trees, state, next_character)
+--       num_jobs = num_jobs + 1
+--       jobs[num_jobs] = {state_index, next_state, next_character, next_path}
+--     end
 
-    ::merge_continue::
-    -- print("Job "..job_index..": "..current_job[4].."("..current_job[1]..") -> "..next_path.."("..state_index..")")
-    if (job_index - last_printed_percentage) >= 1000 then
-      last_printed_percentage = job_index
-      io.write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
-    end
+--     ::merge_continue::
+--     -- print("Job "..job_index..": "..current_job[4].."("..current_job[1]..") -> "..next_path.."("..state_index..")")
+--     if (job_index - last_printed_percentage) >= 1000 then
+--       last_printed_percentage = job_index
+--       -- For testing:
+--       -- io.write("\27[2k\rDone: "..(100*job_index/num_jobs).."%")
+--     end
 
-    local key = current_job[1]..":"..state_index
-    if transitions[key] then
-      transitions[key] = any_character
-    else
-      transitions[key] = current_job[3]
-    end
+--     local key = current_job[1]..":"..state_index
+--     if transitions[key] then
+--       transitions[key] = any_character
+--     else
+--       transitions[key] = current_job[3]
+--     end
 
-    -- Remove job from list and get the next job
-    jobs[job_index] = nil
-    job_index, current_job = inext(jobs, job_index)
+--     -- Remove job from list and get the next job
+--     jobs[job_index] = nil
+--     job_index, current_job = inext(jobs, job_index)
 
-    -- Reset tables
-    possible_matches, next_characters = {}, {[any_character]=true}
-    min_match, min_distance = nil, huge
-  end
+--     -- Reset tables
+--     possible_matches, next_characters = {}, {[any_character]=true}
+--     min_match, min_distance = nil, huge
+--   end
 
-  -- Exit the line we've been rewriting with io.write
-  print("")
-  -- First transition is a dummy transition.
-  transitions["0:1"] = nil
+--   -- Exit the line we've been rewriting with io.write
+--   print("")
+--   -- First transition is a dummy transition.
+--   transitions["0:1"] = nil
 
-  return transitions, matching
-end
+--   return transitions, matching
+-- end
 
----Merge an array of given trees into a single tree
----@param trees Levenshtein.tree[]
-function automation.merge_trees(trees)
+-- ---Merge an array of given trees into a single tree
+-- ---@param trees Levenshtein.tree[]
+-- function automation.merge_trees(trees)
 
-  -- collectgarbage("generational")
-  local transitions, matching = merge_explore(trees)
-  -- collectgarbage("incremental")
+--   -- collectgarbage("generational")
+--   local transitions, matching = merge_explore(trees)
+--   -- collectgarbage("incremental")
 
-  ---@type Levenshtein.tree
-  local new_tree = {
-    matching = matching
-  }
-  ---@type int, int, int
-  local colon, start, destination
-  for transition, character in pairs(transitions) do
-    colon = transition:find(":") --[[@as int]]
-    start = tonumber(transition:sub(1, colon-1))--[[@as int]]
-    destination = tonumber(transition:sub(colon+1))--[[@as int]]
-    local node = new_tree[start] or {}
-    new_tree[start] = node
-    node[character] = destination
-  end
-  return new_tree
-end
+--   ---@type Levenshtein.tree
+--   local new_tree = {
+--     matching = matching
+--   }
+--   ---@type int, int, int
+--   local colon, start, destination
+--   for transition, character in pairs(transitions) do
+--     colon = transition:find(":") --[[@as int]]
+--     start = tonumber(transition:sub(1, colon-1))--[[@as int]]
+--     destination = tonumber(transition:sub(colon+1))--[[@as int]]
+--     local node = new_tree[start] or {}
+--     new_tree[start] = node
+--     node[character] = destination
+--   end
+--   return new_tree
+-- end
 
 --MARK: Debug visualizer
 
 ---@param file_path string
 ---@param tree Levenshtein.tree
 function automation.to_graphviz(file_path, tree)
+---@diagnostic disable-next-line: undefined-global, no-unknown
+  if not io then
+    error("This function is used for testing. Do not call within factorio")
+  else
+---@diagnostic disable-next-line: no-unknown
+    io = io
+  end
+---@diagnostic disable-next-line: no-unknown
   local file = io.open(file_path, "w")
   file:write("digraph G {\n")
 
@@ -498,7 +507,7 @@ function automation.to_graphviz(file_path, tree)
     local color = result_to_color[match[1]]
     if not color then
       last_used_color = last_used_color + 1
-      if not colors[last_used_color] then
+      if not colors[last_used_color--[[@as int]]] then
         last_used_color = 1
       end
       result_to_color[match[1]] = last_used_color
