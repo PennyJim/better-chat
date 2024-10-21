@@ -46,8 +46,9 @@ script.register_metatable("bc-chatlog", chatMetatable)
 ---Creates a new ChatLog
 ---@param oldLog ChatLog?
 ---@param log_type "force"|"player"?
+---@param player_index int?
 ---@return ChatLog
-local function newChatLog(oldLog, log_type)
+local function newChatLog(oldLog, log_type, player_index)
 	local newLog = setmetatable({
 		size = 0,
 		top_index = 1,
@@ -62,7 +63,16 @@ local function newChatLog(oldLog, log_type)
 	if (log_type=="force") then
 		newLog:trim(settings.global["bc-force-chat-history"].value--[[@as int]])
 	else
-		newLog:trim(settings.player["bc-player-chat-history"].value--[[@as int]])
+		---@type int
+		local setting
+		if player_index then
+			setting = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
+		end
+		if setting then
+			newLog:trim(setting)
+		else
+			newLog:trim(settings.player_default["bc-player-chat-history"].value--[[@as int]])
+		end
 	end
 	return newLog
 end
@@ -75,7 +85,7 @@ local manager = {}
 manager.add_force = function(force_index)
 	if storage.ForceChatLog[force_index] then return end
 	storage.ForceChatLog[force_index] = newChatLog(
-		storage.GlobalChatLog
+		storage.GlobalChatLog, "force"
 	)
 end
 ---Adds a new chatlog for player_index if it didn't exist before
@@ -83,7 +93,8 @@ end
 manager.add_player = function(player_index)
 	if storage.PlayerChatLog[player_index] then return end
 	storage.PlayerChatLog[player_index] = newChatLog(
-		storage.ForceChatLog[game.get_player(player_index).force_index]
+		storage.ForceChatLog[game.get_player(player_index).force_index],
+		"player", player_index
 	)
 end
 
