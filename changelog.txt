@@ -2,6 +2,7 @@
 Version: 0.3.4
 Date: ????
   Changes:
+    - Made compatible with 2.0
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.3
 Date: 2024-08-23
@@ -37,7 +38,7 @@ Date: 2024-07-26
     - Can now handle colors that are arrays rather than objects
     - send_message can now take a table of parameters instead. Old method of parameters remains for compatibility
   Issues:
-    - The direct-printing of not clearing the chat uses a hacked-together method of printing the messsage. Leading to times where it might print incorrectly because it doesn't do the pre-processing that is done for internal use.
+    - The direct-printing of not clearing the chat uses a hacked-together method of printing the message. Leading to times where it might print incorrectly because it doesn't do the pre-processing that is done for internal use.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2024-03-12
