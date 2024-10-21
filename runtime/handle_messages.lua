@@ -1,4 +1,5 @@
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+local automation = require("__better-chat__.runtime.levenshtein_automation")
 ---@class handle_messages
 local handle_messages = {}
 
@@ -18,66 +19,6 @@ local function replace_all(text, pattern, replaceFun)
 		output = firsthalf..replaceFun(match)..secondHalf
 	end
 	return output
-end
-
----Whether the string is closer than min_distance
----
----TODO: use [Levenshtein Automation](https://en.wikipedia.org/wiki/Levenshtein_automaton)
----@param strY string
----@param strX string
----@param max_cost int
----@return boolean is_closer
----@return int? distance is returned when it is closer
-local function closer_test(strY, strX, max_cost)
-  local lenY, lenX = #strY, #strX
-  ---@type table<int,table<int, int>>
-  local matrix, cost = {}, 0
-
-  local len_difference = math.abs(lenY - lenX)
-  if (len_difference > max_cost) then
-    return false
-  end
-
-  -- initialise the base matrix values
-  for y = 1, lenY+1, 1 do
-    matrix[y] = {}
-    matrix[y][1] = y
-  end
-  for x = 1, lenX+1, 1 do
-    matrix[1][x] = x
-  end
-
-  local min, unpack = math.min, table.unpack
-  -- actual Levenshtein algorithm
-  for y = 1, lenY, 1 do
-    for x = 1, lenX, 1 do
-      if (strY:byte(y) == strX:byte(x)) then
-        cost = 0
-      else
-        cost = 1
-      end
-
-      matrix[y+1][x+1] = min(
-        matrix[y][x+1] + 1,
-        matrix[y+1][x] + 1,
-        matrix[y][x] + cost
-      )
-    end
-
-    if y >= max_cost then
-      cost = min(unpack(matrix[y]))
-      if cost > max_cost then
-        return false
-      end
-    end
-  end
-
-  cost = matrix[lenY+1][lenX+1]
-  if cost >= max_cost then
-    return false
-  else
-    return true, cost
-  end
 end
 
 ---Loop through the dictionaries to find the nth
@@ -118,21 +59,21 @@ end
 ---@param given_code string
 ---@return string?
 local function Levenshtein_shortcodes(given_code)
+  local tree = automation.generate_tree(given_code)
   ---@type string[]|string?, int
-  local closest, closest_distance = nil, 3
-  ---@type boolean, int?
-  local is_closer, closer_distance = false, nil
+  local closest, closest_distance = nil, math.huge
+  ---@type Levenshtein.match?
+  local match
 
   for _, dictionary in pairs(storage.emojipacks) do
     for shortcode, replacement in pairs(dictionary) do
-      is_closer, closer_distance = closer_test(given_code, shortcode, closest_distance)
-      if is_closer then
-        ---@cast closer_distance int
-        if closer_distance == 1 then
+      match = automation.match(shortcode, tree)
+      if match and match[2] < closest_distance then
+        if match[2] == 1 then
           return type(replacement) == "string" and replacement or replacement[1]
         end
         closest = replacement
-        closest_distance = closer_distance
+        closest_distance = match[2]
       end
     end
   end
