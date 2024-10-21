@@ -183,13 +183,22 @@ end
 ---@return Levenshtein.match?
 ---@nodiscard
 function automation.match(input, tree)
-  local state_index = 1
-  for _, character in pairs{input:byte()} do
-    state_index = tree[state_index]--[[@as table<int,int>]][character]
-
-    if not state_index then
-      return
+  ---@type int, int
+  local state_index, next_state = 1, 1
+  ---@type table<int,int>
+  local current_state
+  for _, character in pairs{input:byte(1, -1)} do
+    current_state = tree[state_index]
+    next_state = current_state[character]
+    if not next_state then
+      next_state = current_state[any_character]
     end
+
+    if next_state == state_index then
+      break
+    end
+
+    state_index = next_state
   end
 
   return tree.matching[state_index]
