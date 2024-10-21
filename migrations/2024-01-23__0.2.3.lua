@@ -5,7 +5,7 @@ local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 local first_player = pairs(game.players)(0) --[[@as int]]
 -- Don't do this migration if the global chatlog has the size field
 -- Checks the first player chatlog
-if global.PlayerChatLog[first_player].top_index then
+if storage.PlayerChatLog[first_player].top_index then
   return log("skipping")
 end
 
@@ -29,10 +29,10 @@ local function linkedListMigration(list)
   return log
 end
 
-global.GlobalChatLog = linkedListMigration(global.GlobalChatLog)
-for force_index in pairs(global.ForceChatLog) do
-  global.ForceChatLog[force_index] = linkedListMigration(global.ForceChatLog[force_index])
+storage.GlobalChatLog = linkedListMigration(storage.GlobalChatLog)
+for force_index in pairs(storage.ForceChatLog) do
+  storage.ForceChatLog[force_index] = linkedListMigration(storage.ForceChatLog[force_index])
 end
-for player_index in pairs(global.PlayerChatLog) do
-  global.PlayerChatLog[player_index] = linkedListMigration(global.PlayerChatLog[player_index])
+for player_index in pairs(storage.PlayerChatLog) do
+  storage.PlayerChatLog[player_index] = linkedListMigration(storage.PlayerChatLog[player_index])
 end

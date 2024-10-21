@@ -62,7 +62,7 @@ local function whisper(player, recipient, message)
 		send_level = "player",
 		recipient = recipient.index
 	}
-  global.lastWhispered[recipient.index] = player.index
+  storage.lastWhispered[recipient.index] = player.index
 end
 
 commands.shout = function(player, event)
@@ -82,7 +82,7 @@ commands.whisper = function(player, event)
 end
 commands.w = commands.whisper
 commands.reply = function (player, event)
-  local recipient = game.get_player(global.lastWhispered[player.index] or "")
+  local recipient = game.get_player(storage.lastWhispered[player.index] or "")
   if not recipient then
     return warn(player, {"noone-to-reply"})
   end

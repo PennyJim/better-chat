@@ -15,7 +15,7 @@ local eventFilters = {}
 events[defines.events.on_console_chat] = function (event)
 	local player_index = event.player_index
 	if not player_index then return end
-	global.isChatOpen[player_index] = nil
+	storage.isChatOpen[player_index] = nil
 	local player = game.get_player(player_index)
 	if not player then return end
 
@@ -64,7 +64,7 @@ events[defines.events.on_player_left_game] =  function (event)
 		process_color = true,
 		send_level = "global"
 	}
-	global.isChatOpen[event.player_index] = nil
+	storage.isChatOpen[event.player_index] = nil
 end
 events[defines.events.on_player_died] = function (event)
 	local player = game.get_player(event.player_index)
@@ -220,12 +220,12 @@ end
 
 -- Catchall for commands
 events[defines.events.on_console_command] = function (event)
-	global.isChatOpen[event.player_index or 0] = nil
+	storage.isChatOpen[event.player_index or 0] = nil
 	local player = game.get_player(event.player_index)
 	if not player then return end
 
 	local func = commands[event.command]
-	local enabled = not global.disabledCommands[event.command]
+	local enabled = not storage.disabledCommands[event.command]
 	if func and enabled then func(player, event) end
 end
 

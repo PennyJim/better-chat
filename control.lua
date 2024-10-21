@@ -9,7 +9,7 @@ local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 ---@field disabledListeners table<defines.events, string[]>
 ---@field disabledCommands table<string, string[]>
 ---@field lastWhispered table<int,int?>
-global = {}
+storage = {}
 ---@type {[string]:metatable}
 metatables = {}
 
@@ -20,19 +20,19 @@ local function clean_emojipacks(changes)
 	-- Remove emojipacks of unloaded mods
 	for mod_name in pairs(changes) do
 		if not changes[mod_name].new_version then
-			global.emojipacks[mod_name] = nil
+			storage.emojipacks[mod_name] = nil
 		end
 	end
 
   --- Update the default emojipack
-  global.emojipacks[script.mod_name] = default_emojipack
+  storage.emojipacks[script.mod_name] = default_emojipack
 end
 
 script.on_event("bc-toggle-chat", function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end
-	global.isChatOpen[event.player_index] = not global.isChatOpen:check(event.player_index)
+	storage.isChatOpen[event.player_index] = not storage.isChatOpen:check(event.player_index)
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Toggle Chat")
 end)
@@ -40,7 +40,7 @@ script.on_event("bc-exit-chat", function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end
-	global.isChatOpen[event.player_index] = nil
+	storage.isChatOpen[event.player_index] = nil
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Exit Chat")
 end)
@@ -61,13 +61,13 @@ metatables.chatOpenMeta = {
 script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
 
 local function setupGlobal()
-	global.emojipacks = global.emojipacks or {
+	storage.emojipacks = storage.emojipacks or {
     [script.mod_name] = default_emojipack
   }
-	global.isChatOpen = global.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
-	global.disabledListeners = global.disabledListeners or {}
-	global.disabledCommands = global.disabledCommands or {}
-  global.lastWhispered = global.lastWhispered or {}
+	storage.isChatOpen = storage.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
+	storage.disabledListeners = storage.disabledListeners or {}
+	storage.disabledCommands = storage.disabledCommands or {}
+  storage.lastWhispered = storage.lastWhispered or {}
 end
 
 script.on_init(function ()
@@ -115,7 +115,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
     elseif setting == "bc-player-closeable-chat" then
       -- Clear opened value when closeable is disabled
       -- Also does it when enabled, but they should just be in main menu
-      global.isChatOpen[player_index--[[@as int]]] = nil
+      storage.isChatOpen[player_index--[[@as int]]] = nil
       -- Update chat to now match the openness it Should be now
       ChatHistoryManager.print_chat("player", player_index)
     elseif (
@@ -185,9 +185,9 @@ remote.add_interface("better-chat", {
 remote.add_interface("emojipack registration", {
 	add = function (mod_name, shortcode_dictionary)
 		if not script.active_mods[mod_name] then return end
-		-- global.emojipacks = global.emojipacks or {}
+		-- storage.emojipacks = global.emojipacks or {}
 
-		global.emojipacks[mod_name] = shortcode_dictionary
+		storage.emojipacks[mod_name] = shortcode_dictionary
 	end
 })
 --#endregion

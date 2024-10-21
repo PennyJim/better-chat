@@ -73,29 +73,29 @@ local manager = {}
 ---Adds a new chatlog for force_index if it didn't exist before
 ---@param force_index int
 manager.add_force = function(force_index)
-	if global.ForceChatLog[force_index] then return end
-	global.ForceChatLog[force_index] = newChatLog(
-		global.GlobalChatLog
+	if storage.ForceChatLog[force_index] then return end
+	storage.ForceChatLog[force_index] = newChatLog(
+		storage.GlobalChatLog
 	)
 end
 ---Adds a new chatlog for player_index if it didn't exist before
 ---@param player_index int
 manager.add_player = function(player_index)
-	if global.PlayerChatLog[player_index] then return end
-	global.PlayerChatLog[player_index] = newChatLog(
-		global.ForceChatLog[game.get_player(player_index).force_index]
+	if storage.PlayerChatLog[player_index] then return end
+	storage.PlayerChatLog[player_index] = newChatLog(
+		storage.ForceChatLog[game.get_player(player_index).force_index]
 	)
 end
 
 ---Removes a chatlog for deleted force
 ---@param force_index int
 manager.remove_force = function(force_index)
-	global.ForceChatLog[force_index] = nil
+	storage.ForceChatLog[force_index] = nil
 end
 ---Removes a chatlog for removed player
 ---@param player_index int
 manager.remove_player = function(player_index)
-	global.PlayerChatLog[player_index] = nil
+	storage.PlayerChatLog[player_index] = nil
 end
 
 ---@class addMessageParams
@@ -117,37 +117,37 @@ manager.add_message = function(messageParams)
 
 	if messageParams.level =="global" then
 		-- Add message to global chat, every force, and every player
-		global.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value--[[@as int]])
+		storage.GlobalChatLog:add(newChat, settings.global["bc-global-chat-history"].value--[[@as int]])
 
 		local force_chat_history = settings.global["bc-force-chat-history"].value--[[@as int]]
 		for _,force in pairs(game.forces) do
-			global.ForceChatLog[force.index]:add(newChat, force_chat_history)
+			storage.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
 
 		for _, player in pairs(game.players) do
 			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
-			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 
 
 	elseif messageParams.level == "force" then
 		local force_index = messageParams.chat_index --[[@as int]]
 		-- Add message to the force and players in the force
-		global.ForceChatLog[force_index]
+		storage.ForceChatLog[force_index]
 			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as int]])
 
 		for _,player in pairs(game.forces[force_index].players) do
 			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
-			global.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
 
 
 	elseif messageParams.level == "player" then
 		local player_index = messageParams.chat_index --[[@as int]]
 		-- Add message to the player
-		global.PlayerChatLog[messageParams.chat_index]
+		storage.PlayerChatLog[messageParams.chat_index]
 			:add(newChat, settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]])
 
 
@@ -192,7 +192,7 @@ end
 ---@param player LuaPlayer
 local function print_chats(player)
 	local player_index = player.index
-	local isChatOpen = global.isChatOpen:check(player_index)
+	local isChatOpen = storage.isChatOpen:check(player_index)
 	-- log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
@@ -203,7 +203,7 @@ local function print_chats(player)
 
 	--Go through every chat
 	player.clear_console()
-	for _,chat in global.PlayerChatLog[player_index]:from() do
+	for _,chat in storage.PlayerChatLog[player_index]:from() do
 
 		--Skip chat if doesn't need to be logged
 		if closeable and not (isChatOpen or player.controller_type == defines.controllers.spectator)
@@ -259,15 +259,15 @@ end
 
 ---Initializes Chat History
 manager.init = function()
-	global.GlobalChatLog = newChatLog();
-	global.ForceChatLog = {}
+	storage.GlobalChatLog = newChatLog();
+	storage.ForceChatLog = {}
 	for _,force in pairs(game.forces) do
-		global.ForceChatLog[force.index] = newChatLog();
+		storage.ForceChatLog[force.index] = newChatLog();
 	end
-	global.PlayerChatLog = {}
+	storage.PlayerChatLog = {}
 	for _, player in pairs(game.players) do
 		local player_index = player.index
-		global.PlayerChatLog[player_index] = newChatLog();
+		storage.PlayerChatLog[player_index] = newChatLog();
 	end
 end
 

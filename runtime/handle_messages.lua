@@ -90,7 +90,7 @@ local function find_shortcode(given_code, variation)
   local count = 0
   ---@type string[]|string, int
   local result, new_count
-  for _, dictionary in pairs(global.emojipacks) do
+  for _, dictionary in pairs(storage.emojipacks) do
     result = dictionary[given_code]
     if result then
 
@@ -123,7 +123,7 @@ local function Levenshtein_shortcodes(given_code)
   ---@type boolean, int?
   local is_closer, closer_distance = false, nil
 
-  for _, dictionary in pairs(global.emojipacks) do
+  for _, dictionary in pairs(storage.emojipacks) do
     for shortcode, replacement in pairs(dictionary) do
       is_closer, closer_distance = closer_test(given_code, shortcode, closest_distance)
       if is_closer then

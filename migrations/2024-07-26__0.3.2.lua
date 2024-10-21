@@ -1,6 +1,6 @@
 
 --- Don't run this if the disabled commands doesn't exist
-if global.disabledCommands then return log("skipping") end
+if storage.disabledCommands then return log("skipping") end
 
 
 ---@param chat Chat
@@ -23,15 +23,15 @@ local function process_message(chat)
   end
 end
 
-for _,chat in global.GlobalChatLog:from() do
+for _,chat in storage.GlobalChatLog:from() do
   process_message(chat)
 end
-for _,ChatLog in pairs(global.ForceChatLog) do
+for _,ChatLog in pairs(storage.ForceChatLog) do
   for _,chat in ChatLog:from() do
     process_message(chat)
   end
 end
-for _,ChatLog in pairs(global.PlayerChatLog) do
+for _,ChatLog in pairs(storage.PlayerChatLog) do
   for _,chat in ChatLog:from() do
     process_message(chat)
   end

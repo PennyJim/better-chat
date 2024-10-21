@@ -11,11 +11,11 @@ local listener = {
 	disable = function (mod_name, event)
 		if not script.active_mods[mod_name] then return false end
 		if not events[event] then return false end
-		local disabled = global.disabledListeners[event]
+		local disabled = storage.disabledListeners[event]
 		if disabled then
 			disabled[#disabled+1] = mod_name
 		else
-			global.disabledListeners[event] = {mod_name}
+			storage.disabledListeners[event] = {mod_name}
 			script.on_event(event, nil)
 		end
 		return true
@@ -27,7 +27,7 @@ local listener = {
 	enable = function (mod_name, event)
 		if not script.active_mods[mod_name] then return false end
 		if not events[event] then return false end
-		local disabled = global.disabledListeners[event]
+		local disabled = storage.disabledListeners[event]
 		if not disabled then return false end
 
 		local mod_index = nil
@@ -41,7 +41,7 @@ local listener = {
 		table.remove(disabled, mod_index)
 
 		if #disabled == 0 then
-			global.disabledListeners[event] = nil
+			storage.disabledListeners[event] = nil
 			script.on_event(event, events[event], eventFilters[event])
 		end
 		return true
@@ -55,11 +55,11 @@ local command = {
 	disable = function (mod_name, command)
 		if not script.active_mods[mod_name] then return false end
 		if not commands[command] then return false end
-		local disabled = global.disabledCommands[command]
+		local disabled = storage.disabledCommands[command]
 		if disabled then
 			disabled[#disabled+1] = mod_name
 		else
-			global.disabledCommands[command] = {mod_name}
+			storage.disabledCommands[command] = {mod_name}
 		end
 		return true
 	end,
@@ -70,7 +70,7 @@ local command = {
 	enable = function (mod_name, command)
 		if not script.active_mods[mod_name] then return false end
 		if not commands[command] then return false end
-		local disabled = global.disabledCommands[command]
+		local disabled = storage.disabledCommands[command]
 		if not disabled then return false end
 
 		local mod_index = nil
@@ -84,7 +84,7 @@ local command = {
 		table.remove(disabled, mod_index)
 
 		if #disabled == 0 then
-			global.disabledCommands[command] = nil
+			storage.disabledCommands[command] = nil
 		end
 		return true
 	end
@@ -96,7 +96,7 @@ local function register_enabled_listeners()
 
 	---@cast events table<defines.events,fun(e:EventData)>
 	for event, handler in pairs(events) do
-		if not global.disabledListeners or not global.disabledListeners[event] then
+		if not storage.disabledListeners or not storage.disabledListeners[event] then
 			script.on_event(event, handler, eventFilters[event])
 		end
 	end
@@ -106,10 +106,10 @@ end
 local function reenable(changes)
 	for mod_name, change in pairs(changes) do
 		if not change.new_version then
-			for event in pairs(global.disabledListeners) do
+			for event in pairs(storage.disabledListeners) do
 				listener.enable(mod_name, event)
 			end
-			for key in pairs(global.disabledCommands) do
+			for key in pairs(storage.disabledCommands) do
 				command.enable(mod_name, key)
 			end
 		end
