@@ -6,7 +6,7 @@
 	"author": "PennyJim",
 	"factorio_version": "2.0",
 	"dependencies": [
-		"base >= 1.1.100"
+		"base >= 2.0"
 	],
 	"package": {
 		"ignore": [

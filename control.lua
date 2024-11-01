@@ -149,7 +149,7 @@ end)
 
 ---@param message LocalisedString|messageParams
 ---@param color Color?
----@param send_level historyLevel
+---@param send_level historyLevel?
 ---@param recipient integer?
 ---@param clear boolean? Whether or not the chat is cleared, `true` by default
 local function compatibility_send(message, color, send_level, recipient, clear)
@@ -158,7 +158,7 @@ local function compatibility_send(message, color, send_level, recipient, clear)
 		return send_message{
 			message = message,
 			color = color,
-			send_level = send_level,
+			send_level = send_level or "global",
 			recipient = recipient,
 			clear = clear,
 		}
