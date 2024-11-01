@@ -130,15 +130,20 @@ end
 -- end
 events[defines.events.on_research_cancelled] = function (event)
 	-- if event.by_script then return end
-	local research = event.research
+	local tech = prototypes.technology
 	local force = event.force
-	handle_messages.broadcast_friendly{
-		message = {"player-cancelled-research", {"chat-localization.unknown-player"}, research.localised_name},
-		color = force.color,
-		process_color = true,
-		send_level = "force",
-		recipient = force.index
-	}
+	local has_cleared = false
+	for research in pairs(event.research) do
+		handle_messages.broadcast_friendly{
+			message = {"player-cancelled-research", tech[research].localised_name, {"chat-localization.unknown-player"}},
+			color = force.color,
+			process_color = true,
+			send_level = "force",
+			recipient = force.index,
+			clear = not has_cleared,
+		}
+		has_cleared = true
+	end
 end
 
 --Banned and kicked
