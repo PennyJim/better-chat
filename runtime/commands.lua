@@ -31,6 +31,22 @@ local function warn(player, message)
 	player.print(message, {color=settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]]})
 end
 
+commands.help = function (player, event)
+  local command = event.parameters
+  local help_message = commands_api.game_commands[command] or commands_api.commands[command]
+
+  if not help_message then
+    return warn(player, {"command-help.unknown-command", {command}})
+  end
+
+  handle_messages.send_message{
+    message = {"", "/"..command.." ", help_message},
+    send_level = "player",
+    recipient = player.index,
+  }
+end
+commands.h = commands.help
+
 ---Sends a message globally
 ---@param player LuaPlayer
 ---@param message string

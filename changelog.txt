@@ -4,6 +4,8 @@ Date: ????
   Features:
     - Added a global setting to change how normal messages are sent.
     - Added /t and /team commands to send messages normally.
+  Commands:
+    - Replicated /help & /h
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2024-10-21
