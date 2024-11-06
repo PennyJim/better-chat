@@ -24,7 +24,7 @@ events[defines.events.on_console_chat] = function (event)
 		message = msg("bc-message-header", player, message),
 		color = player.chat_color,
 		process_color = true,
-		send_level = "force",
+		send_level = settings.global["bc-normal-chat-type"].value --[[@as historyLevel]],
 		recipient = player.force_index
 	}
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}

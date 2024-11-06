@@ -16,6 +16,18 @@ data:extend{
 		minimum_value = 1,
 		order = "global-ab"
 	},
+	{
+		type = "string-setting",
+		name = "bc-normal-chat-type",
+		setting_type = "runtime-global",
+		default_value = "force",
+		allowed_values = {
+			"force",
+			"global",
+			"player",
+		},
+		order = "global-b"
+	}
 	-- {
 	-- 	type = "double-setting",
 	-- 	name = "bc-duplicate-timer",
@@ -23,7 +35,7 @@ data:extend{
 	-- 	default_value = 1.0,
 	-- 	minimum_value = 0.1,
 	-- 	maximum_value = 10.0,
-	--  order = "global-ba"
+	--  order = "global-c"
 	-- },
 }
 data:extend{

@@ -1,4 +1,5 @@
 ---@alias CommandFunctionDict {[string]:fun(player:LuaPlayer, event:EventData.on_console_command)}
+local commands_api = commands
 ---@type CommandFunctionDict
 local commands = {}
 
@@ -69,6 +70,18 @@ commands.shout = function(player, event)
 	shout(player, event.parameters)
 end
 commands.s = commands.shout
+commands.team = function(player, event)
+	local message = handle_messages.process_message(player, event.parameters)
+	handle_messages.send_message{
+		message = msg("bc-team-header", player, message),
+		color = player.chat_color,
+		process_color = true,
+		send_level = "force",
+		recipient = player.force_index,
+    clear = false
+	}
+end
+commands.t = commands.team
 commands.whisper = function(player, event)
 	local target = event.parameters:match("%S+")--[[@as string?]] or ""
 	local recipient = game.get_player(target);
@@ -89,6 +102,10 @@ commands.reply = function (player, event)
   whisper(player, recipient, event.parameters)
 end
 commands.r = commands.reply
+
+local dummy_func = function()end
+commands_api.add_command("team", {"command-help.team"}, dummy_func)
+commands_api.add_command("t", {"command-help.team"}, dummy_func)
 
 ---@enum valid_colors
 local valid_colors = {
