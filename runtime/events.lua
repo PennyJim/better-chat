@@ -19,13 +19,24 @@ events[defines.events.on_console_chat] = function (event)
 	local player = game.get_player(player_index)
 	if not player then return end
 
+	local send_level = settings.global["bc-normal-chat-type"].value --[[@as historyLevel]]
+	local recipient = send_level == "force" and player.force_index or send_level == "player" and player_index or nil
+
+	if send_level == "player" then
+		for _, force_player in pairs(player.force.players) do
+			if force_player.index ~= player_index then
+				handle_messages.clear_ephemeral(force_player.index)
+			end
+		end
+	end
+
 	local message = handle_messages.process_message(player, event.message)
 	handle_messages.send_message{
 		message = msg("bc-message-header", player, message),
 		color = player.chat_color,
 		process_color = true,
-		send_level = settings.global["bc-normal-chat-type"].value --[[@as historyLevel]],
-		recipient = player.force_index
+		send_level = send_level,
+		recipient = recipient
 	}
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
 	-- log{"", "force-chat-log", serpent.block(global.ForceChatLog), "\n"}
