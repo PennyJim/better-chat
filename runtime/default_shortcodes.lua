@@ -22,8 +22,8 @@ return {
   ["blueprint"] = "[img=item.blueprint]",
   ["blueprint_book"] = "[img=item.blueprint-book]",
   ["buff_the_burner_inserter"] = "[img=item.destroyer-capsule]",
-  ["bulk_filter_inserter"] = "[img=item.stack-filter-inserter]", -- NOTE: change with 2.0
-  ["bulk_inserter"] = "[img=item.stack-inserter]", -- NOTE: CHange with 2.0
+  -- ["bulk_filter_inserter"] = "[img=item.bulk-filter-inserter]", -- NOTE: Doesn't exist in 2.0 anymore...
+  ["bulk_inserter"] = "[img=item.bulk-inserter]",
   ["burner_inserter"] = "[img=item.burner-inserter]",
   ["burner_mining_drill"] = "[img=item.burner-mining-drill]",
   ["cannon_shell"] = "[img=item.cannon-shell]",
@@ -182,24 +182,26 @@ return {
   -- ["this"] = "",
   -- ["ugpipe_left"] = "",
 
-  -- NOTE: wait until 2.0
-  -- ["bwuhuo"] = "",
-  -- ["gleba"] = "",
-  -- ["nauvis"] = "",
-  -- ["elevated_rail"] = "",
-  -- ["quality_normal"] = "",
-  -- ["quality_uncommon"] = "",
-  -- ["quality_rare"] = "",
-  -- ["quality_epic"] = "",
-  -- ["quality_legendary"] = "",
-  -- ["quality_any"] = "",
-  -- ["redacted_transport_belt"] = "",
-  -- ["selector_combinator"] = "",
-  -- ["spoilage"] = "",
-  -- ["stack_inserter"] = "",
-  -- ["vulcanus"] = "",
+  ["nauvis"] = "[img=space-location.nauvis]",
+  ["quality_normal"] = "[img=quality.normal]",
+  -- NOTE: Do something with non SA games?
+  ["aquilo"] = "[img=space-location.aquilo]",
+  ["elevated_rail"] = "[img=item.rail-support]",
+  ["fulgora"] = "[img=space-location.fulgora]",
+  ["gleba"] = "[img=space-location.gleba]",
+  ["quality_uncommon"] = "[img=quality.uncommon]",
+  ["quality_rare"] = "[img=quality.rare]",
+  ["quality_epic"] = "[img=quality.epic]",
+  ["quality_legendary"] = "[img=quality.legendary]",
+  ["quality_any"] = "[img=virtual-signal.signal-any-quality]",
+  ["redacted_transport_belt"] = "[img=item.turbo-transport-belt]",
+  ["selector_combinator"] = "[img=selector-combinator]",
+  ["spoilage"] = "[img=item.spoilage]",
+  ["stack_inserter"] = "[img=item.stack-inserter]",
+  ["vulcanus"] = "[img=space-location.vulcanus]",
 
   -- NOTE: needs additional art, might not get added
+  -- ["bwuhuo"] = "",
   -- ["ChibiCry"] = "",
   -- ["ChibiHappy"] = "",
   -- ["ChibiOhno"] = "",

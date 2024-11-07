@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.1
 Date: ????
+  Changes:
+    - Updated shortcodes for 2.0
   Features:
     - Added a global setting to change how normal messages are sent.
     - Added /t and /team commands to send messages normally.
