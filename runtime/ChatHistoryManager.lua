@@ -1,3 +1,5 @@
+--MARK: ChatLog
+
 ---@class Chat
 ---@field message LocalisedString
 ---@field tick int
@@ -77,6 +79,8 @@ local function newChatLog(oldLog, log_type, player_index)
 	return newLog
 end
 
+---MARK: Manager
+
 ---@class ChatLogManager
 local manager = {}
 
@@ -107,6 +111,10 @@ end
 ---@param player_index int
 manager.remove_player = function(player_index)
 	storage.PlayerChatLog[player_index] = nil
+end
+
+manager.clear = function (player_index)
+	storage.PlayerChatLog[player_index] = newChatLog()
 end
 
 ---@class addMessageParams

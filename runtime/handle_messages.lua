@@ -248,6 +248,12 @@ function handle_messages.clear_ephemeral(player_index)
   ChatHistoryManager.print_chat("player", player_index)
 end
 
+--Empties the ChatLog for the given player
+---@param player_index int
+function handle_messages.clear(player_index)
+	ChatHistoryManager.clear(player_index)
+end
+
 ---Wraps the given LocalisedString or string in a LocalisedString
 ---that colors the text. Mostly just a shorthand to avoid
 ---turning the color objects into the argument array all the time

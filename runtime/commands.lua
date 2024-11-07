@@ -31,21 +31,7 @@ local function warn(player, message)
 	player.print(message, {color=settings.get_player_settings(player)["bc-warn-color"].value--[[@as Color]]})
 end
 
-commands.help = function (player, event)
-  local command = event.parameters
-  local help_message = commands_api.game_commands[command] or commands_api.commands[command]
-
-  if not help_message then
-    return warn(player, {"command-help.unknown-command", {command}})
-  end
-
-  handle_messages.send_message{
-    message = {"", "/"..command.." ", help_message},
-    send_level = "player",
-    recipient = player.index,
-  }
-end
-commands.h = commands.help
+--MARK: Chatting
 
 ---Sends a message globally
 ---@param player LuaPlayer
@@ -208,6 +194,24 @@ commands.color = function (player, event)
   }
 end
 
+--MARK: Information
+
+commands.help = function (player, event)
+  local command = event.parameters
+  local help_message = commands_api.game_commands[command] or commands_api.commands[command]
+
+  if not help_message then
+    return warn(player, {"command-help.unknown-command", {command}})
+  end
+
+  handle_messages.send_message{
+    message = {"", "/"..command.." ", help_message},
+    send_level = "player",
+    recipient = player.index,
+  }
+end
+commands.h = commands.help
+
 commands.seed = function (player)
   handle_messages.send_message{
     message = game.surfaces["nauvis"].map_gen_settings.seed,
@@ -283,6 +287,21 @@ commands.time = function (player)
   }
 end
 
+--MARK: Functional
+
+commands.clear = function (player, event)
+  handle_messages.clear(player.index)
+end
+
+--MARK: Admin Functional
+
+--TODO: Will have to store whether it's action loggin in storage.
+-- I simply don't want to right now.
+-- commands["toggle-action-logging"] = function (player, event)
+
+-- end
+
+--MARK: Admin
 
 --Admin promotion and demotion
 commands.promote = function (player, event)
