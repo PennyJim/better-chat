@@ -125,7 +125,14 @@ function handle_messages.process_message(sender, text)
 
 	--- Toggle based icon settings
 	local player_settings = settings.get_player_settings(sender)
-	local icons = {"item","entity","technology","recipe","item-group","fluid","tile","virtual-signal","achievement"}
+	local icons = {"virtual-signal","item","fluid","entity","recipe","technology","space-location","achievement","item-group","tile"}
+
+	---Planet is special and has its own tag besides space-location
+	if(player_settings["bc-space-location-icon"].value) then
+		message = replace_all(message, "%[planet=[^%s,%]]+]", function (match)
+			return "[img=space-location."..match:sub(9)
+		end)
+	end
 
 	for _,icon in pairs(icons) do
 		if(player_settings["bc-"..icon.."-icon"].value) then
@@ -134,6 +141,7 @@ function handle_messages.process_message(sender, text)
 			end)
 		end
 	end
+
 	return message
 end
 

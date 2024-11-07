@@ -124,24 +124,31 @@ data:extend{
 	},
 	{
 		type = "bool-setting",
-		name = "bc-achievement-icon",
+		name = "bc-space-location-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
 		order = "player-dg"
 	},
 	{
 		type = "bool-setting",
-		name = "bc-item-group-icon",
+		name = "bc-achievement-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
 		order = "player-dh"
 	},
 	{
 		type = "bool-setting",
-		name = "bc-tile-icon",
+		name = "bc-item-group-icon",
 		setting_type = "runtime-per-user",
 		default_value = false,
 		order = "player-di"
+	},
+	{
+		type = "bool-setting",
+		name = "bc-tile-icon",
+		setting_type = "runtime-per-user",
+		default_value = false,
+		order = "player-dj"
 	},
 	-- { -- Changed my mind about a dropdown list, but not completely
 	-- 	type = "string-setting",
