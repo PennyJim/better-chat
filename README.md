@@ -9,12 +9,14 @@ The main reason I made this mod, is to add support for discord style emotes. eg:
 This functions by other mods calling `remote.call("emojipack registration", "add")` with the mod name and a dictionary of shortcodes and their tags. I recommend using `[img=<type>.<item>]` rather than `[<type>=<item>]` as it looks significantly nicer in chat.
 
 ## Scripting
-To print a permanent message instead of letting Better Chat clear it away, use `remote.call("better-chat", "send")`
+To print a permanent message instead of letting Better Chat clear it away, use `remote.call("better-chat", "send", {})`
 The arguments are:
-1. The `LocalisedString` that is the message
-2. The `Color` of the message
-3. Whether the message is intended for `"global"` broadcast, a `"force"` level message, or a `"player"` specific message.
-4. The id of the recipient force or player. (ignored for global broadcast)
+- `message` - `LocalisedString` : The contents of the message.
+- `level` - `historyLevel` : Whether the message is intended for `"global"` broadcast, a `"force"` level message, or a `"player"` specific message.
+- `recipient` - `uint` : The id of the recipient force or player (ignored for `"global"` broadcast).
+- `color` - `Color?` : The base color of the message.
+- `process_color` - `boolean?` : Whether or not the color of the message should be faded out based on user setting.
+- `clear` - `boolean?` : Whether or not the chat is cleared before printing the new message. `true` by default.
 
 ## Todo List:
 - [x] Use *Proper* migrations
