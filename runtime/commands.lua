@@ -23,6 +23,35 @@ function string.split(str, sep)
 	return fields
 end
 
+---@param string LocalisedString
+local function pack_localized_concat(string)
+  ---@cast string -?
+  local length = #string
+  if length <= 21 then
+    return string
+  end
+
+  ---@type LocalisedString
+  local new_string, index = {""}, 1
+  for i = 2, length, 20 do
+    index = index + 1
+    new_string[index] = {"",
+      string[i],    string[i+1],
+      string[i+2],  string[i+3],
+      string[i+4],  string[i+5],
+      string[i+6],  string[i+7],
+      string[i+8],  string[i+9],
+      string[i+10], string[i+11],
+      string[i+12], string[i+13],
+      string[i+14], string[i+15],
+      string[i+16], string[i+17],
+      string[i+18], string[i+19],
+    }
+  end
+
+  return pack_localized_concat(new_string)
+end
+
 ---Sends an ephemeral warning message to player
 ---@param player LuaPlayer
 ---@param message LocalisedString
@@ -291,6 +320,80 @@ end
 
 commands.clear = function (player, event)
   handle_messages.clear(player.index)
+end
+
+---Adds the given player to the string
+---@param player LuaPlayer
+---@param list_string LocalisedString
+---@param index int
+---@param list_offline boolean Whether or not to include offline players in the list
+---@nodiscard
+---@return int new_index
+local function add_player_to_list(player, list_string, index, list_offline)
+  if player.connected or list_offline then
+    list_string[index+1] = "\n"
+    list_string[index+2] = color(player.name, player.chat_color)
+    if player.connected then
+      list_string[index+3] = " (online)"
+      index = index+3
+    else
+      index = index+2
+    end
+  end
+  return index
+end
+
+commands.admins = function (player, event)
+  local list_offline = not (event.parameters == "online" or event.parameters == "o")
+
+  local message, index = {"",
+    {list_offline and "chat-localization.bc-listing-admins" or "chat-localization.bc-listing-online-admins"},
+  }, 2
+
+  for _, player in pairs(game.players) do
+    if player.admin then
+      index = add_player_to_list(player, message, index, list_offline)
+    end
+  end
+
+  handle_messages.send_message{
+    message = pack_localized_concat(message),
+    send_level = "player",
+    recipient = player.index
+  }
+end
+
+commands.players = function (player, event)
+  local list_offline = not (event.parameters == "online" or event.parameters == "o")
+  local count = event.parameters == "count" or event.parameters == "c"
+
+  local online = table_size(game.connected_players)
+  local total = #game.players
+
+  ---@type LocalisedString
+  local message, index = {"",
+    {"gui-player-management.online-players", online, total}
+  }, 2
+  ---@cast message -?
+
+  -- Return just the count if count is chosen
+  if count then
+    return handle_messages.send_message{
+      message = message[2],
+      send_level = "player",
+      recipient = player.index,
+    }
+  end
+
+  for _, player in pairs(game.players) do
+    index = add_player_to_list(player, message, index, list_offline)
+  end
+
+  handle_messages.send_message{
+    message = pack_localized_concat(message),
+    send_level = "player",
+    recipient = player.index,
+  }
 end
 
 --MARK: Admin Functional

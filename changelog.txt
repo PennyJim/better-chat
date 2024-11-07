@@ -8,6 +8,9 @@ Date: ????
   Commands:
     - Replicated /help & /h
     - Replicated /clear
+    - Replicated /admins
+    - Replicated /players
+      - Doesn't behave exactly the same, but similar enough.
   Bugfixes:
     - Stops trying to imagify qualitied tags
 ---------------------------------------------------------------------------------------------------
