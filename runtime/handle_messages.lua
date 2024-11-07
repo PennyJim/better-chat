@@ -129,7 +129,7 @@ function handle_messages.process_message(sender, text)
 
 	for _,icon in pairs(icons) do
 		if(player_settings["bc-"..icon.."-icon"].value) then
-			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=%S-]", function (match)
+			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=[^%s,%]]+]", function (match)
 				return "[img="..icon.."."..match:sub(3+#icon)
 			end)
 		end

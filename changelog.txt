@@ -7,6 +7,8 @@ Date: ????
     - Added option to show timestamps next to each message. These are in-game time, as real time is simply not something mods can get.
   Commands:
     - Replicated /help & /h
+  Bugfixes:
+    - Stops trying to imagify qualitied tags
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2024-10-21
