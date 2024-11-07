@@ -194,23 +194,8 @@ function handle_messages.send_message(message)
 	--Clear chat if `clear` is true or nil
 	if clear then
 		ChatHistoryManager.print_chat(send_level, recipient)
-
-	else -- FIXME: use the internal print function rather than this hacked together one
-		---@type LuaGameScript|LuaForce|LuaPlayer
-		local printer
-		if send_level == "global" then
-			printer = game
-		elseif send_level == "force" then
-			---@cast recipient -?
-			printer = game.forces[recipient]
-		else
-			---@cast recipient -?
-			printer = game.players[recipient]
-		end
-		printer.print(msg, {
-			color = color,
-			skip = defines.print_skip.never
-		})
+	else
+		ChatHistoryManager.print_latest(send_level, recipient)
 	end
 end
 

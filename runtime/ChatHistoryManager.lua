@@ -204,7 +204,7 @@ end
 local function print_chats(player)
 	local player_index = player.index
 	local isChatOpen = storage.isChatOpen:check(player_index)
-	-- log("Player: "..player_index.."\tIs Open: "..(isChatOpen and "True" or "False"))
+
 	--Obtain relevant settings
 	local player_settings = settings.get_player_settings(player_index)
 	local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
@@ -226,7 +226,7 @@ local function print_chats(player)
 		local color = chat.color or default_color
 
 		if chat.process_color then
-				color = process_color(color_processing, color)
+			color = process_color(color_processing, color)
 		end
 
 		--Print the message
@@ -239,28 +239,73 @@ local function print_chats(player)
 	end
 end
 
+---Prints the latest message from the player
+---@param player LuaPlayer
+local function print_chat(player)
+	local player_index = player.index
+
+	--Obtain relevant settings
+	local player_settings = settings.get_player_settings(player_index)
+	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
+	local color_processing = get_color_process_settings(player_settings)
+
+	local log = storage.PlayerChatLog[player_index]
+	local chat = log.chat_array[log.last_index]
+
+	--Get general message color
+	local color = chat.color or default_color
+
+	if chat.process_color then
+		color = process_color(color_processing, color)
+	end
+
+	--Print the message
+	player.print(chat.message, {
+		color = color,
+		sound = defines.print_sound.never,
+		skip = defines.print_skip.never
+	})
+end
+
+---@type table<historyLevel, fun(index?:int,func:fun(player:LuaPlayer))>
+local print_level_switch = {
+	["global"] = function (index, func)
+		for _, player in pairs(game.players) do
+			func(player)
+		end
+	end,
+	["force"] = function (index, func)
+		---@cast index int
+		for _, player in pairs(game.forces[index].players) do
+			func(player)
+		end
+	end,
+	["player"] = function (index, func)
+		---@cast index int
+		local player = game.get_player(index)
+		if not player then return log("[ERR] Player getting printed to does not exist") end
+		func(player)
+	end
+}
+
 ---Print out all messages for a group
 ---@param chat_level historyLevel
 ---@param chat_index int?
 manager.print_chat = function(chat_level, chat_index)
-	if chat_level == "global" then
-		for _, player in pairs(game.players) do
-			print_chats(player)
-		end
-	elseif chat_level == "force" then
-		---@cast chat_index int
-		for _, player in pairs(game.forces[chat_index].players) do
-			print_chats(player)
-		end
-	elseif chat_level == "player" then
-		---@cast chat_index int
-		local player = game.get_player(chat_index)
-		-- TODO: improve this error statement
-		if not player then return log("[ERR] Something has gone wrong") end
-		print_chats(player)
-	else
-		log({"invalid-destination"})
-	end
+	local func = print_level_switch[chat_level]
+	if not func then return log({"invalid-destination"}) end
+
+	func(chat_index, print_chats)
+end
+
+---Print the latest message in the group without clearing chat first
+---@param chat_level historyLevel
+---@param chat_index int?
+manager.print_latest = function(chat_level, chat_index)
+	local func = print_level_switch[chat_level]
+	if not func then return log({"invalid-destination"}) end
+
+	func(chat_index, print_chat)
 end
 
 ---@class BetterChatGlobal
