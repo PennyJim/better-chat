@@ -1,7 +1,7 @@
 # Better Chatting
 ### An attempt at improving Factorio's built in chat.
 
-Recommended to be combined with [Twemoji](https://mods.factorio.com/mod/twemoji-in-factorio)
+Recommended to be combined with [Twemoji](https://mods.factorio.com/mod/twemoji-in-factorio) or [Fluent Emoji](https://mods.factorio.com/mod/fluent-emoji) (or both)
 
 ## Emojipack
 The main reason I made this mod, is to add support for discord style emotes. eg: `:purple_heart:` -> 💜
