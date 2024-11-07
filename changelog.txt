@@ -4,6 +4,7 @@ Date: ????
   Features:
     - Added a global setting to change how normal messages are sent.
     - Added /t and /team commands to send messages normally.
+    - Added option to show timestamps next to each message. These are in-game time, as real time is simply not something mods can get.
   Commands:
     - Replicated /help & /h
 ---------------------------------------------------------------------------------------------------

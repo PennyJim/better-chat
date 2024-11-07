@@ -56,6 +56,13 @@ data:extend{
 		order = "player-ab",
 	},
 	{
+		type = "bool-setting",
+		name = "bc-show-timestamp",
+		setting_type = "runtime-per-user",
+		default_value = false,
+		order = "player-ac",
+	},
+	{
 		type = "int-setting",
 		name = "bc-player-chat-history",
 		setting_type = "runtime-per-user",

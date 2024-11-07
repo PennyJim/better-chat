@@ -123,7 +123,7 @@ manager.add_message = function(messageParams)
 		message = messageParams.message,
 		color = messageParams.color,
 		process_color = messageParams.process_color,
-		tick = game.tick
+		tick = game.ticks_played
 	}
 
 	if messageParams.level =="global" then
@@ -199,6 +199,26 @@ local function process_color(color_settings, color)
 	return new_color
 end
 
+---Formats the given tick in D+:HH:MM:SS
+---@param tick int
+---@return string
+local function format_time(tick)
+	---@type int, int, int, int
+	local seconds, minutes, hours, days
+	seconds = tick / 60
+	minutes, seconds = math.floor(seconds / 60), seconds % 60
+	hours, minutes = math.floor(minutes / 60), minutes % 60
+	days, hours = math.floor(hours / 24), hours % 24
+
+	if days > 0 then
+		return string.format("%d:%02d:%02d.%02d", days, hours, minutes, seconds)
+	elseif hours > 0 then
+		return string.format("%d:%02d.%02d", hours, minutes, seconds)
+	else
+		return string.format("%d.%02d", minutes, seconds)
+	end
+end
+
 ---Prints the chats to the passed player
 ---@param player LuaPlayer
 local function print_chats(player)
@@ -210,6 +230,7 @@ local function print_chats(player)
 	local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
 	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
 	local message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
+	local show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
 	local color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
@@ -218,7 +239,7 @@ local function print_chats(player)
 
 		--Skip chat if doesn't need to be logged
 		if closeable and not (isChatOpen or player.controller_type == defines.controllers.spectator)
-		and game.tick > chat.tick + message_linger then
+		and game.ticks_played > chat.tick + message_linger then
 			goto continue -- Skip printing message
 		end
 
@@ -229,8 +250,13 @@ local function print_chats(player)
 			color = process_color(color_processing, color)
 		end
 
+		local message = chat.message
+		if show_timestamp then
+			message = {"", format_time(chat.tick).." | ", message}
+		end
+
 		--Print the message
-		player.print(chat.message, {
+		player.print(message, {
 			color = color,
 			sound = defines.print_sound.never,
 			skip = defines.print_skip.never
