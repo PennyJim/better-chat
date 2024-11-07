@@ -36,16 +36,7 @@ local function pack_localized_concat(string)
   for i = 2, length, 20 do
     index = index + 1
     new_string[index] = {"",
-      string[i],    string[i+1],
-      string[i+2],  string[i+3],
-      string[i+4],  string[i+5],
-      string[i+6],  string[i+7],
-      string[i+8],  string[i+9],
-      string[i+10], string[i+11],
-      string[i+12], string[i+13],
-      string[i+14], string[i+15],
-      string[i+16], string[i+17],
-      string[i+18], string[i+19],
+      table.unpack(string--[[@as LocalisedString[] ]], i, i+19)
     }
   end
 
@@ -222,6 +213,8 @@ commands.color = function (player, event)
     recipient = recipient,
   }
 end
+
+--TODO: Implement Ignore
 
 --MARK: Information
 
