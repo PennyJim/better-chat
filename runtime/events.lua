@@ -236,11 +236,13 @@ end
 
 -- Catchall for commands
 events[defines.events.on_console_command] = function (event)
-	storage.isChatOpen[event.player_index or 0] = nil
+	local player_index = event.player_index
+	if not player_index then return end
+	storage.isChatOpen[player_index] = nil
 	local player = game.get_player(event.player_index)
 	if not player then return end
 
-	local func = commands[event.command]
+	local func = commands[event.command] or function() log(event.command..": Not implemented in Better Chatting") end
 	local enabled = not storage.disabledCommands[event.command]
 	if func and enabled then func(player, event) end
 end
