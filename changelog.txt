@@ -2,7 +2,8 @@
 Version: 0.4.3
 Date: ????
   Features:
-    - Added an api for modifying sent messages. The intent being the ability to filter
+    - Added an api for modifying sent messages. The intent being the ability to filter.
+    - Actually expose ability to clear chatlog for a player.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2024-11-08

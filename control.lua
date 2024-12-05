@@ -181,7 +181,7 @@ remote.add_interface("better-chat", {
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)
 	-- [ ] error(LocalisedString, isEphemeral)
-	-- [ ] clear(player_index),
+	clear = ChatHistoryManager.clear,
 
 	get_message = filter.get_message,
 	set_message = filter.set_message,

@@ -113,6 +113,8 @@ manager.remove_player = function(player_index)
 	storage.PlayerChatLog[player_index] = nil
 end
 
+--Empties the ChatLog for the given player
+---@param player_index int
 manager.clear = function (player_index)
 	storage.PlayerChatLog[player_index] = newChatLog()
 end
