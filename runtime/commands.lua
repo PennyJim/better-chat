@@ -6,6 +6,8 @@ local commands = {}
 local handle_messages = require("__better-chat__.runtime.handle_messages")
 local msg = handle_messages.msg
 local color = handle_messages.color
+---Used to 'fill' commands so it wont log as not implemented
+local dummy_func = function()end
 
 ---Splits a string at 'sep'
 ---@param str string
@@ -125,7 +127,6 @@ commands.reply = function (player, event)
 end
 commands.r = commands.reply
 
-local dummy_func = function()end
 commands_api.add_command("team", {"command-help.team"}, dummy_func)
 commands_api.add_command("t", {"command-help.team"}, dummy_func)
 
@@ -194,7 +195,8 @@ commands.color = function (player, event)
   -- Change the message (and set a recipient)
   -- depending on if it's multiplayer or not
 
-  -- Disabled because base game no longer does so??
+  -- Because this only is used when the player has no username set
+  -- It's labelled singleplayer because multiplayer forces you to set one.
   -- if game.is_multiplayer() then
     send_level = "global"
     message[3] = message[2]
@@ -478,6 +480,34 @@ commands.demote = function (player, event)
 		send_level = "global"
 	}
 end
+
+commands.command = function (player, event)
+  handle_messages.send_message{
+    message = msg("bc-command-ran", player, event.parameters),
+    color = player.chat_color,
+    process_color = true,
+    send_level = "global",
+  }
+end
+commands.c = commands.command
+
+-- The lack of clearing will be a little jank
+-- But we need to preserve the measured time the engine reports
+commands["measured-command"] = function (player, event)
+  handle_messages.send_message{
+    message = msg("bc-command-ran", player, event.parameters),
+    color = player.chat_color,
+    process_color = true,
+    send_level = "global",
+    clear = false,
+  }
+end
+commands.mc = commands.command
+
+commands["silent-command"] = function (player, event)
+  log({"command-ran", player.name, event.parameters})
+end
+commands.sc = commands["silent-command"]
 
 -- script.on_event(defines.events.on_console_command, function (test)
 	

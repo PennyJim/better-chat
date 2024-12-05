@@ -4,6 +4,14 @@ Date: ????
   Features:
     - Added an api for modifying sent messages. The intent being the ability to filter.
     - Actually expose ability to clear chatlog for a player.
+  Commands:
+    - Replicated /command & /c
+      Will not replicate any output (like printed error) as that'd require running it a second time.
+      Running the given code a second time will cause *tons* of unintended consequences.
+    - Logged /silent-command & /sc
+    - Replicatd (kinda) /measured-command & /mc
+      The measured time does not get saved as that's just unfeasible without running the code a second time.
+      It also doesn't clear the engine's normal response as that'd clear the measured time.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2024-11-08
