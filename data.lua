@@ -13,4 +13,8 @@ data:extend{
 		linked_game_control = "toggle-menu",
 		action = "lua",
 	},
+	{
+		type = "custom-event",
+		name = "better-chat-message",
+	}
 }

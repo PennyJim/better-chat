@@ -14,7 +14,7 @@ local eventFilters = {}
 -- Actual Chatting
 events[defines.events.on_console_chat] = function (event)
 	local player_index = event.player_index
-	if not player_index then return end
+	if not player_index then return end --TODO: Support messages from console
 	storage.isChatOpen[player_index] = nil
 	local player = game.get_player(player_index)
 	if not player then return end
@@ -30,7 +30,7 @@ events[defines.events.on_console_chat] = function (event)
 		end
 	end
 
-	local message = handle_messages.process_message(player, event.message)
+	local message = handle_messages.process_message(player, send_level, event.message)
 	handle_messages.send_message{
 		message = msg("bc-message-header", player, message),
 		color = player.chat_color,

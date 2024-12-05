@@ -1,5 +1,6 @@
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local automation = require("__better-chat__.runtime.levenshtein_automation")
+local filter = require("__better-chat__.runtime.filter")
 ---@class handle_messages
 local handle_messages = {}
 
@@ -117,9 +118,10 @@ end
 
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
+---@param send_level historyLevel
 ---@param text string
 ---@return string
-function handle_messages.process_message(sender, text)
+function handle_messages.process_message(sender, send_level, text)
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
 
@@ -141,6 +143,9 @@ function handle_messages.process_message(sender, text)
 			end)
 		end
 	end
+
+	-- Use event to filter
+	message = filter.chat(sender, send_level, text, message)
 
 	return message
 end

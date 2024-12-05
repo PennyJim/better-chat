@@ -3,6 +3,7 @@ local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
+local filter = require("__better-chat__.runtime.filter")
 ---@class BetterChatGlobal
 ---@field emojipacks table<string,table<string,string[]|string>>
 ---@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
@@ -180,7 +181,10 @@ remote.add_interface("better-chat", {
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)
 	-- [ ] error(LocalisedString, isEphemeral)
-	-- [ ] clear(player_index)
+	-- [ ] clear(player_index),
+
+	get_message = filter.get_message,
+	set_message = filter.set_message,
 })
 remote.add_interface("emojipack registration", {
 	add = function (mod_name, shortcode_dictionary)
