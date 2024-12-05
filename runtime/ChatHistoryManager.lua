@@ -229,64 +229,31 @@ local function format_time(tick)
 	end
 end
 
----Prints the chats to the passed player
----@param player LuaPlayer
-local function print_chats(player)
-	local player_index = player.index
-	local isChatOpen = storage.isChatOpen:check(player_index)
+--MARK: Chat Printing
+---@type LuaPlayer
+local printing_player
+---@type boolean
+local isChatOpen
+---@type LuaCustomTable<string, ModSetting>
+local player_settings
+---@type boolean
+local closeable
+---@type Color
+local default_color
+---@type int
+local message_linger
+---@type boolean
+local show_timestamp
+---@type ColorSettings
+local color_processing
 
-	--Obtain relevant settings
-	local player_settings = settings.get_player_settings(player_index)
-	local closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
-	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
-	local message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
-	local show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
-	local color_processing = get_color_process_settings(player_settings)
-
-	--Go through every chat
-	player.clear_console()
-	for _,chat in storage.PlayerChatLog[player_index]:from() do
-
-		--Skip chat if doesn't need to be logged
-		if closeable and not (isChatOpen or player.controller_type == defines.controllers.spectator)
-		and game.ticks_played > chat.tick + message_linger then
-			goto continue -- Skip printing message
-		end
-
-		--Get general message color
-		local color = chat.color or default_color
-
-		if chat.process_color then
-			color = process_color(color_processing, color)
-		end
-
-		local message = chat.message
-		if show_timestamp then
-			message = {"", format_time(chat.tick).." | ", message}
-		end
-
-		--Print the message
-		player.print(message, {
-			color = color,
-			sound = defines.print_sound.never,
-			skip = defines.print_skip.never
-		})
-			::continue::
+---@param chat Chat
+local function print_individual_chat(chat)
+	--Skip chat if doesn't need to be logged
+	if closeable and not (isChatOpen or printing_player.controller_type == defines.controllers.spectator)
+	and game.ticks_played > chat.tick + message_linger then
+		return -- Skip printing message
 	end
-end
-
----Prints the latest message from the player
----@param player LuaPlayer
-local function print_chat(player)
-	local player_index = player.index
-
-	--Obtain relevant settings
-	local player_settings = settings.get_player_settings(player_index)
-	local default_color = player_settings["bc-default-color"].value--[[@as Color]]
-	local color_processing = get_color_process_settings(player_settings)
-
-	local log = storage.PlayerChatLog[player_index]
-	local chat = log.chat_array[log.last_index]
 
 	--Get general message color
 	local color = chat.color or default_color
@@ -295,12 +262,60 @@ local function print_chat(player)
 		color = process_color(color_processing, color)
 	end
 
+	local message = chat.message
+	if show_timestamp then
+		message = {"", format_time(chat.tick).." | ", message}
+	end
+
 	--Print the message
-	player.print(chat.message, {
+	printing_player.print(message, {
 		color = color,
 		sound = defines.print_sound.never,
 		skip = defines.print_skip.never
 	})
+end
+
+---Prints the chats to the passed player
+---@param player LuaPlayer
+local function print_chats(player)
+	local player_index = player.index
+	printing_player = player
+	isChatOpen = storage.isChatOpen:check(player_index)
+
+	--Obtain relevant settings
+	player_settings = settings.get_player_settings(player_index)
+	closeable = player_settings["bc-player-closeable-chat"].value--[[@as boolean]]
+	default_color = player_settings["bc-default-color"].value--[[@as Color]]
+	message_linger = math.floor(player_settings["bc-message-linger"].value--[[@as double]] * 60)
+	show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
+	color_processing = get_color_process_settings(player_settings)
+
+	--Go through every chat
+	player.clear_console()
+	for _,chat in storage.PlayerChatLog[player_index]:from() do
+		print_individual_chat(chat)
+	end
+end
+
+---Prints the latest message from the player
+---@param player LuaPlayer
+local function print_chat(player)
+	local player_index = player.index
+	printing_player = player
+	-- isChatOpen not necessary as closeable set to false
+
+	--Obtain relevant settings
+	player_settings = settings.get_player_settings(player_index)
+	closeable = false -- Set to false to exit the skip printing check asap
+	default_color = player_settings["bc-default-color"].value--[[@as Color]]
+	-- message_linger not necessary as closeable set to false
+	show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
+	color_processing = get_color_process_settings(player_settings)
+
+	local log = storage.PlayerChatLog[player_index]
+	local chat = log.chat_array[log.last_index]
+
+	print_individual_chat(chat)
 end
 
 ---@type table<historyLevel, fun(index?:int,func:fun(player:LuaPlayer))>

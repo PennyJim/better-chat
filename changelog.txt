@@ -12,6 +12,8 @@ Date: ????
     - Replicatd (kinda) /measured-command & /mc
       The measured time does not get saved as that's just unfeasible without running the code a second time.
       It also doesn't clear the engine's normal response as that'd clear the measured time.
+  Bugfixes:
+    - Fixed inconsistencies between clearing prints and regular prints. This was achieved by consolidating the functions more.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2024-11-08
