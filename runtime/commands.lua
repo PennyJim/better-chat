@@ -57,7 +57,7 @@ end
 ---@param player LuaPlayer
 ---@param message string
 local function shout(player, message)
-	message = handle_messages.process_message(player, message)
+	message = handle_messages.process_message(player, "global", message)
 	handle_messages.send_message{
 		message = msg("bc-shout-header", player, message),
 		color = player.chat_color,
@@ -70,7 +70,7 @@ end
 ---@param recipient LuaPlayer
 ---@param message string
 local function whisper(player, recipient, message)
-	message = handle_messages.process_message(player, message)
+	message = handle_messages.process_message(player, "player", message)
 	handle_messages.send_message{
 		message = msg("bc-whisper-to-header", recipient, message),
 		color = player.chat_color,
@@ -93,7 +93,7 @@ commands.shout = function(player, event)
 end
 commands.s = commands.shout
 commands.team = function(player, event)
-	local message = handle_messages.process_message(player, event.parameters)
+	local message = handle_messages.process_message(player, "force", event.parameters)
 	handle_messages.send_message{
 		message = msg("bc-team-header", player, message),
 		color = player.chat_color,
