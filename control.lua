@@ -29,7 +29,7 @@ local function clean_emojipacks(changes)
   storage.emojipacks[script.mod_name] = default_emojipack
 end
 
-script.on_event("bc-toggle-chat", function (event)
+script.on_event(prototypes.custom_input["bc-toggle-chat"], function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end
@@ -37,7 +37,7 @@ script.on_event("bc-toggle-chat", function (event)
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Toggle Chat")
 end)
-script.on_event("bc-exit-chat", function (event)
+script.on_event(prototypes.custom_input["bc-exit-chat"], function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end

@@ -235,6 +235,7 @@ end
 --#endregion
 
 -- Catchall for commands
+---@param event EventData.on_console_command
 events[defines.events.on_console_command] = function (event)
 	local player_index = event.player_index
 	if not player_index then return end
