@@ -155,7 +155,8 @@ end
 ---@field color Color? The general color of the message
 ---@field process_color boolean? Whether or not the message is faded out by the player's settings
 ---@field send_level historyLevel
----@field clear boolean? Whether or not the chat is cleared, `true` by default
+---@field skip_print boolean? Whether or not the added chat is printed at all, `false` by default
+---@field clear boolean? Whether or not the chat is cleared before printing, `true` by default
 
 ---@class messageParams.global : messageParams.base
 ---@field send_level "global" How broad this is broadcast
@@ -194,6 +195,7 @@ function handle_messages.send_message(message)
 	local msg = message.message
 	local color = message.color
 	local process_color = message.process_color
+	local skip_print = message.skip_print
 	local clear = message.clear ~= false
 
 	ChatHistoryManager.add_message{
@@ -203,6 +205,8 @@ function handle_messages.send_message(message)
 		level = send_level,
 		chat_index = recipient
 	}
+
+	if skip_print then return end
 
 	--Clear chat if `clear` is true or nil
 	if clear then

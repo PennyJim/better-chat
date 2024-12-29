@@ -487,6 +487,7 @@ commands.command = function (player, event)
     color = player.chat_color,
     process_color = true,
     send_level = "global",
+    skip_print = true,
   }
 end
 commands.c = commands.command
@@ -499,7 +500,7 @@ commands["measured-command"] = function (player, event)
     color = player.chat_color,
     process_color = true,
     send_level = "global",
-    clear = false,
+    skip_print = true,
   }
 end
 commands.mc = commands.command
