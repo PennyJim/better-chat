@@ -244,18 +244,74 @@ commands.seed = function (player)
   }
 end
 
-commands.evolution = function (player)
+---@param enemy_force LuaForce
+---@param surface_name string
+---@return LocalisedString
+local function get_surface_evolution(enemy_force, surface_name)
+  local evolution_factor = enemy_force.get_evolution_factor(surface_name)
+  return {
+    "evolution-message",
+    string.format("%.4f", evolution_factor),
+    string.format("%d", enemy_force.get_evolution_factor_by_time(surface_name) / evolution_factor * 100),
+    string.format("%d", enemy_force.get_evolution_factor_by_pollution(surface_name) / evolution_factor * 100),
+    string.format("%d", enemy_force.get_evolution_factor_by_killing_spawners(surface_name) / evolution_factor * 100)
+  }
+end
+
+-- My logic for getting the localised surface name might miss something
+-- I know it considers the localised_name while the base game doesn't
+---@param surface LuaSurface
+---@return LocalisedString|true
+local function get_localised_surface_name(surface)
+  ---@type LocalisedString
+  local name = surface.localised_name        -- Get the localised surface name
+  if not name then                           -- If it doesn't have one
+    local planet = surface.planet            -- then check if it has a planet
+    if planet then
+      name = planet.prototype.localised_name -- And use *that* localised name
+    end
+  end
+
+  return name or surface.name
+end
+commands.evolution = function (player, event)
+  ---@type LocalisedString
+  local message
   local enemy_force = game.forces["enemy"]
-  local surface_index = player.surface_index
-  local evolution_factor = enemy_force.get_evolution_factor(surface_index)
+  local parameter = event.parameters
+
+  if parameter ~= "" then
+    local surface = game.get_surface(parameter)
+    if surface then
+      message = get_surface_evolution(enemy_force, surface.name)
+    else
+      message = {"surface-name-doesnt-exist", parameter}
+    end
+
+  else
+
+
+    ---@type LocalisedString
+    message = {""}
+    local index = 2
+
+    for surface_name, surface in pairs(game.surfaces) do
+      ---@cast surface_name string
+      if surface.platform then goto skip_evolution end -- Ignore platforms
+
+      message[index] = get_localised_surface_name(surface)          -- Finally, fallback to the surface string name
+      message[index + 1] = " - "
+      message[index + 2] = get_surface_evolution(enemy_force, surface_name)
+      message[index + 3] = "\n\t\t"
+
+      index = index + 4
+      ::skip_evolution::
+    end
+    message[index - 1] = nil -- remove trailing newline
+  end
+
   handle_messages.send_message{
-    message = {
-      "evolution-message",
-      string.format("%.4f", evolution_factor),
-      string.format("%d", enemy_force.get_evolution_factor_by_time(surface_index) / evolution_factor * 100),
-      string.format("%d", enemy_force.get_evolution_factor_by_pollution(surface_index) / evolution_factor * 100),
-      string.format("%d", enemy_force.get_evolution_factor_by_killing_spawners(surface_index) / evolution_factor * 100)
-    },
+    message = pack_localized_concat(message),
     send_level = "player",
     recipient = player.index
   }

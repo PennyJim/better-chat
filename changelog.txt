@@ -3,6 +3,7 @@ Version: 0.4.4
 Date: ????
   Bugfixes:
     - The lua commands now don't squash any output (but they now appear after the output..)
+    - The evolution command now actually lists the evolutions for every surface
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2024-12-05
