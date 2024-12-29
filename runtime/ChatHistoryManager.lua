@@ -145,8 +145,7 @@ manager.add_message = function(messageParams)
 			storage.ForceChatLog[force.index]:add(newChat, force_chat_history)
 		end
 
-		for _, player in pairs(game.players) do
-			local player_index = player.index
+		for player_index in pairs(game.players) do
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
 			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
 		end
@@ -162,6 +161,17 @@ manager.add_message = function(messageParams)
 			local player_index = player.index
 			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
 			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+		end
+
+
+	elseif messageParams.level == "surface" then
+		local surface_index = messageParams.chat_index --[[@as int]]
+		-- Add message to each player on the surface
+		for player_index, player in pairs(game.players) do
+			if player.surface_index == surface_index then
+				local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
+				storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+			end
 		end
 
 
@@ -329,6 +339,12 @@ local print_level_switch = {
 		---@cast index int
 		for _, player in pairs(game.forces[index].players) do
 			func(player)
+		end
+	end,
+	["surface"] = function (index, func)
+		---@cast index int
+		for _, player in pairs(game.players) do
+			if player.surface_index == index then func(player) end
 		end
 	end,
 	["player"] = function (index, func)

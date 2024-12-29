@@ -1,4 +1,4 @@
----@alias historyLevel "global"|"force"|"player"
+---@alias historyLevel "global"|"force"|"player"|"surface"
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message

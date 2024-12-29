@@ -162,10 +162,17 @@ end
 ---@field send_level "global" How broad this is broadcast
 
 ---@class messageParams.recipient : messageParams.base
----@field send_level "force"|"player"
----@field recipient integer? Either the player or force that recieves it if the send_level was not global
+---@field send_level "force"|"player"|"surface"
+---@field recipient integer? Either the player, surface, or force that recieves it if the send_level was not global
 
 ---@alias messageParams messageParams.global|messageParams.recipient
+
+local valid_send_levels = {
+	global = true,
+	force = true,
+	surface = true,
+	player = true,
+}
 
 ---Processes messsage, saves it to history, then sends latest x messages
 ---@param message messageParams
@@ -173,17 +180,17 @@ end
 function handle_messages.send_message(message)
 	local error = nil
 	local send_level = message.send_level
-	local recipient = message.recipient
+	local recipient = message.recipient --[[@as int]]
 
-	if send_level ~= "force" and
-		send_level ~= "global" and
-		send_level ~= "player" then
-			error = "Invalid send level"
+	if not valid_send_levels[send_level] then
+		error = "Invalid send level"
 	elseif send_level ~= "global" and type(recipient) ~= "number" then
 		error = "Invalid recipient. Must be an index"
 	elseif send_level == "force" and not game.forces[recipient] then
 		error = "Invalid force"
-	elseif send_level == "player" and not game.players[recipient] then
+	elseif send_level == "surface" and not game.get_surface(recipient) then
+		error = "Invalid surface"
+	elseif send_level == "player" and not game.get_player(recipient) then
 		error = "Invalid player"
 	end
 
