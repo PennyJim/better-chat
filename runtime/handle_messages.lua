@@ -151,12 +151,18 @@ function handle_messages.process_message(sender, send_level, text)
 end
 
 ---@class messageParams.base
----@field message LocalisedString The message
----@field color Color? The general color of the message
----@field process_color boolean? Whether or not the message is faded out by the player's settings
+---The contents of the message.
+---@field message LocalisedString
+---Whether the message is intended for `"global"` broadcast, everyone on some `"force"`, everyone on a `"surface"`, or a specific `"player"`.
 ---@field send_level historyLevel
----@field skip_print boolean? Whether or not the added chat is printed at all. This will also skip any sound. `false` by default
----@field clear boolean? Whether or not the chat is cleared before printing, `true` by default
+---The base color of the message.
+---@field color? Color
+---Whether or not the message is faded out by the player's settings. Defaults to `false`.
+---@field process_color? boolean
+---Whether or not the added chat is printed at all. This will also skip any sound. Defaults to `false`.
+---@field skip_print? boolean
+---Whether or not the chat is cleared before printing the new message. Defaults to `true`.
+---@field clear? boolean
 ---If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
 ---@field sound? defines.print_sound
 ---The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
@@ -165,11 +171,13 @@ end
 ---@field volume_modifier? float
 
 ---@class messageParams.global : messageParams.base
----@field send_level "global" How broad this is broadcast
+---@field send_level "global"
+---@field recipient nil
 
 ---@class messageParams.recipient : messageParams.base
 ---@field send_level "force"|"player"|"surface"
----@field recipient integer? Either the player, surface, or force that recieves it if the send_level was not global
+---Either the player, surface, or force that recieves it if the send_level was not global
+---@field recipient integer
 
 ---@alias messageParams messageParams.global|messageParams.recipient
 
