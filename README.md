@@ -76,3 +76,4 @@ end
 
 ## Todo List:
 - [ ] Add nicknames
+- [ ] Add admin interface
