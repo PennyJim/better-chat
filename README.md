@@ -24,5 +24,55 @@ To print a permanent message instead of letting Better Chat clear it away, use `
 - `volume_modifier` - `float?` : The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`
 
 
+## Compatibility
+For easy compatibility, you can just use this code snippet and turn every `object.print(message, settings)` into `compat_send(object, message, settings)`.
+```lua
+---@type boolean?
+local has_better_chat = nil
+local send_levels = {
+	["LuaGameScript"] = "global",
+	["LuaForce"] = "force",
+	["LuaPlayer"] = "player",
+	["LuaSurface"] = "surface",
+}
+--- Safely attempts to print via the Better Chatting's interface
+---@param recipient LuaGameScript|LuaForce|LuaPlayer|LuaSurface
+---@param msg LocalisedString
+---@param print_settings PrintSettings?
+function compat_send(recipient, msg, print_settings)
+	if has_better_chat == nil then
+		local better_chat = remote.interfaces["better-chat"]
+		has_better_chat = better_chat and better_chat["send"]
+	end
+
+	if not has_better_chat then return recipient.print(msg, print_settings) end
+	print_settings = print_settings or {}
+
+
+	local send_level = send_levels[recipient.object_name]
+	---@type int?
+	local send_index
+	if send_level ~= "global" then
+		send_index = recipient.index
+		if not send_index then
+			error("Invalid Recipient", 2)
+		end
+	end
+
+	remote.call("better-chat", "send", {
+		message = msg,
+		send_level = send_level,
+		color = print_settings.color,
+		recipient = send_index,
+		clear = false,
+
+		sound = print_settings.sound,
+		sound_path = print_settings.sound_path,
+		volume_modifier = print_settings.volume_modifier
+	})
+end
+```
+
+
 ## Todo List:
 - [ ] Add nicknames
