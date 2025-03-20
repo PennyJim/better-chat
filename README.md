@@ -17,7 +17,11 @@ The arguments are:
 - `color` - `Color?` : The base color of the message.
 - `process_color` - `boolean?` : Whether or not the color of the message should be faded out based on user setting.
 - `clear` - `boolean?` : Whether or not the chat is cleared before printing the new message. `true` by default.
-- `skip_print` - `boolean?` : Whether or not the chat will be immediately printed. This is used for the lua commands to not squash unreplicable normal output. `false` by default.
+- `skip_print` - `boolean?` : Whether or not the chat will be immediately printed consequentially also skips the sound. This is used for the lua commands to not squash unreplicable normal output. `false` by default.
+- `sound` - `defines.print_sound?` : If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
+- `sound_path` - `SoundPath?` : The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
+- `volume_modifier` - `float?` : The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`
+
 
 ## Todo List:
 - [ ] Add nicknames

@@ -155,8 +155,14 @@ end
 ---@field color Color? The general color of the message
 ---@field process_color boolean? Whether or not the message is faded out by the player's settings
 ---@field send_level historyLevel
----@field skip_print boolean? Whether or not the added chat is printed at all, `false` by default
+---@field skip_print boolean? Whether or not the added chat is printed at all. This will also skip any sound. `false` by default
 ---@field clear boolean? Whether or not the chat is cleared before printing, `true` by default
+---If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
+---@field sound? defines.print_sound
+---The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
+---@field sound_path? SoundPath
+---The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
+---@field volume_modifier? float
 
 ---@class messageParams.global : messageParams.base
 ---@field send_level "global" How broad this is broadcast
@@ -204,6 +210,12 @@ function handle_messages.send_message(message)
 	local process_color = message.process_color
 	local skip_print = message.skip_print
 	local clear = message.clear ~= false
+	local sound = message.sound
+	if not sound and not clear then
+		sound = defines.print_sound.use_player_settings
+	end
+	local sound_path = message.sound_path
+	local volume_modifier = message.volume_modifier
 
 	ChatHistoryManager.add_message{
 		message = msg,
@@ -217,9 +229,9 @@ function handle_messages.send_message(message)
 
 	--Clear chat if `clear` is true or nil
 	if clear then
-		ChatHistoryManager.print_chat(send_level, recipient)
+		ChatHistoryManager.print_chat(send_level, recipient, sound, sound_path, volume_modifier)
 	else
-		ChatHistoryManager.print_latest(send_level, recipient)
+		ChatHistoryManager.print_latest(send_level, recipient, sound, sound_path, volume_modifier)
 	end
 end
 

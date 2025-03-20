@@ -256,6 +256,12 @@ local message_linger
 local show_timestamp
 ---@type ColorSettings
 local color_processing
+---@type defines.print_sound
+local sound = defines.print_sound.never
+---@type SoundPath?
+local sound_path
+---@type float?
+local volume_modifier
 
 ---@param chat Chat
 local function print_individual_chat(chat)
@@ -280,9 +286,15 @@ local function print_individual_chat(chat)
 	--Print the message
 	printing_player.print(message, {
 		color = color,
-		sound = defines.print_sound.never,
-		skip = defines.print_skip.never
+		skip = defines.print_skip.never,
+
+		sound = sound,
+		sound_path = sound_path,
+		volume_modifier = volume_modifier,
 	})
+	sound = defines.print_sound.never
+	sound_path = nil
+	volume_modifier = nil
 end
 
 ---Prints the chats to the passed player
@@ -358,20 +370,32 @@ local print_level_switch = {
 ---Print out all messages for a group
 ---@param chat_level historyLevel
 ---@param chat_index int?
-manager.print_chat = function(chat_level, chat_index)
+---@param print_sound defines.print_sound?
+---@param print_sound_path SoundPath?
+---@param print_volume float?
+manager.print_chat = function(chat_level, chat_index, print_sound, print_sound_path, print_volume)
 	local func = print_level_switch[chat_level]
 	if not func then return log({"invalid-destination"}) end
 
+	sound = print_sound or defines.print_sound.never
+	sound_path = print_sound_path
+	volume_modifier = print_volume
 	func(chat_index, print_chats)
 end
 
 ---Print the latest message in the group without clearing chat first
 ---@param chat_level historyLevel
 ---@param chat_index int?
-manager.print_latest = function(chat_level, chat_index)
+---@param print_sound defines.print_sound? Defaults to `defines.print_sound.never`
+---@param print_sound_path SoundPath?
+---@param print_volume float?
+manager.print_latest = function(chat_level, chat_index, print_sound, print_sound_path, print_volume)
 	local func = print_level_switch[chat_level]
 	if not func then return log({"invalid-destination"}) end
 
+	sound = print_sound or defines.print_sound.never
+	sound_path = print_sound_path
+	volume_modifier = print_volume
 	func(chat_index, print_chat)
 end
 
