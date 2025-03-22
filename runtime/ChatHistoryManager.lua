@@ -81,20 +81,20 @@ end
 
 ---MARK: Manager
 
----@class ChatLogManager
-local manager = {}
+---@class ChatLogManager : custom_event_handler
+local manager = {events = {}--[[@as event_handler.events]], remote_interfaces = {}--[[@as custom_event_handler.remote_interfaces]]}
 
 ---Adds a new chatlog for force_index if it didn't exist before
----@param force_index int
-manager.add_force = function(force_index)
+manager.events[defines.events.on_force_created] = function (event)
+	local force_index = event.force.index
 	if storage.ForceChatLog[force_index] then return end
 	storage.ForceChatLog[force_index] = newChatLog(
 		storage.GlobalChatLog, "force"
 	)
 end
 ---Adds a new chatlog for player_index if it didn't exist before
----@param player_index int
-manager.add_player = function(player_index)
+manager.events[defines.events.on_player_created] = function (event)
+	local player_index = event.player_index
 	if storage.PlayerChatLog[player_index] then return end
 	storage.PlayerChatLog[player_index] = newChatLog(
 		storage.ForceChatLog[game.get_player(player_index).force_index],
@@ -103,14 +103,12 @@ manager.add_player = function(player_index)
 end
 
 ---Removes a chatlog for deleted force
----@param force_index int
-manager.remove_force = function(force_index)
-	storage.ForceChatLog[force_index] = nil
+manager.events[defines.events.on_forces_merged] = function (event)
+	storage.ForceChatLog[event.source_index] = nil
 end
 ---Removes a chatlog for removed player
----@param player_index int
-manager.remove_player = function(player_index)
-	storage.PlayerChatLog[player_index] = nil
+manager.events[defines.events.on_player_removed] = function (event)
+	storage.PlayerChatLog[event.player_index] = nil
 end
 
 --Empties the ChatLog for the given player
@@ -399,13 +397,61 @@ manager.print_latest = function(chat_level, chat_index, print_sound, print_sound
 	func(chat_index, print_chat)
 end
 
+manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
+  local setting = event.setting
+  if event.setting_type == "runtime-global" then
+    if setting == "bc-global-chat-history"
+    or setting == "bc-force-chat-history" then
+      -- Send a message to notify the setting change
+      -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
+      local message = setting == "bc-global-chat-history" and
+        "chat-localization.bc-global-history-changed" or "chat-localization.bc-force-history-changed"
+      local new_setting = settings.global[setting].value
+      send_message{
+        message = {message, new_setting},
+        send_level = "global"
+      }
+      manager.print_chat("global")
+    end
+  else
+    local player_index = event.player_index
+    if not player_index then return log("Who changed their setting???") end
+    if setting == "bc-player-chat-history" then
+      -- Send a message to notify the setting change
+      -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
+      local new_setting = settings.get_player_settings(player_index)[setting].value
+      send_message{
+        message = {"chat-localization.bc-player-history-changed", new_setting},
+        send_level = "player",
+        recipient = player_index
+      }
+      manager.print_chat("player", player_index)
+    elseif setting == "bc-player-closeable-chat" then
+      -- Clear opened value when closeable is disabled
+      -- Also does it when enabled, but they should just be in main menu
+      storage.isChatOpen[player_index--[[@as int]]] = nil
+      -- Update chat to now match the openness it Should be now
+      manager.print_chat("player", player_index)
+    elseif (
+      setting == "bc-color-fade" or
+      setting == "bc-default-color" or
+      setting == "bc-error-color" or
+      setting == "bc-warn-color" or
+      setting == "bc-debug-color"
+    ) then
+      -- Reprint chat to update the the printed chat
+      manager.print_chat("player", player_index)
+    end
+  end
+end
+
 ---@class BetterChatStorage
 ---@field GlobalChatLog ChatLog
 ---@field ForceChatLog table<int, ChatLog>
 ---@field PlayerChatLog table<int, ChatLog>
 
 ---Initializes Chat History
-manager.init = function()
+manager.on_init = function()
 	storage.GlobalChatLog = newChatLog();
 	storage.ForceChatLog = {}
 	for _,force in pairs(game.forces) do
@@ -417,6 +463,10 @@ manager.init = function()
 		storage.PlayerChatLog[player_index] = newChatLog();
 	end
 end
+
+manager.remote_interfaces["better-chat"] = {
+	clear = manager.clear
+}
 
 ---Functions for internal manipulations by runtime_migrations
 manager.__newChatLog = newChatLog

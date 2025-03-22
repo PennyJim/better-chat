@@ -242,6 +242,8 @@ function handle_messages.send_message(message)
 		ChatHistoryManager.print_latest(send_level, recipient, sound, sound_path, volume_modifier)
 	end
 end
+--- Because the printer needs it and this file requires the printer
+send_message = handle_messages.send_message
 
 ---Send a force-leve message and bcc every force
 ---that considers this force friendly

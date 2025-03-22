@@ -1,8 +1,10 @@
 if ... ~= "__better-chat__.runtime.custom_event_handler" then
 	return require("__better-chat__.runtime.custom_event_handler")
 end
-
 local util = require("util")
+
+---@class custom_event_handler.remote_interfaces : {[string]:{[string]:function}}
+
 ---@class custom_event_handler : event_handler
 ---@field on_script_trigger? table<string,fun(event:EventData.on_script_trigger_effect)>
 ---@field remote_interfaces? table<string,table<string,function>>
