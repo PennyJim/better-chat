@@ -14,7 +14,7 @@ local function setup_storage()
 	storage.emojipacks = storage.emojipacks or {
 		[script.mod_name] = default_emojipack
 	}
-	storage.isChatOpen = storage.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
+	storage.isChatOpen = storage.isChatOpen or setmetatable({}, metatables["bc-chatOpen"])
 	storage.disabledListeners = storage.disabledListeners or {}
 	storage.disabledCommands = storage.disabledCommands or {}
   storage.lastWhispered = storage.lastWhispered or {}

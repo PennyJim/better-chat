@@ -7,44 +7,10 @@ local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local filter = require("__better-chat__.runtime.filter")
 
----@type {[string]:metatable}
-metatables = {}
 
-
-
----@param event EventData.CustomInputEvent
-backup_handler.events[prototypes.custom_input["bc-toggle-chat"].event_id] = function (event)
-  if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
-    return
-  end
-	storage.isChatOpen[event.player_index] = not storage.isChatOpen:check(event.player_index)
-	ChatHistoryManager.print_chat("player", event.player_index)
-	-- log("Toggle Chat")
-end
----@param event EventData.CustomInputEvent
-backup_handler.events[script.get_event_id("bc-exit-chat")] = function (event)
-  if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
-    return
-  end
-	storage.isChatOpen[event.player_index] = nil
-	ChatHistoryManager.print_chat("player", event.player_index)
-	-- log("Exit Chat")
-end
 
 --#region Setup
-local isOpenDirty = false
-metatables.chatOpenMeta = {
-	__index = {
-		check = function (self, player_index)
-			if isOpenDirty then
-				self = {}
-				isOpenDirty = false
-			end
-			return self[player_index]
-		end
-	}
-}
-script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
+
 
 backup_handler.on_init = function ()
 	ChatHistoryManager.init()
@@ -149,8 +115,16 @@ remote.add_interface("better-chat", {
 })
 --#endregion
 
-event_handler.add_lib(require("__better-chat__.runtime.storage"))
-event_handler.add_lib(backup_handler)
+---@type {[string]:metatable}
+metatables = {}
+
 event_handler.add_libraries{
-	require("__better-chat__.runtime.disableFunctions")
+	require("__better-chat__.runtime.storage"),
+	backup_handler,
+	require("__better-chat__.runtime.disableFunctions"),
+	require("__better-chat__.runtime.is_open"),
 }
+
+for name, metatable in pairs(metatables) do
+	script.register_metatable(name, metatable)
+end
