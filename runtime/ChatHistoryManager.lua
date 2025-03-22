@@ -81,6 +81,7 @@ end
 
 ---MARK: Manager
 
+---@alias historyLevel "global"|"force"|"player"|"surface"
 ---@class ChatLogManager : custom_event_handler
 local manager = {events = {}--[[@as event_handler.events]], remote_interfaces = {}--[[@as custom_event_handler.remote_interfaces]]}
 

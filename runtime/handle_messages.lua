@@ -1,8 +1,8 @@
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local automation = require("__better-chat__.runtime.levenshtein_automation")
 local filter = require("__better-chat__.runtime.filter")
----@class handle_messages
-local handle_messages = {}
+---@class handle_messages : custom_event_handler
+local handle_messages = {remote_interfaces = {}}
 
 --MARK: Local functions
 
@@ -244,6 +244,33 @@ function handle_messages.send_message(message)
 end
 --- Because the printer needs it and this file requires the printer
 send_message = handle_messages.send_message
+
+---A compatibility layer for the old format of the remote interface
+---@see handle_messages.send_message
+---@param message LocalisedString|messageParams
+---@param color Color?
+---@param send_level historyLevel?
+---@param recipient integer?
+---@param clear boolean? Whether or not the chat is cleared, `true` by default
+local function compatibility_send(message, color, send_level, recipient, clear)
+	if type(message) == "table" and message[1] then
+		---@cast message LocalisedString
+		return handle_messages.send_message{
+			message = message,
+			color = color,
+			send_level = send_level or "global",
+			recipient = recipient,
+			clear = clear,
+		}
+
+	else
+		---@cast message messageParams
+		return handle_messages.send_message(message)
+	end
+end
+handle_messages.remote_interfaces["better-chat"] = {
+	send = compatibility_send,
+}
 
 ---Send a force-leve message and bcc every force
 ---that considers this force friendly
