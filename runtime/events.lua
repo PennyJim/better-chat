@@ -6,9 +6,6 @@ local color = handle_messages.color
 ---@alias EventFunctionDict event_handler.events
 ---@type EventFunctionDict
 local events = {}
----@alias EventFilterDict {[defines.events]: EventFilter}
----@type EventFilter
-local eventFilters = {}
 
 
 -- Actual Chatting
@@ -264,10 +261,8 @@ end
 
 ---@class events
 ---@field events EventFunctionDict
----@field eventFilters EventFilterDict
 ---@field get_remote_events fun()
 return {
 	events = events,
-	eventFilters = eventFilters,
 	get_remote_events = remote_events
 }

@@ -1,3 +1,7 @@
+local event_handler = require("__better-chat__.runtime.custom_event_handler")
+---@type custom_event_handler
+local backup_handler = {events = {}}
+
 ---@alias historyLevel "global"|"force"|"player"|"surface"
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
@@ -29,22 +33,24 @@ local function clean_emojipacks(changes)
   storage.emojipacks[script.mod_name] = default_emojipack
 end
 
-script.on_event(prototypes.custom_input["bc-toggle-chat"], function (event)
+---@param event EventData.CustomInputEvent
+backup_handler.events[prototypes.custom_input["bc-toggle-chat"].event_id] = function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end
 	storage.isChatOpen[event.player_index] = not storage.isChatOpen:check(event.player_index)
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Toggle Chat")
-end)
-script.on_event(prototypes.custom_input["bc-exit-chat"], function (event)
+end
+---@param event EventData.CustomInputEvent
+backup_handler.events[script.get_event_id("bc-exit-chat")] = function (event)
   if not settings.get_player_settings(event.player_index)["bc-player-closeable-chat"].value then
     return
   end
 	storage.isChatOpen[event.player_index] = nil
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Exit Chat")
-end)
+end
 
 --#region Setup
 local isOpenDirty = false
@@ -71,20 +77,15 @@ local function setupGlobal()
   storage.lastWhispered = storage.lastWhispered or {}
 end
 
-script.on_init(function ()
+backup_handler.on_init = function ()
   setupGlobal()
-	disableFunctions.register_enabled_listeners()
 	ChatHistoryManager.init()
-end)
-script.on_load(function ()
-	disableFunctions.register_enabled_listeners()
-end)
-script.on_configuration_changed(function (change)
+end
+backup_handler.on_configuration_changed = function (change)
   setupGlobal()
 	clean_emojipacks(change.mod_changes)
-	disableFunctions.reenable(change.mod_changes)
-end)
-script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
+end
+backup_handler.events[defines.events.on_runtime_mod_setting_changed] = function (event)
   local setting = event.setting
   if event.setting_type == "runtime-global" then
     if setting == "bc-global-chat-history"
@@ -130,21 +131,21 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
       ChatHistoryManager.print_chat("player", player_index)
     end
   end
-end)
+end
 
 --#region Players/Forces Created/Destroyed
-script.on_event(defines.events.on_player_created, function (event)
+backup_handler.events[defines.events.on_player_created] =  function (event)
 	ChatHistoryManager.add_player(event.player_index)
-end)
-script.on_event(defines.events.on_force_created, function (event)
+end
+backup_handler.events[defines.events.on_force_created] =  function (event)
 	ChatHistoryManager.add_force(event.force.index)
-end)
-script.on_event(defines.events.on_player_removed, function (event)
+end
+backup_handler.events[defines.events.on_player_removed] =  function (event)
 	ChatHistoryManager.remove_player(event.player_index)
-end)
-script.on_event(defines.events.on_forces_merged, function (event)
+end
+backup_handler.events[defines.events.on_forces_merged] =  function (event)
 	ChatHistoryManager.remove_force(event.source_index)
-end)
+end
 --#endregion
 --#endregion
 
@@ -173,10 +174,10 @@ end
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
 	send = compatibility_send,
-	disable_listener = disableFunctions.listener.disable,
-	enable_listener = disableFunctions.listener.enable,
-	disable_command = disableFunctions.command.disable,
-	enable_command = disableFunctions.command.enable,
+	disable_listener = disableFunctions.disable_event,
+	enable_listener = disableFunctions.enable_event,
+	disable_command = disableFunctions.disable_command,
+	enable_command = disableFunctions.enable_command,
 	-- [ ] debug(LocalisedString, isEphemeral)
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)
@@ -195,3 +196,8 @@ remote.add_interface("emojipack registration", {
 	end
 })
 --#endregion
+
+event_handler.add_lib(backup_handler)
+event_handler.add_libraries{
+	require("__better-chat__.runtime.disableFunctions")
+}
