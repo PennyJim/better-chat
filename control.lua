@@ -3,9 +3,7 @@ local event_handler = require("__better-chat__.runtime.custom_event_handler")
 local backup_handler = {events = {}}
 
 ---@alias historyLevel "global"|"force"|"player"|"surface"
-local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
-local filter = require("__better-chat__.runtime.filter")
 
 
 
@@ -34,9 +32,6 @@ end
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
 	send = compatibility_send,
-
-	get_message = filter.get_message,
-	set_message = filter.set_message,
 })
 --#endregion
 
@@ -48,6 +43,7 @@ event_handler.add_libraries{
 	backup_handler,
 	require("__better-chat__.runtime.ChatHistoryManager"),
 	require("__better-chat__.runtime.disableFunctions"),
+	require("__better-chat__.runtime.filter"),
 	require("__better-chat__.runtime.is_open"),
 }
 

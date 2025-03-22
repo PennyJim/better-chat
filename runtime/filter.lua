@@ -1,4 +1,5 @@
-local filter = {}
+---@class MessageFilter : custom_event_handler
+local filter = {remote_interfaces = {}}
 filter.during_message = false
 filter.message = ""
 
@@ -55,5 +56,10 @@ end
 	Add some sort of filtering for printed messages?
 	It might be nice, but also how do you event filter a LocalisedString?
 ]]
+
+filter.remote_interfaces["better-chat"] = {
+	get_message = filter.get_message,
+	set_message = filter.set_message,
+}
 
 return filter
