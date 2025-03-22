@@ -100,7 +100,7 @@ local register_remote_interfaces = function()
 
 			if not next(handlers, next(handlers)) then
 				-- We only have *one* handler. Just pass it directly
-				merged_interface[key] = handlers[1]
+				_, merged_interface[key] = next(handlers)
 			else
 				log("There are multiple handlers for the '"..name.."' inteface: "..key)
 

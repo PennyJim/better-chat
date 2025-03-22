@@ -37,3 +37,5 @@ handler.events[script.get_event_id("bc-exit-chat")] = function (event)
 	ChatHistoryManager.print_chat("player", event.player_index)
 	-- log("Exit Chat")
 end
+
+return handler
