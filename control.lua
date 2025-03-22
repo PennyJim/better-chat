@@ -9,7 +9,6 @@ local send_message = require("__better-chat__.runtime.handle_messages").send_mes
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 local filter = require("__better-chat__.runtime.filter")
 ---@class BetterChatGlobal
----@field emojipacks table<string,table<string,string[]|string>>
 ---@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
 ---@field disabledListeners table<defines.events, string[]>
 ---@field disabledCommands table<string, string[]>
@@ -19,19 +18,6 @@ storage = {}
 metatables = {}
 
 
----Clean emojipacks of unloaded mods
----@param changes {[string]: ModChangeData}
-local function clean_emojipacks(changes)
-	-- Remove emojipacks of unloaded mods
-	for mod_name in pairs(changes) do
-		if not changes[mod_name].new_version then
-			storage.emojipacks[mod_name] = nil
-		end
-	end
-
-  --- Update the default emojipack
-  storage.emojipacks[script.mod_name] = default_emojipack
-end
 
 ---@param event EventData.CustomInputEvent
 backup_handler.events[prototypes.custom_input["bc-toggle-chat"].event_id] = function (event)
@@ -68,9 +54,6 @@ metatables.chatOpenMeta = {
 script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
 
 local function setupGlobal()
-	storage.emojipacks = storage.emojipacks or {
-    [script.mod_name] = default_emojipack
-  }
 	storage.isChatOpen = storage.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
 	storage.disabledListeners = storage.disabledListeners or {}
 	storage.disabledCommands = storage.disabledCommands or {}
@@ -83,7 +66,6 @@ backup_handler.on_init = function ()
 end
 backup_handler.on_configuration_changed = function (change)
   setupGlobal()
-	clean_emojipacks(change.mod_changes)
 end
 backup_handler.events[defines.events.on_runtime_mod_setting_changed] = function (event)
   local setting = event.setting
@@ -186,14 +168,6 @@ remote.add_interface("better-chat", {
 
 	get_message = filter.get_message,
 	set_message = filter.set_message,
-})
-remote.add_interface("emojipack registration", {
-	add = function (mod_name, shortcode_dictionary)
-		if not script.active_mods[mod_name] then return end
-		-- storage.emojipacks = global.emojipacks or {}
-
-		storage.emojipacks[mod_name] = shortcode_dictionary
-	end
 })
 --#endregion
 
