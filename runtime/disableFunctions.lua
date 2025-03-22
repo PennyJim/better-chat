@@ -4,7 +4,7 @@ local eventData = require("__better-chat__.runtime.events")
 local events = eventData.events
 
 ---@class handler_within_event_handler : custom_event_handler
-local handlers = {events = events}
+local handlers = {events = events, remote_interfaces = {}}
 
 --MARK: Filtering
 
@@ -24,7 +24,7 @@ end
 ---@param mod_name string
 ---@param event defines.events
 ---@return boolean success
-function handlers.disable_event(mod_name, event)
+local function disable_event(mod_name, event)
 	if not script.active_mods[mod_name] then return false end
 	if not events[event] then return false end
 	local disabled = storage.disabledListeners[event]
@@ -41,7 +41,7 @@ end
 ---@param mod_name string
 ---@param event defines.events
 ---@return boolean success
-function handlers.enable_event(mod_name, event)
+local function enable_event(mod_name, event)
 	if not script.active_mods[mod_name] then return false end
 	if not events[event] then return false end
 	local disabled = storage.disabledListeners[event]
@@ -70,7 +70,7 @@ end
 ---@param mod_name string
 ---@param command string
 ---@return boolean success
-function handlers.disable_command(mod_name, command)
+local function disable_command(mod_name, command)
 	if not script.active_mods[mod_name] then return false end
 	if not commands[command] then return false end
 	local disabled = storage.disabledCommands[command]
@@ -85,7 +85,7 @@ end
 ---@param mod_name string
 ---@param command string
 ---@return boolean success
-function handlers.enable_command(mod_name, command)
+local function enable_command(mod_name, command)
 	if not script.active_mods[mod_name] then return false end
 	if not commands[command] then return false end
 	local disabled = storage.disabledCommands[command]
@@ -107,6 +107,15 @@ function handlers.enable_command(mod_name, command)
 	return true
 end
 
+handlers.remote_interfaces["better-chat"] = {
+	disable_listener = disable_event,
+	enable_listener = enable_event,
+	disable_command = disable_command,
+	enable_command = enable_command,
+}
+
+--MARK: Structural
+
 ---Register all listeners not in global.disabledListeners
 local function on_load()
 	eventData.get_remote_events()
@@ -122,12 +131,13 @@ function handlers.on_configuration_changed(event)
 	for mod_name, change in pairs(event.mod_changes) do
 		if not change.new_version then
 			for event in pairs(storage.disabledListeners) do
-				handlers.enable_event(mod_name, event)
+				enable_event(mod_name, event)
 			end
 			for key in pairs(storage.disabledCommands) do
-				handlers.enable_command(mod_name, key)
+				enable_command(mod_name, key)
 			end
 		end
 	end
 end
+
 return handlers

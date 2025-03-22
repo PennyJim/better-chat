@@ -4,9 +4,7 @@ local backup_handler = {events = {}}
 
 ---@alias historyLevel "global"|"force"|"player"|"surface"
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
-local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
-local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 local filter = require("__better-chat__.runtime.filter")
 
 ---@type {[string]:metatable}
@@ -140,10 +138,6 @@ end
 --#region Symbol Exporting for other mods
 remote.add_interface("better-chat", {
 	send = compatibility_send,
-	disable_listener = disableFunctions.disable_event,
-	enable_listener = disableFunctions.enable_event,
-	disable_command = disableFunctions.disable_command,
-	enable_command = disableFunctions.enable_command,
 	-- [ ] debug(LocalisedString, isEphemeral)
 	-- [ ] print(LocalisedString, color)
 	-- [ ] warn(LocalisedString, isEphemeral)
