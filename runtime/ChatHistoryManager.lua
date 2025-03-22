@@ -399,7 +399,7 @@ manager.print_latest = function(chat_level, chat_index, print_sound, print_sound
 	func(chat_index, print_chat)
 end
 
----@class BetterChatGlobal
+---@class BetterChatStorage
 ---@field GlobalChatLog ChatLog
 ---@field ForceChatLog table<int, ChatLog>
 ---@field PlayerChatLog table<int, ChatLog>

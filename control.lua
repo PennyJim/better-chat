@@ -8,12 +8,7 @@ local default_emojipack = require("__better-chat__.runtime.default_shortcodes")
 local send_message = require("__better-chat__.runtime.handle_messages").send_message
 local disableFunctions = require("__better-chat__.runtime.disableFunctions")
 local filter = require("__better-chat__.runtime.filter")
----@class BetterChatGlobal
----@field isChatOpen {[integer]: boolean, check:fun(this, integer):boolean}
----@field disabledListeners table<defines.events, string[]>
----@field disabledCommands table<string, string[]>
----@field lastWhispered table<int,int?>
-storage = {}
+
 ---@type {[string]:metatable}
 metatables = {}
 
@@ -53,19 +48,8 @@ metatables.chatOpenMeta = {
 }
 script.register_metatable("bc-chatOpen",metatables.chatOpenMeta)
 
-local function setupGlobal()
-	storage.isChatOpen = storage.isChatOpen or setmetatable({}, metatables.chatOpenMeta)
-	storage.disabledListeners = storage.disabledListeners or {}
-	storage.disabledCommands = storage.disabledCommands or {}
-  storage.lastWhispered = storage.lastWhispered or {}
-end
-
 backup_handler.on_init = function ()
-  setupGlobal()
 	ChatHistoryManager.init()
-end
-backup_handler.on_configuration_changed = function (change)
-  setupGlobal()
 end
 backup_handler.events[defines.events.on_runtime_mod_setting_changed] = function (event)
   local setting = event.setting
@@ -171,6 +155,7 @@ remote.add_interface("better-chat", {
 })
 --#endregion
 
+event_handler.add_lib(require("__better-chat__.runtime.storage"))
 event_handler.add_lib(backup_handler)
 event_handler.add_libraries{
 	require("__better-chat__.runtime.disableFunctions")
