@@ -1,4 +1,5 @@
 local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+local printer = require("__better-chat__.runtime.ChatPrinter")
 local automation = require("__better-chat__.runtime.levenshtein_automation")
 local filter = require("__better-chat__.runtime.filter")
 ---@class handle_messages : custom_event_handler
@@ -237,9 +238,9 @@ function handle_messages.send_message(message)
 
 	--Clear chat if `clear` is true or nil
 	if clear then
-		ChatHistoryManager.print_chat(send_level, recipient, sound, sound_path, volume_modifier)
+		printer.print_chat(send_level, recipient, sound, sound_path, volume_modifier)
 	else
-		ChatHistoryManager.print_latest(send_level, recipient, sound, sound_path, volume_modifier)
+		printer.print_latest(send_level, recipient, sound, sound_path, volume_modifier)
 	end
 end
 --- Because the printer needs it and this file requires the printer
@@ -318,7 +319,7 @@ end
 ---Reprints the chat to clear ephemeral messages
 ---@param player_index int
 function handle_messages.clear_ephemeral(player_index)
-  ChatHistoryManager.print_chat("player", player_index)
+  printer.print_chat("player", player_index)
 end
 
 handle_messages.clear = ChatHistoryManager.clear

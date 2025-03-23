@@ -1,4 +1,4 @@
-local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
+local printer = require("__better-chat__.runtime.ChatPrinter")
 
 ---@type custom_event_handler
 local handler = {events = {}}
@@ -25,7 +25,7 @@ handler.events[prototypes.custom_input["bc-toggle-chat"].event_id] = function (e
     return
   end
 	storage.isChatOpen[event.player_index] = not storage.isChatOpen:check(event.player_index)
-	ChatHistoryManager.print_chat("player", event.player_index)
+	printer.print_chat("player", event.player_index)
 	-- log("Toggle Chat")
 end
 ---@param event EventData.CustomInputEvent
@@ -34,7 +34,7 @@ handler.events[script.get_event_id("bc-exit-chat")] = function (event)
     return
   end
 	storage.isChatOpen[event.player_index] = nil
-	ChatHistoryManager.print_chat("player", event.player_index)
+	printer.print_chat("player", event.player_index)
 	-- log("Exit Chat")
 end
 
