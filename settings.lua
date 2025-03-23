@@ -1,4 +1,11 @@
+local global_module_add = module_add
+local function module_add(name)
+	return global_module_add(name, "__better-chat__.modules."..name)
+end
+
+
 data:extend{
+	module_add("chat_log_entry"),
 	{
 		type = "int-setting",
 		name = "bc-global-chat-history",

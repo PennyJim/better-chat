@@ -1,3 +1,4 @@
+local interface = require("__better-chat__.runtime.ChatInterface")
 --MARK: ChatLog
 
 ---@class Chat
@@ -15,21 +16,24 @@ local ChatLog = {
 	---Add a new element in the linked list
 	---@param self ChatLog
 	---@param chat Chat
-	---@param sizeLimit int?
-	add = function(self, chat, sizeLimit)
+	---@param sizeLimit? int
+	---@param removal_callback? fun(index:uint)
+	add = function(self, chat, sizeLimit, removal_callback)
 		self.size = self.size + 1
 		self.last_index = self.last_index + 1
 		self.chat_array[self.last_index] = chat
-		if sizeLimit then self:trim(sizeLimit) end
+		if sizeLimit then self:trim(sizeLimit, removal_callback) end
 	end,
 	---Trim elements from list until its equal to limit
 	---@param self ChatLog
 	---@param sizeLimit int
-	trim = function(self, sizeLimit)
+	---@param removal_callback? fun(index:uint)
+	trim = function(self, sizeLimit, removal_callback)
 		for i = self.top_index, self.last_index-sizeLimit, 1 do
 			self.top_index = i + 1
 			self.size = self.size - 1
 			self.chat_array[i] = nil
+			if removal_callback then removal_callback(i) end
 		end
 	end,
 	---Return an iterator for every element in linked list
@@ -116,6 +120,19 @@ end
 ---@param player_index int
 manager.clear = function (player_index)
 	storage.PlayerChatLog[player_index] = newChatLog()
+	interface.clear_chat(player_index)
+end
+
+---@param player_index uint
+---@param newChat Chat
+local function add_to_player_log(player_index, newChat)
+	local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
+	local log = storage.PlayerChatLog[player_index]
+
+	log:add(newChat, player_chat_history, function (index)
+		interface.remove_chat(player_index, tostring(index))
+	end)
+	interface.add_chat(player_index, newChat, tostring(log.last_index))
 end
 
 ---@class addMessageParams
@@ -145,8 +162,8 @@ manager.add_message = function(messageParams)
 		end
 
 		for player_index in pairs(game.players) do
-			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
-			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+			---@cast player_index uint
+			add_to_player_log(player_index, newChat)
 		end
 
 
@@ -157,9 +174,7 @@ manager.add_message = function(messageParams)
 			:add(newChat, settings.global["bc-force-chat-history"].value--[[@as int]])
 
 		for _,player in pairs(game.forces[force_index].players) do
-			local player_index = player.index
-			local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
-			storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+			add_to_player_log(player.index, newChat)
 		end
 
 
@@ -167,18 +182,16 @@ manager.add_message = function(messageParams)
 		local surface_index = messageParams.chat_index --[[@as int]]
 		-- Add message to each player on the surface
 		for player_index, player in pairs(game.players) do
+			---@cast player_index uint
 			if player.surface_index == surface_index then
-				local player_chat_history = settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]]
-				storage.PlayerChatLog[player_index]:add(newChat, player_chat_history)
+				add_to_player_log(player_index, newChat)
 			end
 		end
 
 
 	elseif messageParams.level == "player" then
-		local player_index = messageParams.chat_index --[[@as int]]
 		-- Add message to the player
-		storage.PlayerChatLog[messageParams.chat_index]
-			:add(newChat, settings.get_player_settings(player_index)["bc-player-chat-history"].value--[[@as int]])
+		add_to_player_log(messageParams.chat_index, newChat)
 
 
 	else
@@ -221,7 +234,7 @@ end
 ---Formats the given tick in D+:HH:MM:SS
 ---@param tick int
 ---@return string
-local function format_time(tick)
+function format_time(tick)
 	---@type int, int, int, int
 	local seconds, minutes, hours, days
 	seconds = tick / 60
@@ -237,6 +250,7 @@ local function format_time(tick)
 		return string.format("%d.%02d", minutes, seconds)
 	end
 end
+local format_time = format_time
 
 --MARK: Chat Printing
 ---@type LuaPlayer
@@ -312,8 +326,14 @@ local function print_chats(player)
 	color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
+	local log = storage.PlayerChatLog[player_index]
+	local start = log.last_index - 36
+	if start < log.top_index then
+		start = log.top_index
+	end
+
 	player.clear_console()
-	for _,chat in storage.PlayerChatLog[player_index]:from() do
+	for _,chat in log:from(start) do
 		print_individual_chat(chat)
 	end
 end

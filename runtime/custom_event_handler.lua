@@ -89,6 +89,11 @@ local register_remote_interfaces = function()
 			end
 		end
 
+		-- And I guess I have to still support these :(
+---@diagnostic disable-next-line: deprecated
+		if lib.add_commands then lib.add_commands() end
+---@diagnostic disable-next-line: deprecated
+		if lib.add_remote_interface then lib.add_remote_interface() end
   end
 
 
@@ -251,7 +256,7 @@ end)
 ---@class custom_event_handler_lib : event_handler_lib
 local handler = {}
 
----@param lib custom_event_handler
+---@param lib custom_event_handler|event_handler
 handler.add_lib = function(lib)
   for k, current in pairs (libraries) do
     if current == lib then
@@ -261,7 +266,7 @@ handler.add_lib = function(lib)
   table.insert(libraries, lib)
 end
 
----@param libs custom_event_handler[]
+---@param libs (custom_event_handler|event_handler)[]
 handler.add_libraries = function(libs)
   for k, lib in pairs (libs) do
     handler.add_lib(lib)

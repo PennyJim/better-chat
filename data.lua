@@ -14,6 +14,14 @@ data:extend{
 		action = "lua",
 	},
 	{
+		type = "shortcut",
+		name = "bc-open-chatlog",
+		action = "lua",
+		toggleable = true,
+		icons = {util.empty_icon()},
+		small_icons = {util.empty_icon()},
+	}--[[@as data.ShortcutPrototype]],
+	{
 		type = "custom-event",
 		name = "better-chat-message",
 	}
