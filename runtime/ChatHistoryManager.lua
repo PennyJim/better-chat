@@ -4,7 +4,6 @@ local printer = require("__better-chat__.runtime.ChatPrinter")
 
 ---MARK: Manager
 
----@alias historyLevel "global"|"force"|"player"|"surface"
 ---@class ChatLogManager : custom_event_handler
 local manager = {events = {}--[[@as event_handler.events]], remote_interfaces = {}--[[@as custom_event_handler.remote_interfaces]]}
 
@@ -62,46 +61,82 @@ manager.clear = function (player_index)
 	interface.clear_chat(player_index)
 end
 
+---@param player LuaPlayer?
+---@return ChatPlayer?
+local function convert_player(player)
+	return player and {
+		name = player.name,
+		color = player.chat_color --[[@as Color.0]],
+		index = player.index
+	}
+end
+
 ---@class ChatParams.base
 ---@field type "global"
 ---@field message LocalisedString
----@field sender? ChatPlayer
+---@field sender? LuaPlayer
 ---@field color? Color
 ---@field process_color? boolean
 
----@class ChatParams.force_player : ChatParams.base
----@field type "force"|"player"
+---@class ChatParams.force_player_surface : ChatParams.base
+---@field type "force"|"player"|"surface"
 ---@field recipient_index uint
-
----@class ChatParams.surface : ChatParams.base
----@field type "surface"
----@field recipients uint[]
 
 ---@class ChatParams.whisper : ChatParams.base
 ---@field type "whisper"
----@field sender ChatPlayer
----@field recipient ChatPlayer
+---@field sender LuaPlayer
+---@field recipient LuaPlayer
 
----@alias ChatParams Chat.base|Chat.force_player|Chat.surface|Chat.whisper
+---@alias ChatParams ChatParams.base|ChatParams.force_player_surface|ChatParams.whisper
 ---Adds a message to chat history
 ---@param tentative_chat ChatParams
 manager.add_message = function(tentative_chat)
 	---@type Chat
-	local newChat = util.copy(tentative_chat)
-	newChat.chat_id = storage.master_log.last_index + 1
-	newChat.tick = game.ticks_played
-	storage.master_log:add(newChat, settings.global["bc-global-chat-history"].value--[[@as int]],
+	local new_chat = {
+		chat_id = storage.master_log.last_index + 1,
+		tick = game.ticks_played,
+
+		type = tentative_chat.type,
+		message = tentative_chat.message,
+		sender = convert_player(tentative_chat.sender),
+		color = tentative_chat.color,
+		process_color = tentative_chat.process_color,
+	}
+
+	if new_chat.type == "surface" then
+		local surface_index = tentative_chat.recipient_index
+		---@type uint[]
+		local list, count = {}, 0
+		new_chat.recipients = list
+
+		for index, player in pairs(game.players) do
+			---@cast index uint
+			if surface_index == player.surface_index then
+				count = count + 1
+				list[count] = index
+			end
+		end
+
+	elseif new_chat.type == "whisper" then
+		if not new_chat.sender then error("Whisper has no sender") end
+		local recipient = convert_player(tentative_chat.recipient)
+		if not recipient then error("Whisper has no recipient") end
+		new_chat.recipient = recipient
+	end
+
+
+	storage.master_log:add(new_chat, settings.global["bc-global-chat-history"].value--[[@as int]],
 		interface.remove_chat
 	)
 
 	for player_index, player in pairs(game.players) do
 		---@cast player_index uint
 		local force_index = player.force_index
-		if chatlog.passes_filter(tentative_chat, {
+		if chatlog.passes_filter(new_chat, {
 			player_index = player_index,
 			force_index = force_index
 		}) then
-			storage.player_logs[player_index]:add(tentative_chat, 36)
+			storage.player_logs[player_index]:add(new_chat, 36)
 		end
 	end
 end
@@ -112,12 +147,12 @@ manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
     if setting == "bc-global-chat-history" then
       -- Send a message to notify the setting change
       -- Also to cause the ChatHistoryManager to fix a chatlog that's too long
-      send_message{
+      manager.add_message{
+				type = "global",
         message = {
 					"chat-localization.bc-global-history-changed",
 					settings.global[setting].value
-				},
-        send_level = "global"
+				}
       }
       printer.print_chat("global")
     end
