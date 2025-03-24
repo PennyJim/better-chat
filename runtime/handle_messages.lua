@@ -178,7 +178,7 @@ end
 ---The contents of the message.
 ---@field message LocalisedString
 ---The index of hte player who the message will be attributed to.
----@field sender? uint|LuaPlayer
+---@field sender? uint|LuaPlayer|ChatPlayer
 ---The base color of the message.
 ---@field color? Color
 ---Whether or not the message is faded out by the player's settings. Defaults to `false`.
@@ -229,7 +229,12 @@ function handle_messages.send_message(message)
 	---@type ChatPlayer|LuaPlayer|uint?
 	local recipient = message.recipient
 	---@cast recipient -ChatPlayer
-	local sender = convert_player(message.sender)
+	local sender = message.sender
+	if type(sender) ~= "table" then
+		---@cast sender -ChatPlayer
+		sender = convert_player(sender)
+	end
+	---@cast sender -LuaPlayer
 
 	if not valid_types[message_type] then
 		error_message = "Invalid message type"

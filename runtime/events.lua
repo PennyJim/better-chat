@@ -1,6 +1,6 @@
 local commands = require("__better-chat__.runtime.commands")
 local handle_messages = require("__better-chat__.runtime.handle_messages")
-local msg = handle_messages.msg
+local send_message = handle_messages.send_message
 local color = handle_messages.color
 
 ---@alias EventFunctionDict event_handler.events
@@ -11,12 +11,22 @@ local events = {}
 -- Actual Chatting
 events[defines.events.on_console_chat] = function (event)
 	local player_index = event.player_index
-	if not player_index then return end --TODO: Support messages from console
+	if not player_index then
+		send_message{
+			type = "global",
+			message = event.message,
+			sender = {
+				name = "Server",
+				color = {r=1,g=1,b=1,a=1},
+			}
+		}
+		return
+	end --TODO: Support messages from console
 	storage.isChatOpen[player_index] = nil
 	local player = game.get_player(player_index)
 	if not player then return end
 
-	local send_level = settings.global["bc-normal-chat-type"].value --[[@as historyLevel]]
+	local send_level = settings.global["bc-normal-chat-type"].value --[[@as PrintLevel]]
 	local recipient = send_level == "force" and player.force_index or send_level == "player" and player_index or nil
 
 	if send_level == "player" then
@@ -28,11 +38,12 @@ events[defines.events.on_console_chat] = function (event)
 	end
 
 	local message = handle_messages.process_message(player, send_level, event.message)
-	handle_messages.send_message{
-		message = msg("bc-message-header", player, message),
+	send_message{
+		sender = player,
+		message = player,
 		color = player.chat_color,
 		process_color = true,
-		send_level = send_level,
+		type = send_level,
 		recipient = recipient
 	}
 	-- log{"", "global-chat-log", serpent.block(global.GlobalChatLog), "\n"}
@@ -44,20 +55,20 @@ end
 events[defines.events.on_player_joined_game] = function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one joined???") end
-	handle_messages.send_message{
+	send_message{
 		message = {"multiplayer.player-joined-game", color(player.name, player.chat_color)},
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 
   if game.is_multiplayer() then
     local setting = settings.get_player_settings(player)
     if setting["bc-player-closeable-chat"].value then
-      handle_messages.send_message{
+      send_message{
         message = {"chat-localization.bc-latency-warning"},
         color = setting["bc-warn-color"].value --[[@as Color]],
-        send_level = "player",
+        type = "player",
         recipient = event.player_index
       }
     end
@@ -66,11 +77,11 @@ end
 events[defines.events.on_player_left_game] =  function (event)
 	local player = game.get_player(event.player_index)
 	if not player then return log("No one left???") end
-	handle_messages.send_message{
+	send_message{
 		message = {"multiplayer.player-left-game", color(player.name, player.chat_color)},
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 	storage.isChatOpen[event.player_index] = nil
 end
@@ -95,11 +106,11 @@ events[defines.events.on_player_died] = function (event)
 		message[4] = message[3]
 		message[3] = cause_name
 	end
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 end
 events[defines.events.on_player_respawned] = function (event)
@@ -109,11 +120,11 @@ events[defines.events.on_player_respawned] = function (event)
 		"multiplayer.player-respawn",
 		color(player.name, player.chat_color)
 	}
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 end
 
@@ -126,7 +137,7 @@ events[defines.events.on_research_finished] = function (event)
 		message = {"technology-researched", research.localised_name},
 		color = force.color,
 		process_color = true,
-		send_level = "force",
+		type = "force",
 		recipient = force.index
 	}
 end
@@ -146,7 +157,7 @@ events[defines.events.on_research_cancelled] = function (event)
 			message = {"player-cancelled-research", tech[research].localised_name, {"chat-localization.unknown-player"}},
 			color = force.color,
 			process_color = true,
-			send_level = "force",
+			type = "force",
 			recipient = force.index,
 			clear = not has_cleared,
 		}
@@ -177,11 +188,11 @@ events[defines.events.on_player_banned] = function (event)
 	else
 		message[1] = "unknown-player-was-banned"
 	end
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 end
 events[defines.events.on_player_unbanned] = function (event)
@@ -198,11 +209,11 @@ events[defines.events.on_player_unbanned] = function (event)
 		event.player_name,
 		player.name
 	}
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 end
 events[defines.events.on_player_kicked] = function (event)
@@ -222,11 +233,11 @@ events[defines.events.on_player_kicked] = function (event)
 		color(by_player.name, by_player.chat_color),
 		event.reason or "unspecified"
 	}
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = by_player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global"
 	}
 end
 --#endregion
