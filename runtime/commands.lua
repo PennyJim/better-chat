@@ -4,7 +4,7 @@ local commands_api = commands
 local commands = {}
 
 local handle_messages = require("__better-chat__.runtime.handle_messages")
-local msg = handle_messages.msg
+local send_message = handle_messages.send_message
 local color = handle_messages.color
 ---Used to 'fill' commands so it wont log as not implemented
 local dummy_func = function()end
@@ -60,11 +60,13 @@ end
 ---@param message string
 local function shout(player, message)
 	message = handle_messages.process_message(player, "global", message)
-	handle_messages.send_message{
-		message = msg("bc-shout-header", player, message),
+	send_message{
+    sender = player,
+		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global",
+		type = "global",
+    clear = true,
 	}
 end
 ---Sends a message to a player
@@ -73,19 +75,14 @@ end
 ---@param message string
 local function whisper(player, recipient, message)
 	message = handle_messages.process_message(player, "player", message)
-	handle_messages.send_message{
-		message = msg("bc-whisper-to-header", recipient, message),
+	send_message{
+    sender = player,
+    recipient = recipient,
+		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "player",
-		recipient = player.index
-	}
-	handle_messages.send_message{
-		message = msg("bc-whisper-from-header", player, message),
-		color = player.chat_color,
-		process_color = true,
-		send_level = "player",
-		recipient = recipient.index
+    type = "whisper",
+    clear = true,
 	}
   storage.lastWhispered[recipient.index] = player.index
 end
@@ -96,13 +93,13 @@ end
 commands.s = commands.shout
 commands.team = function(player, event)
 	local message = handle_messages.process_message(player, "force", event.parameters)
-	handle_messages.send_message{
-		message = msg("bc-team-header", player, message),
+	send_message{
+    sender = player,
+		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "force",
+    type = "force",
 		recipient = player.force_index,
-    clear = false
 	}
 end
 commands.t = commands.team
@@ -186,7 +183,7 @@ commands.color = function (player, event)
 
   -- player-changed-color=__1__'s color is now __2__.
   -- player-changed-color-singleplayer=Your color is now __1__.
-  ---@type historyLevel, int?
+  ---@type PrintLevel, int?
   local send_level, recipient
   ---@type LocalisedString
   local message = {"player-changed-color", color_str}
@@ -208,11 +205,12 @@ commands.color = function (player, event)
   -- end
 
 
-  handle_messages.send_message{
+  send_message{
     message = message,
     color = player.chat_color,
-    send_level = send_level,
+    type = send_level,
     recipient = recipient,
+    clear = true,
   }
 end
 
@@ -228,19 +226,21 @@ commands.help = function (player, event)
     return warn(player, {"command-help.unknown-command", {command}})
   end
 
-  handle_messages.send_message{
+  send_message{
     message = {"", "/"..command.." ", help_message},
-    send_level = "player",
+    type = "player",
     recipient = player.index,
+    clear = true,
   }
 end
 commands.h = commands.help
 
 commands.seed = function (player)
-  handle_messages.send_message{
+  send_message{
     message = game.surfaces["nauvis"].map_gen_settings.seed,
-    send_level = "player",
-    recipient = player.index
+    type = "player",
+    recipient = player.index,
+    clear = true,
   }
 end
 
@@ -310,10 +310,11 @@ commands.evolution = function (player, event)
     message[index - 1] = nil -- remove trailing newline
   end
 
-  handle_messages.send_message{
+  send_message{
     message = pack_localized_concat(message),
-    send_level = "player",
-    recipient = player.index
+    type = "player",
+    recipient = player.index,
+    clear = true,
   }
 end
 
@@ -360,10 +361,11 @@ commands.time = function (player)
     message[#message-1] = {""," ",{"and"}," ",}
   end
 
-  handle_messages.send_message{
+  send_message{
     message = message,
-    send_level = "player",
-    recipient = player.index
+    type = "player",
+    recipient = player.index,
+    clear = true,
   }
 end
 
@@ -407,10 +409,11 @@ commands.admins = function (player, event)
     end
   end
 
-  handle_messages.send_message{
+  send_message{
     message = pack_localized_concat(message),
-    send_level = "player",
-    recipient = player.index
+    type = "player",
+    recipient = player.index,
+    clear = true,
   }
 end
 
@@ -429,9 +432,9 @@ commands.players = function (player, event)
 
   -- Return just the count if count is chosen
   if count then
-    return handle_messages.send_message{
+    return send_message{
       message = message[2],
-      send_level = "player",
+      type = "player",
       recipient = player.index,
     }
   end
@@ -440,10 +443,11 @@ commands.players = function (player, event)
     index = add_player_to_list(player, message, index, list_offline)
   end
 
-  handle_messages.send_message{
+  send_message{
     message = pack_localized_concat(message),
-    send_level = "player",
+    type = "player",
     recipient = player.index,
+    clear = true,
   }
 end
 
@@ -460,10 +464,11 @@ end
 --Admin promotion and demotion
 commands.promote = function (player, event)
 	if not player.admin then
-		return handle_messages.send_message{
+		return send_message{
 			message = {"cant-run-command-not-admin", "promote"},
-			send_level = "player",
-			recipient = player.index
+			type = "player",
+			recipient = player.index,
+      clear = true,
 		}
 	end
 
@@ -482,28 +487,31 @@ commands.promote = function (player, event)
 		msg[2] = color(promoted_player.name, promoted_player.chat_color)
 		if promoted_player.admin then
 			msg[1] = "player-is-already-an-admin"
-			return handle_messages.send_message{
+			return send_message{
 				message = msg,
-				send_level = "player",
-				recipient = player.index
+				type = "player",
+				recipient = player.index,
+        clear = true,
 			}
 		end
 	else
 		msg[1] = "player-was-added-to-admin-list"
 	end
-	handle_messages.send_message{
+	send_message{
 		message = msg,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global",
+		type = "global",
+    clear = true,
 	}
 end
 commands.demote = function (player, event)
 	if not player.admin then
-		return handle_messages.send_message{
+		return send_message{
 			message = {"cant-run-command-not-admin", "promote"},
-			send_level = "player",
-			recipient = player.index
+			type = "player",
+			recipient = player.index,
+      clear = true,
 		}
 	end
 	local target = event.parameters:match("%S+")
@@ -520,29 +528,32 @@ commands.demote = function (player, event)
 		message[2] = color(demoted_player.name, demoted_player.chat_color)
 		if not demoted_player.admin then
 			message[1] = "player-is-not-an-admin"
-			return handle_messages.send_message{
+			return send_message{
 				message = message,
-				send_level = "player",
-				recipient = player.index
+				type = "player",
+				recipient = player.index,
+        clear = true,
 			}
 		end
 	else
 		message[1] = "player-was-removed-from-admin-list"
 	end
-	handle_messages.send_message{
+	send_message{
 		message = message,
 		color = player.chat_color,
 		process_color = true,
-		send_level = "global"
+		type = "global",
+    clear = true,
 	}
 end
 
 commands.command = function (player, event)
-  handle_messages.send_message{
-    message = msg("bc-command-ran", player, event.parameters),
+  send_message{
+    sender = player,
+    message = event.parameters,
     color = player.chat_color,
     process_color = true,
-    send_level = "global",
+    type = "command",
     skip_print = true,
   }
 end
@@ -551,11 +562,12 @@ commands.c = commands.command
 -- The lack of clearing will be a little jank
 -- But we need to preserve the measured time the engine reports
 commands["measured-command"] = function (player, event)
-  handle_messages.send_message{
-    message = msg("bc-command-ran", player, event.parameters),
+  send_message{
+    sender = player,
+    message = event.parameters,
     color = player.chat_color,
     process_color = true,
-    send_level = "global",
+    type = "command",
     skip_print = true,
   }
 end
@@ -566,7 +578,4 @@ commands["silent-command"] = function (player, event)
 end
 commands.sc = commands["silent-command"]
 
--- script.on_event(defines.events.on_console_command, function (test)
-	
--- end)
 return commands
