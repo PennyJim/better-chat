@@ -10,18 +10,9 @@ data:extend{
 		type = "int-setting",
 		name = "bc-global-chat-history",
 		setting_type = "runtime-global",
-		default_value = 36,
+		default_value = 500,
 		minimum_value = 1,
-		maximum_value = 64,
 		order = "global-aa"
-	},
-	{
-		type = "int-setting",
-		name = "bc-force-chat-history",
-		setting_type = "runtime-global",
-		default_value = 64,
-		minimum_value = 1,
-		order = "global-ab"
 	},
 	{
 		type = "string-setting",
@@ -32,6 +23,7 @@ data:extend{
 			"force",
 			"global",
 			"player",
+			"surface",
 		},
 		order = "global-b"
 	}
@@ -69,15 +61,15 @@ data:extend{
 		default_value = false,
 		order = "player-ac",
 	},
-	{
-		type = "int-setting",
-		name = "bc-player-chat-history",
-		setting_type = "runtime-per-user",
-		default_value = 36,
-		minimum_value = 1,
-		maximum_value = 64,
-		order = "player-ba"
-	},
+	-- { -- Now it's hardcoded to 36 for printing
+	-- 	type = "int-setting",
+	-- 	name = "bc-player-chat-history",
+	-- 	setting_type = "runtime-per-user",
+	-- 	default_value = 36,
+	-- 	minimum_value = 1,
+	-- 	maximum_value = 64,
+	-- 	order = "player-ba"
+	-- },
 	{
 		type = "double-setting",
 		name = "bc-message-linger",
