@@ -195,7 +195,7 @@ end
 ---@field volume_modifier? float
 
 ---@class MessageParams.global : MessageParams.base
----@field type "global"
+---@field type "global"|"command"
 ---@field recipient nil
 
 ---@class MessageParams.recipient : MessageParams.base

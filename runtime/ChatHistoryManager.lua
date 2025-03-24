@@ -68,7 +68,7 @@ end
 ---@field process_color? boolean
 
 ---@class ChatParams.global
----@field type "global"
+---@field type "global"|"command"
 ---@field recipient nil
 
 ---@class ChatParams.force_player_surface : ChatParams.base

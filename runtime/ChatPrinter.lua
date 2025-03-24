@@ -117,44 +117,26 @@ local function general_chat_print(chat, initial_message)
 	volume_modifier = nil
 end
 
+---@param badge_key string
+---@return fun(chat:Chat)
+local function common_chat_print(badge_key)
+	return function (chat)
+		---@type LocalisedString[]
+		local message = {"", nil, {badge_key}, nil, nil, chat.message}
+		if chat.sender then
+			message[4] = print_player(chat.sender)
+			message[5] = ": "
+		end
+		general_chat_print(chat, message)
+	end
+end
+
 ---@type table<ChatMessageType,fun(chat:Chat)>
 local specific_chat_print = {
-	global = function (chat)
-		---@type LocalisedString[]
-		local message = {"", nil, {"bc.global-badge"}, nil, nil, chat.message}
-		if chat.sender then
-			message[4] = print_player(chat.sender)
-			message[5] = ": "
-		end
-		general_chat_print(chat, message)
-	end,
-	force = function (chat)
-		---@type LocalisedString[]
-		local message = {"", nil, {"bc.force-badge"}, nil, nil, chat.message}
-		if chat.sender then
-			message[4] = print_player(chat.sender)
-			message[5] = ": "
-		end
-		general_chat_print(chat, message)
-	end,
-	player = function (chat)
-		---@type LocalisedString[]
-		local message = {"", nil, {"bc.player-badge"}, nil, nil, chat.message}
-		if chat.sender then
-			message[4] = print_player(chat.sender)
-			message[5] = ": "
-		end
-		general_chat_print(chat, message)
-	end,
-	surface = function (chat)
-		---@type LocalisedString[]
-		local message = {"", nil, {"bc.surface-badge"}, nil, nil, chat.message}
-		if chat.sender then
-			message[4] = print_player(chat.sender)
-			message[5] = ": "
-		end
-		general_chat_print(chat, message)
-	end,
+	global = common_chat_print("chat-localization.bc-global-badge"),
+	force = common_chat_print("chat-localization.bc-force-badge"),
+	player = common_chat_print("chat-localization.bc-player-badge"),
+	surface = common_chat_print("chat-localization.bc-surface-badge"),
 	whisper = function (chat)
 		local player_index = printing_player.index
 		local is_sender = chat.sender.index == player_index
@@ -167,6 +149,7 @@ local specific_chat_print = {
 
 		general_chat_print(chat, message)
 	end,
+	command = common_chat_print("chat-localization.bc-command-badge"),
 }
 
 

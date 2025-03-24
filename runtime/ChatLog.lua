@@ -1,13 +1,14 @@
 
 ---@alias PrintLevel 
 ---| "global"
----|"force"
----|"player"
----|"surface"
+---| "force"
+---| "player"
+---| "surface"
 
 ---@alias ChatMessageType
 ---| PrintLevel
 ---| "whisper"
+---| "command"
 
 ---@class ChatPlayer
 ---@field name string
@@ -15,7 +16,7 @@
 ---@field index? uint Nilable because the player may have been removed
 
 ---@class Chat.base
----@field type "global"
+---@field type "global"|"command"
 ---@field message LocalisedString
 ---@field tick uint
 ---@field chat_id uint
@@ -40,22 +41,22 @@
 
 ---@type table<ChatMessageType,fun(chat:Chat,player?:uint,force?:uint):boolean>
 local see_lookup = {
-	["global"] = function() return true end,
+	global = function() return true end,
 
 	---@param chat Chat.force_player
-	["force"] = function (chat, _, force)
+	force = function (chat, _, force)
 		if not force then return true end
 		return chat.recipient_index == force
 	end,
 
 	---@param chat Chat.force_player
-	["player"] = function (chat, player)
+	player = function (chat, player)
 		if not player then return true end
 		return chat.recipient_index == player
 	end,
 
 	---@param chat Chat.surface
-	["surface"] = function (chat, player)
+	surface = function (chat, player)
 		if not player then return true end
 		for _, recipient_index in pairs(chat.recipients) do
 			if recipient_index == player then
@@ -66,10 +67,15 @@ local see_lookup = {
 	end,
 
 	---@param chat Chat.whisper
-	["whisper"] = function (chat, player)
+	whisper = function (chat, player)
 		if not player then return true end
 		return not chat.recipient.index == player or chat.sender == player
 	end,
+
+	command = function (chat, player, force)
+		if not player then return true end
+		return game.get_player(player).admin
+	end
 }
 
 ---@class ChatLog.filter
