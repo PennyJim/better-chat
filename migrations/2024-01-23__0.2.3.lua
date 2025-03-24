@@ -1,6 +1,11 @@
 ---@diagnostic disable: inject-field, no-unknown, undefined-field
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
+-- Dont' do this migration if there's the master chatlog
+if storage.master_log then
+  return log("skipping")
+end
+
 ---@diagnostic disable-next-line: param-type-mismatch
 local first_player = pairs(game.players)(0) --[[@as int]]
 -- Don't do this migration if the global chatlog has the size field

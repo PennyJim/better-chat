@@ -1,3 +1,9 @@
+---@diagnostic disable: inject-field, no-unknown, undefined-field
+-- Dont' do this migration if there's the master chatlog
+if storage.master_log then
+  return log("skipping")
+end
+
 for _,chat in storage.GlobalChatLog:from() do
   chat.tick = chat.tick or game.tick
 end

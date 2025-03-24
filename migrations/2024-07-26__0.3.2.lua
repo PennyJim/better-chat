@@ -1,4 +1,4 @@
-
+---@diagnostic disable: no-unknown, undefined-field
 --- Don't run this if the disabled commands doesn't exist
 if storage.disabledCommands then return log("skipping") end
 

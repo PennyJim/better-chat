@@ -1,4 +1,5 @@
 ---@diagnostic disable: inject-field, no-unknown
+local chatlog = require("__better-chat__.runtime.ChatLog")
 local ChatHistoryManager = require "__better-chat__.runtime.ChatHistoryManager"
 
 -- Don't do this migration if chatHistroy doesn't exist
@@ -9,15 +10,11 @@ local oldHistory = storage.chatHistory
 storage.chatHistory = nil;
 
 --Replicate ChatHistoryManager.init
-storage.GlobalChatLog = ChatHistoryManager.__newChatLog()
-storage.ForceChatLog = {}
-for _,force in pairs(game.forces) do
-  storage.ForceChatLog[force.index] = ChatHistoryManager.__newChatLog();
-end
-storage.PlayerChatLog = {}
-for _,player in pairs(game.players) do
-  local player_index = player.index
-  storage.PlayerChatLog[player_index] = ChatHistoryManager.__newChatLog();
+storage.master_log = chatlog.new()
+storage.player_logs = {}
+for index,player in pairs(game.players) do
+  ---@cast index uint
+  storage.player_logs[index] = chatlog.new()
 end
 
 --Migrate old chat history into new one's global chat
@@ -25,6 +22,6 @@ for _, chat in pairs(oldHistory) do
   ChatHistoryManager.add_message{
     message = chat.msg,
     color = chat.color,
-    level = "global"
+    type = "global"
   }
 end
