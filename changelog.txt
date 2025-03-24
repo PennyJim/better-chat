@@ -1,7 +1,12 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.6
 Date: ????
+  Features:
+    - Messages now support a `sender` that a message will be attributed to.
+    - There is now the ability to send messages of type `"whisper"`.
   Changes:
+    - The `clear` argument now defaults to false to better match how the interface is likely to be called.
+    - The `send_level` is now `type` to match the more general meaning of the field.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2025-03-20

@@ -225,7 +225,7 @@ local function print_chat(player)
 	specific_chat_print[chat.type](chat)
 end
 
----@type table<historyLevel, fun(index?:int,func:fun(player:LuaPlayer))>
+---@type table<PrintLevel, fun(index?:int,func:fun(player:LuaPlayer))>
 local print_level_switch = {
 	["global"] = function (index, func)
 		for _, player in pairs(game.players) do
@@ -256,7 +256,7 @@ local print_level_switch = {
 local printer = {}
 
 ---Print out all messages for a group
----@param chat_level historyLevel
+---@param chat_level PrintLevel
 ---@param chat_index int?
 ---@param print_sound defines.print_sound?
 ---@param print_sound_path SoundPath?
@@ -272,7 +272,7 @@ printer.print_chat = function(chat_level, chat_index, print_sound, print_sound_p
 end
 
 ---Print the latest message in the group without clearing chat first
----@param chat_level historyLevel
+---@param chat_level PrintLevel
 ---@param chat_index int?
 ---@param print_sound defines.print_sound? Defaults to `defines.print_sound.never`
 ---@param print_sound_path SoundPath?

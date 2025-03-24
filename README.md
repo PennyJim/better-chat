@@ -11,17 +11,29 @@ This functions by other mods calling `remote.call("emojipack registration", "add
 ## Scripting
 To print a permanent message instead of letting Better Chat clear it away, use `remote.call("better-chat", "send", {})`
 <br>The arguments are:
+
 - `message` - `LocalisedString` : The contents of the message.
-- `level` - `historyLevel` : Whether the message is intended for `"global"` broadcast, everyone on some `"force"`, everyone on a `"surface"`, or a specific `"player"`.
-- `recipient` - `uint` : Either the player, surface, or force that recieves it if the send_level was not global.
+- `type` - `ChatMessageType` : What type of message this is.
+- `sender` - `uint?` : The index of the player who the message will be attributed to.
 - `color` - `Color?` : The base color of the message.
 - `process_color` - `boolean?` : Whether or not the message is faded out by the player's settings. Defaults to `false`.
-- `skip_print` - `boolean?` : Whether or not the added chat is printed at all. This will also skip any sound. Defaults to `false`.
+- `skip_print` - `boolean?` : Whether or not the added message is printed at all. This will also skip any sound. Defaults to `false`.
 	- This was intended to be able to preserve the output of commands with less jank.
-- `clear` - `boolean?` : Whether or not the chat is cleared before printing the new message. Defaults to `true`.
+- `clear` - `boolean?` : Whether or not the chat is cleared before printing the new message. Defaults to `false`.
 - `sound` - `defines.print_sound?` : If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
 - `sound_path` - `SoundPath?` : The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
-- `volume_modifier` - `float?` : The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`
+- `volume_modifier` - `float?` : The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
+
+If the `type` is `"global"` there are no additional arguments
+
+If the `type` is `"force"`, `"player"`, or `"surface"`, you add:
+
+- `recipient` - `uint` : Either the player, surface, or force the message is sent to
+
+If the `type` is `"whisper"`, you add:
+- `sender` - `uint` : The player that sent the whisper.
+	- The difference from base, is that it is now required.
+- `recipient` - `uint` : The player that received the whisper.
 
 
 ## Compatibility
@@ -29,7 +41,7 @@ For easy compatibility, you can just use this code snippet and turn every `objec
 ```lua
 ---@type boolean?
 local has_better_chat = nil
-local send_levels = {
+local send_types = {
 	["LuaGameScript"] = "global",
 	["LuaForce"] = "force",
 	["LuaPlayer"] = "player",
@@ -49,7 +61,9 @@ function compat_send(recipient, msg, print_settings)
 	print_settings = print_settings or {}
 
 
-	local send_level = send_levels[recipient.object_name]
+	local send_type = send_types[recipient.object_name]
+	if not send_type then error("Invalid Recipient", 2) end
+
 	---@type int?
 	local send_index
 	if send_level ~= "global" then
@@ -61,10 +75,9 @@ function compat_send(recipient, msg, print_settings)
 
 	remote.call("better-chat", "send", {
 		message = msg,
-		send_level = send_level,
+		type = send_type,
 		color = print_settings.color,
 		recipient = send_index,
-		clear = false,
 
 		sound = print_settings.sound,
 		sound_path = print_settings.sound_path,

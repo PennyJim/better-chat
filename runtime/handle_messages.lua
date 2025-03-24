@@ -119,10 +119,10 @@ end
 
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
----@param send_level historyLevel
+---@param type ChatMessageType
 ---@param text string
 ---@return string
-function handle_messages.process_message(sender, send_level, text)
+function handle_messages.process_message(sender, type, text)
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
 
@@ -146,23 +146,25 @@ function handle_messages.process_message(sender, send_level, text)
 	end
 
 	-- Use event to filter
-	message = filter.chat(sender, send_level, text, message)
+	message = filter.chat(sender, type, text, message)
 
 	return message
 end
 
----@class messageParams.base
+
+---@class MessageParams.base
+---@field type "global"
 ---The contents of the message.
 ---@field message LocalisedString
----Whether the message is intended for `"global"` broadcast, everyone on some `"force"`, everyone on a `"surface"`, or a specific `"player"`.
----@field send_level historyLevel
+---The index of hte player who the message will be attributed to.
+---@field sender? uint
 ---The base color of the message.
 ---@field color? Color
 ---Whether or not the message is faded out by the player's settings. Defaults to `false`.
 ---@field process_color? boolean
----Whether or not the added chat is printed at all. This will also skip any sound. Defaults to `false`.
+---Whether or not the added message is printed at all. This will also skip any sound. Defaults to `false`.
 ---@field skip_print? boolean
----Whether or not the chat is cleared before printing the new message. Defaults to `true`.
+---Whether or not the chat is cleared before printing the new message. Defaults to `false`.
 ---@field clear? boolean
 ---If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
 ---@field sound? defines.print_sound
@@ -171,47 +173,57 @@ end
 ---The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
 ---@field volume_modifier? float
 
----@class messageParams.global : messageParams.base
----@field send_level "global"
----@field recipient nil
-
----@class messageParams.recipient : messageParams.base
----@field send_level "force"|"player"|"surface"
+---@class MessageParams.recipient : MessageParams.base
+---@field type "force"|"player"|"surface"
 ---Either the player, surface, or force that recieves it if the send_level was not global
----@field recipient integer
+---@field recipient uint
 
----@alias messageParams messageParams.global|messageParams.recipient
+---@class MessageParams.whisper : MessageParams.base
+---@field type "whisper"
+---The player that sent the whisper.
+---@field sender uint
+---The index of the player that received the whisper.
+---@field recipient uint
 
-local valid_send_levels = {
+---@alias MessageParams MessageParams.base|MessageParams.recipient|MessageParams.whisper
+
+local valid_types = {
 	global = true,
 	force = true,
 	surface = true,
 	player = true,
+	whisper = true,
 }
 
 ---Processes messsage, saves it to history, then sends latest x messages
----@param message messageParams
+---@param message MessageParams
 ---@return string? Error
 function handle_messages.send_message(message)
-	local error = nil
-	local send_level = message.send_level
+	local error_message = nil
+	local type = message.type
 	local recipient = message.recipient --[[@as int]]
+	local sender = message.sender--[[@as int]]
 
-	if not valid_send_levels[send_level] then
-		error = "Invalid send level"
-	elseif send_level ~= "global" and type(recipient) ~= "number" then
-		error = "Invalid recipient. Must be an index"
-	elseif send_level == "force" and not game.forces[recipient] then
-		error = "Invalid force"
-	elseif send_level == "surface" and not game.get_surface(recipient) then
-		error = "Invalid surface"
-	elseif send_level == "player" and not game.get_player(recipient) then
-		error = "Invalid player"
+	if not valid_types[type] then
+		error_message = "Invalid message type"
+	elseif type ~= "global" and type(recipient) ~= "number" then
+		error_message = "Invalid recipient. Must be an index"
+	elseif type == "force" and not game.forces[recipient] then
+		error_message = "Invalid force"
+	elseif type == "surface" and not game.get_surface(recipient) then
+		error_message = "Invalid surface"
+	elseif type == "player" and not game.get_player(recipient) then
+		error_message = "Invalid player"
+	elseif type == "whisper" then
+		if not game.get_player(recipient) then
+			error_message = "Invalid receiving player"
+		elseif not game.get_player(sender) then
+			error_message = "Invalid sending player"
+		end
 	end
 
-	if error then
-		log(error)
-		return error
+	if error_message then
+		error(error_message)
 	end
 
 	local msg = message.message
@@ -227,46 +239,91 @@ function handle_messages.send_message(message)
 	local volume_modifier = message.volume_modifier
 
 	ChatHistoryManager.add_message{
+		type = message.type,
 		message = msg,
 		color = color,
 		process_color = process_color,
-		level = send_level,
+		level = type,
 		chat_index = recipient
 	}
 
 	if skip_print then return end
 
 	--Clear chat if `clear` is true or nil
+	---@type function
+	local func
 	if clear then
-		printer.print_chat(send_level, recipient, sound, sound_path, volume_modifier)
+		func = printer.print_chat
 	else
-		printer.print_latest(send_level, recipient, sound, sound_path, volume_modifier)
+		func = printer.print_latest
+	end
+
+	if type == "whisper" then
+		func("player", sender, sound, sound_path, volume_modifier)
+		func("player", recipient, sound, sound_path, volume_modifier)
+	else
+		---@cast type PrintLevel
+		func(type, recipient, sound, sound_path, volume_modifier)
 	end
 end
 --- Because the printer needs it and this file requires the printer
 send_message = handle_messages.send_message
 
+
+---@deprecated There is a new format with a message 'type' instead of level
+---@class messageParams.base
+---@field message LocalisedString
+---@field send_level "global"
+---@field color? Color
+---@field process_color? boolean
+---@field skip_print? boolean
+---@field clear? boolean
+---@field sound? defines.print_sound
+---@field sound_path? SoundPath
+---@field volume_modifier? float
+
+---@class messageParams.recipient : messageParams.base
+---@field send_level "force"|"player"|"surface"
+---@field recipient integer
+
+---@alias messageParams messageParams.base|messageParams.recipient
+
+---@param params messageParams|MessageParams
+---@return MessageParams
+local function convert_params(params)
+	if params.type then return params --[[@as MessageParams]] end
+	params.type = params.send_level
+	params.send_level = nil
+
+	params.clear = not params.clear
+
+	---@cast params -messageParams
+	return params
+end
+
+
 ---A compatibility layer for the old format of the remote interface
 ---@see handle_messages.send_message
 ---@param message LocalisedString|messageParams
 ---@param color Color?
----@param send_level historyLevel?
+---@param send_level PrintLevel?
 ---@param recipient integer?
 ---@param clear boolean? Whether or not the chat is cleared, `true` by default
 local function compatibility_send(message, color, send_level, recipient, clear)
 	if type(message) == "table" and message[1] then
 		---@cast message LocalisedString
-		return handle_messages.send_message{
+		return handle_messages.send_message({
 			message = message,
 			color = color,
-			send_level = send_level or "global",
+			type = send_level or "global",
+---@diagnostic disable-next-line: assign-type-mismatch
 			recipient = recipient,
 			clear = clear,
-		}
+		})
 
 	else
 		---@cast message messageParams
-		return handle_messages.send_message(message)
+		return handle_messages.send_message(convert_params(message))
 	end
 end
 handle_messages.remote_interfaces["better-chat"] = {
@@ -276,9 +333,9 @@ handle_messages.remote_interfaces["better-chat"] = {
 ---Send a force-leve message and bcc every force
 ---that considers this force friendly
 ---Why not the other way round? Dunno. It's how base game does it :)
----@param message messageParams.recipient
+---@param message MessageParams.recipient
 function handle_messages.broadcast_friendly(message)
-  if message.send_level ~= "force" then error("This should *only* be for force level communications") end
+  if message.type ~= "force" then error("This should *only* be for force level communications") end
   local force_index = message.recipient--[[@as int]]
 
 	for _, other_force in pairs(game.forces) do

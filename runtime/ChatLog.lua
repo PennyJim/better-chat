@@ -1,8 +1,12 @@
----@alias ChatMessageType
+
+---@alias PrintLevel 
 ---| "global"
----| "force"
----| "player"
----| "surface"
+---|"force"
+---|"player"
+---|"surface"
+
+---@alias ChatMessageType
+---| PrintLevel
 ---| "whisper"
 
 ---@class ChatPlayer
