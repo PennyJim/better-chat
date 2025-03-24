@@ -198,19 +198,28 @@ end
 ---@field type "global"|"command"
 ---@field recipient nil
 
----@class MessageParams.recipient : MessageParams.base
----@field type "force"|"player"|"surface"
----Either the player, surface, or force that recieves it if the send_level was not global
+---@class MessageParams.force_surface : MessageParams.base
+---@field type "force"|"surface"
+---Either the surface, or force that recieves the message.
 ---@field recipient uint
+
+---@class MessageParams.player : MessageParams.base
+---@field type "player"
+---The player that received the message.
+---@field recipient uint|LuaPlayer
 
 ---@class MessageParams.whisper : MessageParams.base
 ---@field type "whisper"
 ---The player that sent the whisper.
 ---@field sender uint|LuaPlayer
----The index of the player that received the whisper.
+---The player that received the whisper.
 ---@field recipient uint|LuaPlayer
 
----@alias MessageParams MessageParams.global|MessageParams.recipient|MessageParams.whisper
+---@alias MessageParams
+---| MessageParams.global
+---| MessageParams.force_surface
+---| MessageParams.player
+---| MessageParams.whisper
 
 local valid_types = {
 	global = true,
@@ -244,8 +253,11 @@ function handle_messages.send_message(message)
 		error_message = "Invalid force"
 	elseif message_type == "surface" and not game.get_surface(recipient--[[@as number]]) then
 		error_message = "Invalid surface"
-	elseif message_type == "player" and not game.get_player(recipient--[[@as number]]) then
-		error_message = "Invalid player"
+	elseif message_type == "player" then
+		recipient = convert_player(recipient)
+		if not recipient then
+			error_message = "Invalid player"
+		end
 	elseif message_type == "whisper" then
 		recipient = convert_player(recipient)
 		if not recipient then
@@ -279,7 +291,7 @@ function handle_messages.send_message(message)
 		color = color,
 		process_color = process_color,
 	}
-	if new_message.type == "whisper" then
+	if new_message.type == "whisper" or new_message.type == "player" then
 		---@cast recipient ChatPlayer
 		new_message.recipient = recipient
 	else
@@ -301,8 +313,12 @@ function handle_messages.send_message(message)
 	end
 
 	if message_type ~= "whisper" then
+		---@cast recipient ChatPlayer|uint
+		-- To fix the fact that the player is a ChatPlayer
+		if type(recipient) == "table" then
+			recipient = recipient.index
+		end
 		---@cast message_type PrintLevel
-		---@cast recipient uint
 		func(message_type, recipient, sound, sound_path, volume_modifier)
 	else
 		---@cast sender ChatPlayer
@@ -377,7 +393,7 @@ handle_messages.remote_interfaces["better-chat"] = {
 ---Send a force-leve message and bcc every force
 ---that considers this force friendly
 ---Why not the other way round? Dunno. It's how base game does it :)
----@param message MessageParams.recipient
+---@param message MessageParams.force_surface
 function handle_messages.broadcast_friendly(message)
   if message.type ~= "force" then error("This should *only* be for force level communications") end
   local force_index = message.recipient--[[@as int]]

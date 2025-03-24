@@ -16,11 +16,35 @@ local handler_names = {
 	--my_handler = "my_module.my_handler" -- Standardly prepended with module name to avoid naming collisions
 }
 
----@param player ChatPlayer
+---@param force LuaForce
+---@return LocalisedString
+local function print_force(force)
+	local color = force.custom_color or force.color
+	return {"chat-localization.colored-text",
+	force.name,
+	color.r,
+	color.g,
+	color.b,
+}
+end
+
+---@param surface LuaSurface
+---@return LocalisedString
+local function print_surface(surface)
+	return surface.localised_name or surface.name
+end
+
+---@param player ChatPlayer|LuaPlayer
 ---@param name_override LocalisedString?
 ---@return LocalisedString
 local function print_player(player, name_override)
-	local color = player.color
+	---@type Color.0
+	local color
+	if type(player) == "table" then
+		color = player.color
+	else
+		color = player.chat_color
+	end
 	return {"chat-localization.colored-text",
 		name_override or player.name,
 		color.r,
@@ -35,16 +59,29 @@ local badge_switch = {
 	command = function() return {"chat-localization.bc-command-badge"} end,
 
 	-- Turn the badge into a tag with a name if setting is enabled.
-	force =   function(chat) return {"chat-localization.bc-force-badge"} end,
-	player =  function(chat) return {"chat-localization.bc-player-badge"} end,
-	surface = function(chat) return {"chat-localization.bc-surface-badge"} end,
+	force =   function(chat, params)
+		return params.expand_badges
+		and {"chat-localization.bc-expanded-force-badge", print_force(game.forces[chat.recipient_index])}
+		or {"chat-localization.bc-force-badge"}
+	end,
+	player =  function(chat, params)
+		return params.expand_badges
+		-- It's safe to assume the player exists, because when they are deleted the messages get *wiped*
+		and {"chat-localization.bc-expanded-player-badge", print_player(chat.recipient)}
+		or {"chat-localization.bc-player-badge"}
+	end,
+	surface = function(chat, params)
+		return params.expand_badges
+		and {"chat-localization.bc-expanded-surface-badge", print_surface(game.surfaces[chat.recipient_index])}
+		or {"chat-localization.bc-surface-badge"}
+	end,
 
 	---@param chat Chat.whisper
 	whisper = function(chat, params)
 		local player_index = params.player.index
 		return {"chat-localization.bc-whisper-badge",
-			print_player(chat.sender, params.expand_badges and chat.sender.index == player_index {"chat-localization.you"}),
-			print_player(chat.recipient, params.expand_badges and chat.recipient.index == player_index {"chat-localization.you"}),
+			print_player(chat.sender, not params.expand_badges and chat.sender.index == player_index and {"chat-localization.you"}),
+			print_player(chat.recipient, not params.expand_badges and chat.recipient.index == player_index and {"chat-localization.you"}),
 		}
 	end
 }

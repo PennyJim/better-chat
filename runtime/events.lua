@@ -27,7 +27,9 @@ events[defines.events.on_console_chat] = function (event)
 	if not player then return end
 
 	local send_level = settings.global["bc-normal-chat-type"].value --[[@as PrintLevel]]
-	local recipient = send_level == "force" and player.force_index or send_level == "player" and player_index or nil
+	local recipient = send_level == "force" and player.force_index
+		or send_level == "player" and player_index
+		or send_level == "surface" and player.surface_index
 
 	if send_level == "player" then
 		for _, force_player in pairs(player.force.players) do

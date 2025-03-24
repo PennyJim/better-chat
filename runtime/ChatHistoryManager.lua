@@ -35,13 +35,13 @@ manager.events[defines.events.on_player_removed] = function (event)
 	--- Remove references to this player's index
 	local log = storage.master_log
 	for chat_id, chat in log:from() do
-		---@cast chat Chat.whisper|Chat.force_player
+		---@cast chat Chat.whisper|Chat.player
 		if chat.type == "whisper" then
 			if chat.recipient.index == player_index then
 				log:remove(chat_id)
 			end
 		elseif chat.type == "player" then
-			---@cast chat Chat.force_player
+			---@cast chat Chat.player
 			if chat.recipient_index == player_index then
 				log:remove(chat_id)
 			end
@@ -70,16 +70,24 @@ end
 ---@field type "global"|"command"
 ---@field recipient nil
 
----@class ChatParams.force_player_surface : ChatParams.base
----@field type "force"|"player"|"surface"
+---@class ChatParams.force_surface : ChatParams.base
+---@field type "force"|"surface"
 ---@field recipient_index uint
+
+---@class ChatParams.player : ChatParams.base
+---@field type "player"
+---@field recipient ChatPlayer
 
 ---@class ChatParams.whisper : ChatParams.base
 ---@field type "whisper"
 ---@field sender ChatPlayer
 ---@field recipient ChatPlayer
 
----@alias ChatParams ChatParams.global|ChatParams.force_player_surface|ChatParams.whisper
+---@alias ChatParams 
+---| ChatParams.global
+---| ChatParams.force_surface
+---| ChatParams.player
+---| ChatParams.whisper
 ---Adds a message to chat history
 ---@param tentative_chat ChatParams
 manager.add_message = function(tentative_chat)
@@ -97,6 +105,7 @@ manager.add_message = function(tentative_chat)
 
 	if new_chat.type == "surface" then
 		local surface_index = tentative_chat.recipient_index
+		new_chat.recipient_index = surface_index
 		---@type uint[]
 		local list, count = {}, 0
 		new_chat.recipients = list
@@ -109,8 +118,20 @@ manager.add_message = function(tentative_chat)
 			end
 		end
 
-	elseif new_chat.type == "force" or new_chat.type == "player" then
-		new_chat.recipient_index = tentative_chat.recipient_index
+	elseif new_chat.type == "force" then
+		local force_index = tentative_chat.recipient_index
+		new_chat.recipient_index = force_index
+		---@type uint[]
+		local list, count = {}, 0
+		new_chat.recipients = list
+
+		for _, player in pairs(game.forces[force_index].players) do
+			count = count + 1
+			list[count] = player.index
+		end
+
+	elseif new_chat.type == "player" then
+		new_chat.recipient = tentative_chat.recipient
 
 	elseif new_chat.type == "whisper" then
 		if not new_chat.sender then error("Whisper has no sender") end

@@ -24,12 +24,13 @@
 ---@field color? Color
 ---@field process_color? boolean
 
----@class Chat.force_player : Chat.base
----@field type "force"|"player"
----@field recipient_index uint
+---@class Chat.player : Chat.base
+---@field type "player"
+---@field recipient ChatPlayer
 
----@class Chat.surface : Chat.base
----@field type "surface"
+---@class Chat.force_surface : Chat.base
+---@field type "surface"|"force"
+---@field recipient_index uint
 ---@field recipients uint[]
 
 ---@class Chat.whisper : Chat.base
@@ -37,25 +38,29 @@
 ---@field sender ChatPlayer
 ---@field recipient ChatPlayer
 
----@alias Chat Chat.base|Chat.force_player|Chat.surface|Chat.whisper
+---@alias Chat
+---| Chat.base
+---| Chat.player
+---| Chat.force_surface
+---| Chat.whisper
 
 ---@type table<ChatMessageType,fun(chat:Chat,player?:uint,force?:uint):boolean>
 local see_lookup = {
 	global = function() return true end,
 
-	---@param chat Chat.force_player
+	---@param chat Chat.force_surface
 	force = function (chat, _, force)
 		if not force then return true end
 		return chat.recipient_index == force
 	end,
 
-	---@param chat Chat.force_player
+	---@param chat Chat.player
 	player = function (chat, player)
 		if not player then return true end
-		return chat.recipient_index == player
+		return chat.recipient.index == player
 	end,
 
-	---@param chat Chat.surface
+	---@param chat Chat.force_surface
 	surface = function (chat, player)
 		if not player then return true end
 		for _, recipient_index in pairs(chat.recipients) do
@@ -69,7 +74,7 @@ local see_lookup = {
 	---@param chat Chat.whisper
 	whisper = function (chat, player)
 		if not player then return true end
-		return not chat.recipient.index == player or chat.sender == player
+		return chat.recipient.index == player or chat.sender.index == player
 	end,
 
 	command = function (chat, player, force)

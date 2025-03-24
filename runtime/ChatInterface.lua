@@ -9,7 +9,7 @@ local function add_chat(state, chat)
 	state.gui.add(state.namespace, list, {
 		type = "module", module_type = "chat_log_entry",
 		chat = chat, name = tostring(chat.chat_id),
-		player = state.player,
+		player = state.player, expand_badges = true,
 	}, true)
 	state.elems["chat-scroll"].scroll_to_bottom()
 end
