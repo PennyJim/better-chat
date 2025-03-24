@@ -40,7 +40,7 @@ events[defines.events.on_console_chat] = function (event)
 	local message = handle_messages.process_message(player, send_level, event.message)
 	send_message{
 		sender = player,
-		message = player,
+		message = message,
 		color = player.chat_color,
 		process_color = true,
 		type = send_level,

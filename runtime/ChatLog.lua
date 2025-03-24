@@ -137,11 +137,13 @@ end
 ---@param sizeLimit int
 ---@param removal_callback? fun(index:uint)
 function chatlog:trim(sizeLimit, removal_callback)
+	local top_index = next(self.chat_array)
+	if not top_index then return end
 	while self.size > sizeLimit do
 		self.size = self.size - 1
-		self.chat_array[self.top_index] = nil
-		if removal_callback then removal_callback(self.top_index) end
-		self.top_index = next(self.chat_array, self.top_index)
+		self.chat_array[top_index] = nil
+		if removal_callback then removal_callback(top_index) end
+		top_index = next(self.chat_array, top_index)
 	end
 end
 

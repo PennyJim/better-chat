@@ -58,7 +58,6 @@ end
 ---@param player_index int
 manager.clear = function (player_index)
 	storage.player_logs[player_index] = chatlog.new()
-	interface.clear_chat(player_index)
 end
 
 ---@class ChatParams.base
@@ -110,6 +109,9 @@ manager.add_message = function(tentative_chat)
 			end
 		end
 
+	elseif new_chat.type == "force" or new_chat.type == "player" then
+		new_chat.recipient_index = tentative_chat.recipient_index
+
 	elseif new_chat.type == "whisper" then
 		if not new_chat.sender then error("Whisper has no sender") end
 		local recipient = tentative_chat.recipient
@@ -123,6 +125,7 @@ manager.add_message = function(tentative_chat)
 	)
 
 	for player_index, player in pairs(game.players) do
+		interface.add_chat(player_index, new_chat)
 		---@cast player_index uint
 		local force_index = player.force_index
 		if chatlog.passes_filter(new_chat, {

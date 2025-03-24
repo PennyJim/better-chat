@@ -4,19 +4,19 @@ local gui = require("__gui-modules__.gui")
 
 ---@param state modules.WindowState
 ---@param chat Chat
----@param chat_identifier string
-local function add_chat(state, chat, chat_identifier)
+local function add_chat(state, chat)
 	local list = state.elems["chat-flow"]
 	state.gui.add(state.namespace, list, {
 		type = "module", module_type = "chat_log_entry",
-		chat = chat, name = chat_identifier
+		chat = chat, name = tostring(chat.chat_id)
 	}, true)
 	state.elems["chat-scroll"].scroll_to_bottom()
 end
 
 ---@param state modules.WindowState
----@param chat_identifier string
-local function remove_chat(state, chat_identifier)
+---@param chat_identifier uint
+local function remove_chat(state, chat_id)
+	local chat_identifier = tostring(chat_id)
 	state.elems[chat_identifier].destroy()
 	state.elems[chat_identifier] = nil
 end
@@ -58,11 +58,23 @@ gui.new({
 		
 	},
 	state_setup = function (state)
-		local log = storage.PlayerChatLog[state.player.index]
+		local log = storage.master_log
 		if not log then return end -- No messages yet
+		local player = state.player
 
-		for id, chat in log:from() do
-			add_chat(state, chat, tostring(id))
+		---@type ChatLog.filter
+		local filter
+		if player.admin then
+			filter = {}
+		else
+			filter = {
+				player_index = player.index,
+				force_index = player.force_index,
+			}
+		end
+
+		for _, chat in log:filter(filter) do
+			add_chat(state, chat)
 		end
 	end
 }--[[@as newWindowParams]])
@@ -80,19 +92,20 @@ chat_interface.commands = {
 
 ---@param player_index uint
 ---@param chat Chat
----@param chat_identifier string
-function chat_interface.add_chat(player_index, chat, chat_identifier)
-	add_chat(gui.get_state("better-chat", player_index), chat, chat_identifier)
+function chat_interface.add_chat(player_index, chat)
+	add_chat(gui.get_state("better-chat", player_index), chat)
 end
 
----@param player_index uint
----@param chat_identifier string
-function chat_interface.remove_chat(player_index, chat_identifier)
-	remove_chat(gui.get_state("better-chat", player_index), chat_identifier)
+---@param chat_identifier uint
+function chat_interface.remove_chat(chat_identifier)
+	for index in pairs(game.players) do
+		---@cast index uint
+		remove_chat(gui.get_state("better-chat", index), chat_identifier)
+	end
 end
 
-function chat_interface.clear_chat(player_index)
-	clear_chat(gui.get_state("better-chat", player_index))
-end
+-- function chat_interface.clear_chat(player_index)
+-- 	clear_chat(gui.get_state("better-chat", player_index))
+-- end
 
 return chat_interface

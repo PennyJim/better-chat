@@ -168,22 +168,15 @@ local function print_chats(player)
 	show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
 	color_processing = get_color_process_settings(player_settings)
 
-	--Go through every chat
-	local log = storage.player_logs[player_index]
-	local start = log.last_index - 36
-	if start < log.top_index then
-		start = log.top_index
-	end
-
 	player.clear_console()
-	for _,chat in log:from(start) do
+	for _,chat in storage.player_logs[player_index]:from() do
 		--Skip chat if doesn't need to be logged
 		if closeable and not (isChatOpen or printing_player.controller_type == defines.controllers.spectator)
 		and game.ticks_played > chat.tick + message_linger then
-			return -- Skip printing message
+			-- Skip printing message
+		else
+			specific_chat_print[chat.type](chat)
 		end
-
-		specific_chat_print[chat.type](chat)
 	end
 end
 

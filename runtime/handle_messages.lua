@@ -276,13 +276,16 @@ function handle_messages.send_message(message)
 		type = message.type,
 		message = msg,
 		sender = sender,
-		-- It simply will never understand this..
-		-- I could break it out into an if block, but yeah no.
----@diagnostic disable-next-line: assign-type-mismatch
-		recipient = recipient,
 		color = color,
 		process_color = process_color,
 	}
+	if new_message.type == "whisper" then
+		---@cast recipient ChatPlayer
+		new_message.recipient = recipient
+	else
+		---@cast recipient uint
+		new_message.recipient_index = recipient
+	end
 
 	ChatHistoryManager.add_message(new_message)
 
