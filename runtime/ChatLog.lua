@@ -7,7 +7,7 @@
 
 ---@class ChatPlayer
 ---@field name string
----@field color Color
+---@field color Color.0
 ---@field index? uint Nilable because the player may have been removed
 
 ---@class Chat.base

@@ -53,6 +53,17 @@ function format_time(tick)
 end
 local format_time = format_time
 
+---@param player ChatPlayer
+local function print_player(player)
+	local color = player.color
+	return {"chat-localization.colored-text",
+		player.name,
+		color.r,
+		color.g,
+		color.b,
+	}
+end
+
 --MARK: Chat Printing
 ---@type LuaPlayer
 local printing_player
@@ -78,13 +89,8 @@ local sound_path
 local volume_modifier
 
 ---@param chat Chat
-local function print_individual_chat(chat)
-	--Skip chat if doesn't need to be logged
-	if closeable and not (isChatOpen or printing_player.controller_type == defines.controllers.spectator)
-	and game.ticks_played > chat.tick + message_linger then
-		return -- Skip printing message
-	end
-
+---@param initial_message LocalisedString[]
+local function general_chat_print(chat, initial_message)
 	--Get general message color
 	local color = chat.color or default_color
 
@@ -92,9 +98,9 @@ local function print_individual_chat(chat)
 		color = process_color(color_processing, color)
 	end
 
-	local message = chat.message
+	local message = initial_message
 	if show_timestamp then
-		message = {"", format_time(chat.tick).." | ", message}
+		message[2] = format_time(chat.tick).." | "
 	end
 
 	--Print the message
@@ -110,6 +116,59 @@ local function print_individual_chat(chat)
 	sound_path = nil
 	volume_modifier = nil
 end
+
+---@type table<ChatMessageType,fun(chat:Chat)>
+local specific_chat_print = {
+	global = function (chat)
+		---@type LocalisedString[]
+		local message = {"", nil, {"bc.global-badge"}, nil, nil, chat.message}
+		if chat.sender then
+			message[4] = print_player(chat.sender)
+			message[5] = ": "
+		end
+		general_chat_print(chat, message)
+	end,
+	force = function (chat)
+		---@type LocalisedString[]
+		local message = {"", nil, {"bc.force-badge"}, nil, nil, chat.message}
+		if chat.sender then
+			message[4] = print_player(chat.sender)
+			message[5] = ": "
+		end
+		general_chat_print(chat, message)
+	end,
+	player = function (chat)
+		---@type LocalisedString[]
+		local message = {"", nil, {"bc.player-badge"}, nil, nil, chat.message}
+		if chat.sender then
+			message[4] = print_player(chat.sender)
+			message[5] = ": "
+		end
+		general_chat_print(chat, message)
+	end,
+	surface = function (chat)
+		---@type LocalisedString[]
+		local message = {"", nil, {"bc.surface-badge"}, nil, nil, chat.message}
+		if chat.sender then
+			message[4] = print_player(chat.sender)
+			message[5] = ": "
+		end
+		general_chat_print(chat, message)
+	end,
+	whisper = function (chat)
+		local player_index = printing_player.index
+		local is_sender = chat.sender.index == player_index
+
+		---@type LocalisedString[]
+		local message = {"", nil, {
+			is_sender and "chat-localization.bc-whisper-to-header" or "chat-localization.bc-whisper-from-header",
+			print_player(chat.recipient)
+		}, chat.message}
+
+		general_chat_print(chat, message)
+	end,
+}
+
 
 ---Prints the chats to the passed player
 ---@param player LuaPlayer
@@ -127,7 +186,7 @@ local function print_chats(player)
 	color_processing = get_color_process_settings(player_settings)
 
 	--Go through every chat
-	local log = storage.PlayerChatLog[player_index]
+	local log = storage.player_logs[player_index]
 	local start = log.last_index - 36
 	if start < log.top_index then
 		start = log.top_index
@@ -135,7 +194,13 @@ local function print_chats(player)
 
 	player.clear_console()
 	for _,chat in log:from(start) do
-		print_individual_chat(chat)
+		--Skip chat if doesn't need to be logged
+		if closeable and not (isChatOpen or printing_player.controller_type == defines.controllers.spectator)
+		and game.ticks_played > chat.tick + message_linger then
+			return -- Skip printing message
+		end
+
+		specific_chat_print[chat.type](chat)
 	end
 end
 
@@ -154,10 +219,10 @@ local function print_chat(player)
 	show_timestamp = player_settings["bc-show-timestamp"].value--[[@as boolean]]
 	color_processing = get_color_process_settings(player_settings)
 
-	local log = storage.PlayerChatLog[player_index]
+	local log = storage.player_logs[player_index]
 	local chat = log.chat_array[log.last_index]
 
-	print_individual_chat(chat)
+	specific_chat_print[chat.type](chat)
 end
 
 ---@type table<historyLevel, fun(index?:int,func:fun(player:LuaPlayer))>
