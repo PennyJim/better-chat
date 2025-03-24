@@ -125,8 +125,9 @@ manager.add_message = function(tentative_chat)
 	)
 
 	for player_index, player in pairs(game.players) do
-		interface.add_chat(player_index, new_chat)
 		---@cast player_index uint
+		interface.add_chat(player_index, new_chat)
+		
 		local force_index = player.force_index
 		if chatlog.passes_filter(new_chat, {
 			player_index = player_index,

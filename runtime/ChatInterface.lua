@@ -8,13 +8,14 @@ local function add_chat(state, chat)
 	local list = state.elems["chat-flow"]
 	state.gui.add(state.namespace, list, {
 		type = "module", module_type = "chat_log_entry",
-		chat = chat, name = tostring(chat.chat_id)
+		chat = chat, name = tostring(chat.chat_id),
+		player = state.player,
 	}, true)
 	state.elems["chat-scroll"].scroll_to_bottom()
 end
 
 ---@param state modules.WindowState
----@param chat_identifier uint
+---@param chat_id uint
 local function remove_chat(state, chat_id)
 	local chat_identifier = tostring(chat_id)
 	state.elems[chat_identifier].destroy()

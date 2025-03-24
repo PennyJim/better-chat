@@ -51,8 +51,10 @@ local badge_switch = {
 
 ---@alias (partial) modules.types
 ---| "chat_log_entry"
+---@alias (partial) modules.GuiElemDef
+---| ChatLogEntryParams
 
----@class ChatLogEntryParams : modules.ModuleDef
+---@class ChatLogEntryParams : modules.ModuleParams
 ---@field module_type "chat_log_entry"
 -- where LuaLS parameter definitons go
 ---@field chat Chat
@@ -64,7 +66,7 @@ local badge_switch = {
 module.parameters = {
 	-- Where gui-modules parameter definitons go
 	chat = {is_optional = false, type = {"table"}},
-	player = {is_optional = false, type = {"userdata"}},
+	player = {is_optional = false, type = {"LuaPlayer"}},
 	expand_badges = {is_optional = true, type = {"boolean"}, default = false},
 
 	name = {is_optional = true, type = {"string"}},
@@ -72,7 +74,7 @@ module.parameters = {
 
 ---Creates the frame for a window with an exit button
 ---@param params ChatLogEntryParams
----@return flib.GuiElemDef
+---@return modules.GuiElemDef.base
 function module.build_func(params)
 	local chat = params.chat
 	local badge = badge_switch[chat.type](chat, params)
