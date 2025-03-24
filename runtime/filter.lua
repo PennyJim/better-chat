@@ -6,10 +6,9 @@ filter.message = ""
 ---NOTE: If you have any ideas for parameters to add to this event, feel free to ask.
 ---
 ---I just can't think of any more.
----@class EventData.better-chat-message
+---@class EventData.better-chat-message : EventData
 ---@field player LuaPlayer The player who sent the message.
----@field send_level historyLevel how many people will be able to see this message.
--- -@field tick uint The tick during which the event happened.
+---@field type PrintLevel How many people will be able to see this message.
 ---@class EventData.better-chat-message
 local _ = {
 	---This is only there if youre *really* need it. If you act based on the original message, you'll squash previous filtering.
@@ -20,15 +19,18 @@ local _ = {
 }
 
 ---@param player LuaPlayer
----@param send_level historyLevel
+---@param type PrintLevel
 ---@param original string
 ---@param message string
 ---@return string
-function filter.chat(player, send_level, original, message)
+function filter.chat(player, type, original, message)
 	---@type EventData.better-chat-message
 	local data = {
+		-- To make luals happy. Even though the engine will add them :(
+		name = script.get_event_id("better-chat-message"), tick = game.tick,
+
 		player = player,
-		send_level = send_level,
+		type = type,
 		orig_message = original,
 		-- tick = game.tick,
 	}

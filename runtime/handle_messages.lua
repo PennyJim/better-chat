@@ -119,7 +119,7 @@ end
 
 ---Turns the message into a chat message
 ---@param sender LuaPlayer
----@param type ChatMessageType
+---@param type PrintLevel
 ---@param text string
 ---@return string
 function handle_messages.process_message(sender, type, text)
@@ -153,7 +153,6 @@ end
 
 
 ---@class MessageParams.base
----@field type "global"
 ---The contents of the message.
 ---@field message LocalisedString
 ---The index of hte player who the message will be attributed to.
@@ -173,6 +172,10 @@ end
 ---The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
 ---@field volume_modifier? float
 
+---@class MessageParams.global : MessageParams.base
+---@field type "global"
+---@field recipient nil
+
 ---@class MessageParams.recipient : MessageParams.base
 ---@field type "force"|"player"|"surface"
 ---Either the player, surface, or force that recieves it if the send_level was not global
@@ -185,7 +188,7 @@ end
 ---The index of the player that received the whisper.
 ---@field recipient uint
 
----@alias MessageParams MessageParams.base|MessageParams.recipient|MessageParams.whisper
+---@alias MessageParams MessageParams.global|MessageParams.recipient|MessageParams.whisper
 
 local valid_types = {
 	global = true,
@@ -316,7 +319,6 @@ local function compatibility_send(message, color, send_level, recipient, clear)
 			message = message,
 			color = color,
 			type = send_level or "global",
----@diagnostic disable-next-line: assign-type-mismatch
 			recipient = recipient,
 			clear = clear,
 		})
