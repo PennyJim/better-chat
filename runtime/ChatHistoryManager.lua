@@ -61,22 +61,15 @@ manager.clear = function (player_index)
 	interface.clear_chat(player_index)
 end
 
----@param player LuaPlayer?
----@return ChatPlayer?
-local function convert_player(player)
-	return player and {
-		name = player.name,
-		color = player.chat_color --[[@as Color.0]],
-		index = player.index
-	}
-end
-
 ---@class ChatParams.base
----@field type "global"
 ---@field message LocalisedString
----@field sender? LuaPlayer
+---@field sender? ChatPlayer
 ---@field color? Color
 ---@field process_color? boolean
+
+---@class ChatParams.global
+---@field type "global"
+---@field recipient nil
 
 ---@class ChatParams.force_player_surface : ChatParams.base
 ---@field type "force"|"player"|"surface"
@@ -84,10 +77,10 @@ end
 
 ---@class ChatParams.whisper : ChatParams.base
 ---@field type "whisper"
----@field sender LuaPlayer
----@field recipient LuaPlayer
+---@field sender ChatPlayer
+---@field recipient ChatPlayer
 
----@alias ChatParams ChatParams.base|ChatParams.force_player_surface|ChatParams.whisper
+---@alias ChatParams ChatParams.global|ChatParams.force_player_surface|ChatParams.whisper
 ---Adds a message to chat history
 ---@param tentative_chat ChatParams
 manager.add_message = function(tentative_chat)
@@ -98,7 +91,7 @@ manager.add_message = function(tentative_chat)
 
 		type = tentative_chat.type,
 		message = tentative_chat.message,
-		sender = convert_player(tentative_chat.sender),
+		sender = tentative_chat.sender,
 		color = tentative_chat.color,
 		process_color = tentative_chat.process_color,
 	}
@@ -119,7 +112,7 @@ manager.add_message = function(tentative_chat)
 
 	elseif new_chat.type == "whisper" then
 		if not new_chat.sender then error("Whisper has no sender") end
-		local recipient = convert_player(tentative_chat.recipient)
+		local recipient = tentative_chat.recipient
 		if not recipient then error("Whisper has no recipient") end
 		new_chat.recipient = recipient
 	end

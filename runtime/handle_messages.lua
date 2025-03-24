@@ -115,6 +115,28 @@ local function replace_shortcodes(text)
 	end)
 end
 
+---@param player LuaPlayer?
+---@return ChatPlayer?
+---@overload fun(player:uint):ChatPlayer
+local function convert_player(player)
+	if not player then return end
+	if type(player) == "number" then
+		player = game.get_player(player)
+		if not player then error("Player did not exist", 2) end
+	end
+
+	local name = player.name
+	if player.tag and #player.tag > 0 then
+		name = name.." "..player.tag
+	end
+
+	return {
+		name = player.name,
+		color = player.chat_color --[[@as Color.0]],
+		index = player.index
+	}
+end
+
 --MARK: public functions
 
 ---Turns the message into a chat message
@@ -156,7 +178,7 @@ end
 ---The contents of the message.
 ---@field message LocalisedString
 ---The index of hte player who the message will be attributed to.
----@field sender? uint
+---@field sender? uint|LuaPlayer
 ---The base color of the message.
 ---@field color? Color
 ---Whether or not the message is faded out by the player's settings. Defaults to `false`.
@@ -184,9 +206,9 @@ end
 ---@class MessageParams.whisper : MessageParams.base
 ---@field type "whisper"
 ---The player that sent the whisper.
----@field sender uint
+---@field sender uint|LuaPlayer
 ---The index of the player that received the whisper.
----@field recipient uint
+---@field recipient uint|LuaPlayer
 
 ---@alias MessageParams MessageParams.global|MessageParams.recipient|MessageParams.whisper
 
@@ -203,24 +225,27 @@ local valid_types = {
 ---@return string? Error
 function handle_messages.send_message(message)
 	local error_message = nil
-	local type = message.type
-	local recipient = message.recipient --[[@as int]]
-	local sender = message.sender--[[@as int]]
+	local message_type = message.type
+	---@type ChatPlayer|LuaPlayer|uint?
+	local recipient = message.recipient
+	---@cast recipient -ChatPlayer
+	local sender = convert_player(message.sender)
 
-	if not valid_types[type] then
+	if not valid_types[message_type] then
 		error_message = "Invalid message type"
-	elseif type ~= "global" and type(recipient) ~= "number" then
+	elseif message_type ~= "global" and message_type ~= "whisper" and type(recipient) ~= "number" then
 		error_message = "Invalid recipient. Must be an index"
-	elseif type == "force" and not game.forces[recipient] then
+	elseif message_type == "force" and not game.forces[recipient] then
 		error_message = "Invalid force"
-	elseif type == "surface" and not game.get_surface(recipient) then
+	elseif message_type == "surface" and not game.get_surface(recipient--[[@as number]]) then
 		error_message = "Invalid surface"
-	elseif type == "player" and not game.get_player(recipient) then
+	elseif message_type == "player" and not game.get_player(recipient--[[@as number]]) then
 		error_message = "Invalid player"
-	elseif type == "whisper" then
-		if not game.get_player(recipient) then
+	elseif message_type == "whisper" then
+		recipient = convert_player(recipient)
+		if not recipient then
 			error_message = "Invalid receiving player"
-		elseif not game.get_player(sender) then
+		elseif not sender then
 			error_message = "Invalid sending player"
 		end
 	end
@@ -241,14 +266,20 @@ function handle_messages.send_message(message)
 	local sound_path = message.sound_path
 	local volume_modifier = message.volume_modifier
 
-	ChatHistoryManager.add_message{
+	---@type ChatParams
+	local new_message = {
 		type = message.type,
 		message = msg,
+		sender = sender,
+		-- It simply will never understand this..
+		-- I could break it out into an if block, but yeah no.
+---@diagnostic disable-next-line: assign-type-mismatch
+		recipient = recipient,
 		color = color,
 		process_color = process_color,
-		level = type,
-		chat_index = recipient
 	}
+
+	ChatHistoryManager.add_message(new_message)
 
 	if skip_print then return end
 
@@ -261,12 +292,15 @@ function handle_messages.send_message(message)
 		func = printer.print_latest
 	end
 
-	if type == "whisper" then
-		func("player", sender, sound, sound_path, volume_modifier)
-		func("player", recipient, sound, sound_path, volume_modifier)
+	if message_type ~= "whisper" then
+		---@cast message_type PrintLevel
+		---@cast recipient uint
+		func(message_type, recipient, sound, sound_path, volume_modifier)
 	else
-		---@cast type PrintLevel
-		func(type, recipient, sound, sound_path, volume_modifier)
+		---@cast sender ChatPlayer
+		---@cast recipient ChatPlayer
+		func("player", sender.index, sound, sound_path, volume_modifier)
+		func("player", recipient.index, sound, sound_path, volume_modifier)
 	end
 end
 --- Because the printer needs it and this file requires the printer
@@ -346,33 +380,6 @@ function handle_messages.broadcast_friendly(message)
 			handle_messages.send_message(message)
 		end
 	end
-end
-
----Turns the arguments into a LocalizedString
----@param header string
----@param player LuaPlayer
----@param message string
----@return LocalisedString message
-function handle_messages.msg(header, player, message)
-	local name = player.name
-	if player.tag and #player.tag > 0 then
-		name = name.." "..player.tag
-	end
-	local color = player.chat_color
-	return {
-		"",
-		{
-			"chat-localization.colored-text",
-			{
-				"chat-localization."..header,
-				name
-			},
-			color[1] or color.r,
-			color[2] or color.g,
-			color[3] or color.b,
-		},
-		message
-	}
 end
 
 ---Reprints the chat to clear ephemeral messages
