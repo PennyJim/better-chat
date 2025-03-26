@@ -227,6 +227,13 @@ local valid_types = {
 	surface = true,
 	player = true,
 	whisper = true,
+	command = true,
+}
+
+local non_int_recipients = {
+	global = true,
+	whisper = true,
+	command = true,
 }
 
 ---Processes messsage, saves it to history, then sends latest x messages
@@ -247,7 +254,7 @@ function handle_messages.send_message(message)
 
 	if not valid_types[message_type] then
 		error_message = "Invalid message type"
-	elseif message_type ~= "global" and message_type ~= "whisper" and type(recipient) ~= "number" then
+	elseif not non_int_recipients[message_type] and type(recipient) ~= "number" then
 		error_message = "Invalid recipient. Must be an index"
 	elseif message_type == "force" and not game.forces[recipient] then
 		error_message = "Invalid force"
