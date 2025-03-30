@@ -7,13 +7,16 @@ local printer = require("__better-chat__.runtime.ChatPrinter")
 ---@class ChatLogManager : custom_event_handler
 local manager = {events = {}--[[@as event_handler.events]], remote_interfaces = {}--[[@as custom_event_handler.remote_interfaces]]}
 
----Adds a new chatlog for player_index if it didn't exist before
-manager.events[defines.events.on_player_created] = function (event)
-	local player_index = event.player_index
+---@param player_index uint
+local function build_player_log(player_index)
 	local player = game.get_player(player_index)
 	---@cast player -?
-	if storage.player_logs[player_index] then return log("Player already had a log!?? '"..player.name.."' at "..player_index) end -- HMMM??
+	if storage.player_logs[player_index] then return log("Player already had a log. '"..player.name.."' at "..player_index) end
 	storage.player_logs[player_index] = chatlog.new(storage.master_log, player)
+end
+---Adds a new chatlog for player_index if it didn't exist before
+manager.events[defines.events.on_player_created] = function (event)
+	build_player_log(event.player_index)
 end
 
 ---Removes a chatlog for deleted force
@@ -150,7 +153,14 @@ manager.add_message = function(tentative_chat)
 			player_index = player_index,
 			force_index = force_index
 		}) then
-			storage.player_logs[player_index]:add(new_chat, 36)
+			-- Only add to it if it was already built
+			-- It should be automatically added when building it
+			local player_log = storage.player_logs[player_index]
+			if player_log then
+				player_log:add(new_chat, 36)
+			else
+				build_player_log(player_index)
+			end
 		end
 	end
 end
