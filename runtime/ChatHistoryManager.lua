@@ -36,13 +36,9 @@ manager.events[defines.events.on_player_removed] = function (event)
 	local log = storage.master_log
 	for chat_id, chat in log:from() do
 		---@cast chat Chat.whisper|Chat.player
-		if chat.type == "whisper" then
+		if chat.type == "whisper"
+		or chat.type == "player" then
 			if chat.recipient.index == player_index then
-				log:remove(chat_id)
-			end
-		elseif chat.type == "player" then
-			---@cast chat Chat.player
-			if chat.recipient_index == player_index then
 				log:remove(chat_id)
 			end
 		end
