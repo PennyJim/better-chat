@@ -94,14 +94,20 @@ chat_interface.commands = {
 ---@param player_index uint
 ---@param chat Chat
 function chat_interface.add_chat(player_index, chat)
-	add_chat(gui.get_state("better-chat", player_index), chat)
+	local state, did_build = gui.get_state("better-chat", player_index)
+	if not did_build then
+		add_chat(state, chat)
+	end
 end
 
 ---@param chat_identifier uint
 function chat_interface.remove_chat(chat_identifier)
 	for index in pairs(game.players) do
 		---@cast index uint
-		remove_chat(gui.get_state("better-chat", index), chat_identifier)
+		local state, did_build = gui.get_state("better-chat", index)
+		if not did_build then
+			remove_chat(state, chat_identifier)
+		end
 	end
 end
 
