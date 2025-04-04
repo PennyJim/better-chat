@@ -7,9 +7,11 @@ local gui = require("__gui-modules__.gui")
 local function add_chat(state, chat)
 	local list = state.elems["chat-flow"]
 	state.gui.add(state.namespace, list, {
-		type = "module", module_type = "chat_log_entry",
-		chat = chat, name = tostring(chat.chat_id),
-		player = state.player, expand_badges = true,
+		module_type = "chat_log_entry",
+		args = {
+			chat = chat, name = tostring(chat.chat_id),
+			player = state.player, expand_badges = true,
+		}
 	}, true)
 	state.elems["chat-scroll"].scroll_to_bottom()
 end
@@ -41,19 +43,23 @@ gui.new({
 		version = 0,
 		root = "screen",
 		definition = {
-			type = "module", module_type = "window_frame",
-			name = "better-chat", title = {"better-chat.window-title"},
-			has_close_button = true, has_pin_button = true,
-			children = {{
-				type = "scroll-pane", name = "chat-scroll",
-				horizontal_scroll_policy = "never",
-				vertical_scroll_policy = "always",
+			module_type = "window_frame",
+			args = {
+				has_close_button = true, has_pin_button = true,
+				name = "better-chat", title = {"better-chat.window-title"},
 				children = {{
-					type = "flow", name = "chat-flow",
-					direction = "vertical"
+					args = {
+						type = "scroll-pane", name = "chat-scroll",
+						horizontal_scroll_policy = "never",
+						vertical_scroll_policy = "always",
+					},
+					children = {{args={
+						type = "flow", name = "chat-flow",
+						direction = "vertical"
+					}}}
 				}}
-			}}
-		}--[[@as WindowFrameParams]]
+			}
+		}--[[@as modules.WindowFrameElem]]
 	},
 	handlers = {
 		

@@ -1,4 +1,9 @@
-local module = {module_type = "chat_log_entry", handlers = {} --[[@as GuiModuleEventHandlers]]}
+---@type modules.GuiModuleDef
+---@diagnostic disable-next-line: missing-fields
+local module = {
+	module_type = "chat_log_entry",
+	handlers = {}
+}
 
 ---@class WindowState.my_module : modules.WindowState
 -- Where custom fields would go
@@ -53,7 +58,7 @@ local function print_player(player, name_override)
 	}
 end
 
----@type table<ChatMessageType,LocalisedString|fun(chat:Chat,params:ChatLogEntryParams):LocalisedString>
+---@type table<ChatMessageType,LocalisedString|fun(chat:Chat,params:ChatLogEntryArgs):LocalisedString>
 local badge_switch = {
 	global =  function() return {"chat-localization.bc-global-badge"} end,
 	command = function() return {"chat-localization.bc-command-badge"} end,
@@ -88,11 +93,13 @@ local badge_switch = {
 
 ---@alias (partial) modules.types
 ---| "chat_log_entry"
----@alias (partial) modules.GuiElemDef
----| ChatLogEntryParams
-
----@class ChatLogEntryParams : modules.ModuleParams
+---@alias (partial) modules.ModuleElems
+---| ChatLogEntryElem
+---@class ChatLogEntryElem
 ---@field module_type "chat_log_entry"
+---@field args ChatLogEntryArgs
+
+---@class ChatLogEntryArgs
 -- where LuaLS parameter definitons go
 ---@field chat Chat
 ---@field player LuaPlayer
@@ -110,8 +117,7 @@ module.parameters = {
 }
 
 ---Creates the frame for a window with an exit button
----@param params ChatLogEntryParams
----@return modules.GuiElemDef.base
+---@param params ChatLogEntryArgs
 function module.build_func(params)
 	local chat = params.chat
 	local badge = badge_switch[chat.type](chat, params)
@@ -120,32 +126,33 @@ function module.build_func(params)
 	local processed_color = "something"
 
 	return {
-		type = "frame", name = params.name,
+		args = {type = "frame", name = params.name},
 		children = {
-			{
+			{args={
 				type = "label",
 				caption = format_time(chat.tick)
-			},
-			{
+			}},
+			{args={
 				type = "label",
 				caption = "|"
-			},
-			{
+			}},
+			{args={
 				type = "label",
 				caption = badge
-			},
-			show_sender and {
+			}},
+			show_sender and {args={
 				type = "label",
 				caption = print_player(chat.sender)
-			} or {},
-			show_sender and {
+			}} or nil,
+			show_sender and {args={
 				type = "label",
 				caption = ":"
-			} or {},
+			}} or nil,
 			{
-				type = "label",
-				caption = chat.message,
-				tags = {process_color=chat.process_color},
+				args={
+					type = "label",caption = chat.message,
+					tags = {process_color=chat.process_color},
+				},
 				style_mods = {font_color = chat.color}
 			}
 		}
