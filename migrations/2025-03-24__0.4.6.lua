@@ -1,3 +1,5 @@
+if not storage.GlobalChatLog then return log("Global log doesn't exist. Skipping migration") end
+
 local chatlog = require("__better-chat__.runtime.ChatLog")
 
 ---@diagnostic disable: no-unknown, undefined-field

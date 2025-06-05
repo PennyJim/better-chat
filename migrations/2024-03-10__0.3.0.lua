@@ -1,4 +1,5 @@
 ---@diagnostic disable: inject-field, no-unknown, undefined-field
+if not storage.GlobalChatLog then return log("Global log doesn't exist. Skipping migration") end
 
 for _,chat in storage.GlobalChatLog:from() do
   if chat.msg then
