@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.4.6
+Version: 0.5.0
 Date: ????
   Features:
     - Messages now support a `sender` that a message will be attributed to.
