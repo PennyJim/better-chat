@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.6
 Date: ????
-  Changes:
+  Bugfixes:
+    - Forces created in init handlers are caught in the configuration changed handler now.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2025-03-20

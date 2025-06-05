@@ -83,6 +83,13 @@ script.on_configuration_changed(function (change)
   setupGlobal()
 	clean_emojipacks(change.mod_changes)
 	disableFunctions.reenable(change.mod_changes)
+
+	for _, force in pairs(game.forces) do
+		local chatlog = storage.ForceChatLog[force.index]
+		if not chatlog then
+			ChatHistoryManager.add_force(force.index)
+		end
+	end
 end)
 script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
   local setting = event.setting
