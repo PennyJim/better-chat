@@ -22,65 +22,113 @@ local function replace_all(text, pattern, replaceFun)
 	return output
 end
 
+---@param array table<any,any>|any
+---@param tested_type type
+---@return boolean
+local function is_array(array, tested_type)
+	if type(array) ~= "table" then return false end
+	---@type uint?
+	local last_index
+	for index, value in ipairs(array) do
+		if type(value) ~= tested_type then
+			last_index = nil
+			break
+		end
+		last_index = index
+	end
+	-- If the size and the last index are equivalent, then we know ipairs didn't miss any indexes
+	return last_index and table_size(array) == last_index
+end
+
+---@type table<string, string[]|string>
+local shortcodes = {}
+
+for emojipack_name, mod_data in pairs(prototypes.mod_data) do
+	if mod_data.data_type ~= "bc-shortcodes" then goto continue end
+
+	for shortcode, expansion in pairs(mod_data.data) do
+		local expansion_list = shortcodes[shortcode]
+		if type(expansion_list) == "string" then
+			expansion_list = {expansion_list}
+		end
+
+		if type(expansion) == "string" then
+			if expansion_list then
+				table.insert(expansion_list, expansion)
+			else
+				shortcodes[shortcode] = expansion
+			end
+
+		elseif is_array(expansion, "string") then
+			---@cast expansion string[]
+			if expansion_list then
+				for _, sub_expansion in pairs(expansion) do
+					table.insert(expansion_list, sub_expansion)
+				end
+			else
+				shortcodes[shortcode] = expansion
+			end
+
+		else
+			local mod_history = prototypes.get_history("mod-data", emojipack_name)
+			local mod_blame = "\n\t- "..mod_history.created
+			for _, mod in pairs(mod_history.changed) do
+				mod_blame = mod_blame.."\n\t- "..mod
+			end
+			error("In emojipack '"..emojipack_name.."' for '"..shortcode.."' expected string or array of strings, got "..serpent.line(expansion)
+				.."\n\nMod(s) to blame:"..mod_blame
+			)
+		end
+	end
+
+	::continue::
+end
+
 ---Loop through the dictionaries to find the nth
 ---instance of the given shortcode
 ---@param given_code string
 ---@param variation int
 ---@return string?
 local function find_shortcode(given_code, variation)
-  -- Define variables outside the loop
-  local count = 0
-  ---@type string[]|string, int
-  local result, new_count
-  for _, dictionary in pairs(storage.emojipacks) do
-    result = dictionary[given_code]
-    if result then
+  local result = shortcodes[given_code]
+	if not result then return end
 
-      if type(result) == "string" then
-        -- If it's the result
-        count = count + 1
-        if count == variation then
-          return result
-        end
-      else
+	if type(result) == "string" then
+		if variation == 1 then
+			return result
+		end
 
-        -- If it's an array of results
-        new_count = count + #result
-        if new_count >= variation then
-          return result[variation - count]
-        end
-        count = new_count
-      end
-    end
-  end
+	else
+		return result[variation]
+	end
 end
 
 ---Use the levenshtein algorithm to find the closest
 ---shortcode to the text given
----@param given_code string
----@return string?
-local function Levenshtein_shortcodes(given_code)
-  local tree = automation.generate_tree(given_code)
-  ---@type string[]|string?, int
-  local closest, closest_distance = nil, math.huge
-  ---@type Levenshtein.match?
-  local match
+-- -@param given_code string
+-- -@return string?
+-- local function Levenshtein_shortcodes(given_code)
+--   local tree = automation.generate_tree(given_code)
+--   ---@type string[]|string?, int
+--   local closest, closest_distance = nil, math.huge
+--   ---@type Levenshtein.match?
+--   local match
 
-  for _, dictionary in pairs(storage.emojipacks) do
-    for shortcode, replacement in pairs(dictionary) do
-      match = automation.match(shortcode, tree)
-      if match and match[2] < closest_distance then
-        if match[2] == 1 then
-          return type(replacement) == "string" and replacement or replacement[1]
-        end
-        closest = replacement
-        closest_distance = match[2]
-      end
-    end
-  end
+--   for _, dictionary in pairs(storage.emojipacks) do
+--     for shortcode, replacement in pairs(dictionary) do
+--       match = automation.match(shortcode, tree)
+--       if match and match[2] < closest_distance then
+--         if match[2] == 1 then
+--           return type(replacement) == "string" and replacement or replacement[1]
+--         end
+--         closest = replacement
+--         closest_distance = match[2]
+--       end
+--     end
+--   end
 
-  return type(closest) == "table" and closest[1] or closest --[[@as string?]]
-end
+--   return type(closest) == "table" and closest[1] or closest --[[@as string?]]
+-- end
 
 ---Replaces `:<shortcodes>:` into their emoji
 ---@param text string
@@ -107,9 +155,9 @@ local function replace_shortcodes(text)
     -- Wasn't found, let's try a code that's levenshteinly close
     -- unlesss a variation is specified or on a server
     -- It is not optimized enough for that :P
-    if not game.is_multiplayer() and variation == 1 then
-      item = Levenshtein_shortcodes(shortenedcode)
-    end
+    -- if not game.is_multiplayer() and variation == 1 then
+    --   item = Levenshtein_shortcodes(shortenedcode)
+    -- end
     return item or shortcode
 	end)
 end
@@ -186,7 +234,7 @@ function handle_messages.process_message(sender, type, text)
 	end
 
 	-- Use event to filter
-	message = filter.chat(sender, type, text, message)
+	-- message = filter.chat(sender, type, text, message)
 
 	return message
 end
