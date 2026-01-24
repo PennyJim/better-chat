@@ -1,9 +1,8 @@
-local ChatHistoryManager = require("__better-chat__.runtime.ChatHistoryManager")
-local printer = require("__better-chat__.runtime.ChatPrinter")
-local automation = require("__better-chat__.runtime.levenshtein_automation")
-local filter = require("__better-chat__.runtime.filter")
----@class handle_messages : custom_event_handler
-local handle_messages = {remote_interfaces = {}}
+local chatlog_manager = require("chatlog_manager")
+-- local automation = require("__better-chat__.runtime.levenshtein_automation")
+-- local filter = require("__better-chat__.runtime.filter")
+---@class handle_messages : event_handler
+local handle_messages = {remote_interfaces = {}} --[[@as event_handler]]
 
 --MARK: Local functions
 
@@ -115,15 +114,33 @@ local function replace_shortcodes(text)
 	end)
 end
 
----@param player LuaPlayer?
+--- Converts the given player reference into a standard ChatPlayer if needed
+--- Validates the inputs with a verbose message of why it's an invalid reference
+---@param player PlayerReference
+---@param depth? int
 ---@return ChatPlayer?
----@overload fun(player:uint):ChatPlayer
-local function convert_player(player)
+local function convert_player(player, depth)
 	if not player then return end
-	if type(player) == "number" then
-		player = game.get_player(player)
-		if not player then error("Player did not exist", 2) end
+	depth = depth and depth + 1 or 2
+
+	if type(player) == "table" then
+		---@cast player ChatPlayer
+		if type(player.name) ~= "string" then
+			error("Invalid ChatPlayer, name was not a string: "..serpent.line(player.name), depth)
+		elseif player.index and type(player.index) ~= "number" then
+			error("Invalid ChatPlayer, index was not a number: "..serpent.line(player.index), depth)
+		end
+		return player
+
+	elseif type(player) == "number" or type(player) == "string" then
+		local luaplayer = game.get_player(player)
+		if not luaplayer then error("Player did not exist: "..serpent.line(player), depth) end
+		player = luaplayer
+
+	elseif type(player) ~= "userdata" then
+		error("Expected a PlayerReference (PlayerIdentification or ChatPlayer), was instead given "..serpent.line(player), depth)
 	end
+	---@cast player LuaPlayer
 
 	local name = player.name
 	if player.tag and #player.tag > 0 then
@@ -131,7 +148,8 @@ local function convert_player(player)
 	end
 
 	return {
-		name = player.name,
+		-- name = player.name,
+		name = name,
 		color = player.chat_color --[[@as Color.0]],
 		index = player.index
 	}
@@ -173,169 +191,81 @@ function handle_messages.process_message(sender, type, text)
 	return message
 end
 
+--MARK: Validation
 
----@class MessageParams.base
----The contents of the message.
----@field message LocalisedString
----The index of hte player who the message will be attributed to.
----@field sender? uint|LuaPlayer|ChatPlayer
----The base color of the message.
----@field color? Color
----Whether or not the message is faded out by the player's settings. Defaults to `false`.
----@field process_color? boolean
----Whether or not the added message is printed at all. This will also skip any sound. Defaults to `false`.
----@field skip_print? boolean
----Whether or not the chat is cleared before printing the new message. Defaults to `false`.
----@field clear? boolean
----If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
----@field sound? defines.print_sound
----The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
----@field sound_path? SoundPath
----The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
----@field volume_modifier? float
+---@type table<ChatMessageType, fun(recipient:ForceID|SurfaceIdentification|PlayerReference,message:ChatParams):ChatPlayer|uint?>
+local type_validation = {
+	---@return nil recipient
+	global = function (recipient, message)
+		if recipient then
+			log("Recipient was given for a global message?\n"..serpent.block(message))
+		end
+	end,
+	---@return nil recipient
+	command = function (recipient, message)
+		if recipient then
+			log("Recipient was given for a command? Sender should be used to assign a command to a user.\n"..serpent.block(message))
+		end
+	end,
+	---@param recipient ForceID
+	---@return uint recipient
+	force = function (recipient)
+		if type(recipient) == "userdata" then
+			if recipient.object_name == "LuaForce" then
+				return recipient.index
+			end
 
----@class MessageParams.global : MessageParams.base
----@field type "global"|"command"
----@field recipient nil
+		elseif type(recipient) == "string" or type(recipient) == "number" then
+			local force = game.forces[recipient]
+			if force then return force.index end
+			error("Given force did not exist: "..recipient, 2)
+		end
 
----@class MessageParams.force_surface : MessageParams.base
----@field type "force"|"surface"
----Either the surface, or force that recieves the message.
----@field recipient uint
+		error("Expected a ForceID, got "..serpent.line(recipient), 2)
+	end,
+	---@param recipient SurfaceIdentification
+	---@return uint recipient
+	surface = function (recipient)
+		if type(recipient) == "userdata" then
+			if recipient.object_name == "LuaSurface" then
+				return recipient.index
+			end
 
----@class MessageParams.player : MessageParams.base
----@field type "player"
----The player that received the message.
----@field recipient uint|LuaPlayer
+		elseif type(recipient) == "string" or type(recipient) == "number" then
+			local surface = game.get_surface(recipient)
+			if surface then return surface.index end
+			error("Given surface did not exist: "..recipient, 2)
+		end
 
----@class MessageParams.whisper : MessageParams.base
----@field type "whisper"
----The player that sent the whisper.
----@field sender uint|LuaPlayer
----The player that received the whisper.
----@field recipient uint|LuaPlayer
-
----@alias MessageParams
----| MessageParams.global
----| MessageParams.force_surface
----| MessageParams.player
----| MessageParams.whisper
-
-local valid_types = {
-	global = true,
-	force = true,
-	surface = true,
-	player = true,
-	whisper = true,
-	command = true,
+		error("Expected a SurfaceIdentification, got "..serpent.line(recipient), 2)
+	end,
+	---@param recipient PlayerReference
+	---@return PlayerReference recipient
+	player = function (recipient)
+		local player = convert_player(recipient, 2)
+		if not player then
+			error("A recipient player is required", 2)
+		end
+		if player.index then return player end
+		error("A ChatPlayer missing an index cannot be a recipient: "..serpent.line(player), 2)
+	end,
 }
 
-local non_int_recipients = {
-	global = true,
-	whisper = true,
-	command = true,
-}
-
----Processes messsage, saves it to history, then sends latest x messages
----@param message MessageParams
+---Processes messsage and saves it to history
+---@param message ChatParams
 ---@return string? Error
 function handle_messages.send_message(message)
-	local error_message = nil
 	local message_type = message.type
-	---@type ChatPlayer|LuaPlayer|uint?
-	local recipient = message.recipient
-	---@cast recipient -ChatPlayer
-	local sender = message.sender
-	if type(sender) ~= "table" then
-		---@cast sender -ChatPlayer
-		sender = convert_player(sender)
+	message.sender = convert_player(message.sender)
+
+	if not message_type or not type_validation[message_type] then
+		error("Invalid message type: "..serpent.line(message_type))
 	end
-	---@cast sender -LuaPlayer
+	message.recipient = type_validation[message_type](message.recipient, message)
+	---@cast message ChatParamsValidated
 
-	if not valid_types[message_type] then
-		error_message = "Invalid message type"
-	elseif not non_int_recipients[message_type] and type(recipient) ~= "number" then
-		error_message = "Invalid recipient. Must be an index"
-	elseif message_type == "force" and not game.forces[recipient] then
-		error_message = "Invalid force"
-	elseif message_type == "surface" and not game.get_surface(recipient--[[@as number]]) then
-		error_message = "Invalid surface"
-	elseif message_type == "player" then
-		recipient = convert_player(recipient)
-		if not recipient then
-			error_message = "Invalid player"
-		end
-	elseif message_type == "whisper" then
-		recipient = convert_player(recipient)
-		if not recipient then
-			error_message = "Invalid receiving player"
-		elseif not sender then
-			error_message = "Invalid sending player"
-		end
-	end
-
-	if error_message then
-		error(error_message)
-	end
-
-	local msg = message.message
-	local color = message.color
-	local process_color = message.process_color
-	local skip_print = message.skip_print
-	local clear = message.clear ~= false
-	local sound = message.sound
-	if not sound and not clear then
-		sound = defines.print_sound.use_player_settings
-	end
-	local sound_path = message.sound_path
-	local volume_modifier = message.volume_modifier
-
-	---@type ChatParams
-	local new_message = {
-		type = message.type,
-		message = msg,
-		sender = sender,
-		color = color,
-		process_color = process_color,
-	}
-	if new_message.type == "whisper" or new_message.type == "player" then
-		---@cast recipient ChatPlayer
-		new_message.recipient = recipient
-	else
-		---@cast recipient uint
-		new_message.recipient_index = recipient
-	end
-
-	ChatHistoryManager.add_message(new_message)
-
-	if skip_print then return end
-
-	--Clear chat if `clear` is true or nil
-	---@type function
-	local func
-	if clear then
-		func = printer.print_chat
-	else
-		func = printer.print_latest
-	end
-
-	if message_type ~= "whisper" then
-		---@cast recipient ChatPlayer|uint
-		-- To fix the fact that the player is a ChatPlayer
-		if type(recipient) == "table" then
-			recipient = recipient.index
-		end
-		---@cast message_type PrintLevel
-		func(message_type, recipient, sound, sound_path, volume_modifier)
-	else
-		---@cast sender ChatPlayer
-		---@cast recipient ChatPlayer
-		func("player", sender.index, sound, sound_path, volume_modifier)
-		func("player", recipient.index, sound, sound_path, volume_modifier)
-	end
+	chatlog_manager.add_message(message)
 end
---- Because the printer needs it and this file requires the printer
-send_message = handle_messages.send_message
 
 
 ---@deprecated There is a new format with a message 'type' instead of level
@@ -356,10 +286,10 @@ send_message = handle_messages.send_message
 
 ---@alias messageParams messageParams.base|messageParams.recipient
 
----@param params messageParams|MessageParams
----@return MessageParams
+---@param params messageParams|ChatParams
+---@return ChatParams
 local function convert_params(params)
-	if params.type then return params --[[@as MessageParams]] end
+	if params.type then return params --[[@as ChatParams]] end
 	params.type = params.send_level
 	params.send_level = nil
 
@@ -397,10 +327,10 @@ handle_messages.remote_interfaces["better-chat"] = {
 	send = compatibility_send,
 }
 
----Send a force-leve message and bcc every force
+---Send a force-level message and bcc every force
 ---that considers this force friendly
 ---Why not the other way round? Dunno. It's how base game does it :)
----@param message MessageParams.force_surface
+---@param message ChatParams.force
 function handle_messages.broadcast_friendly(message)
   if message.type ~= "force" then error("This should *only* be for force level communications") end
   local force_index = message.recipient--[[@as int]]
@@ -413,13 +343,7 @@ function handle_messages.broadcast_friendly(message)
 	end
 end
 
----Reprints the chat to clear ephemeral messages
----@param player_index int
-function handle_messages.clear_ephemeral(player_index)
-  printer.print_chat("player", player_index)
-end
-
-handle_messages.clear = ChatHistoryManager.clear
+handle_messages.clear = chatlog_manager.clear
 
 ---Wraps the given LocalisedString or string in a LocalisedString
 ---that colors the text. Mostly just a shorthand to avoid
@@ -428,12 +352,14 @@ handle_messages.clear = ChatHistoryManager.clear
 ---@param color Color
 ---@return LocalisedString
 function handle_messages.color(string, color)
-	return {
-		"chat-localization.colored-text",
-		string,
-		color[1] or color.r,
-		color[2] or color.g,
-		color[3] or color.b,
+	return {"",
+		"[color="
+			..color[1] or color.r
+			..color[2] or color.g
+			..color[3] or color.b
+		.."]",
+			string,
+		"[/color]"
 	}
 end
 
