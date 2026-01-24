@@ -3,17 +3,17 @@ if ... ~= "__better-chat__.runtime.custom_event_handler" then
 end
 local util = require("util")
 
----@class custom_event_handler.remote_interfaces : {[string]:{[string]:function}}
+---@class event_handler.remote_interfaces : {[string]:{[string]:function}}
 
----@class custom_event_handler : event_handler
+---@class event_handler
 ---@field on_script_trigger? table<string,fun(event:EventData.on_script_trigger_effect)>
----@field remote_interfaces? table<string,table<string,function>>
+---@field remote_interfaces? event_handler.remote_interfaces
 ---@field commands? table<string,fun(event:CustomCommandData)>
 ---@field command_helps? table<string,LocalisedString> If a help message is left unset, it'll default to `{"command-help."..name}`
 local tmp = {
-	---@deprecated DO NOT USE. Fucking hate this interface
+	---@deprecated DO NOT USE. Hate this interface
 	add_commands = nil,
-	---@deprecated DO NOT USE. Fucking hate this interface
+	---@deprecated DO NOT USE. Hate this interface
 	add_remote_interface = nil,
 }
 ---@diagnostic disable-next-line: cast-local-type
@@ -38,7 +38,7 @@ local function pack_localized_concat(string)
   return pack_localized_concat(new_string)
 end
 
----@type custom_event_handler[]
+---@type event_handler[]
 local libraries = {}
 
 local setup_ran = false
@@ -48,8 +48,8 @@ local register_remote_interfaces = function()
   if setup_ran then return end
   setup_ran = true
 
-	---@type table<string,table<string,function[]>>
-	local unmerged_interfaces = {}
+	---@type table<string,table<string,function>>
+	local interfaces = {}
 	---@type table<string,fun(event:CustomCommandData)[]>
 	local custom_commands = {}
 	---@type table<string,LocalisedString[]>
@@ -60,16 +60,18 @@ local register_remote_interfaces = function()
 
 		if lib.remote_interfaces then
 			for name, new in pairs(lib.remote_interfaces) do
-				local current = unmerged_interfaces[name]
+				local interface = interfaces[name]
 
-				if not current then
-					current = {}
-					unmerged_interfaces[name] = current
+				if not interface then
+					interface = {}
+					interfaces[name] = interface
 				end
 
 				for key, handler in pairs(new) do
-					current[key] = current[key] or {}
-					current[key][lib_name] = handler
+					if interface[key] then
+						error("Two functions registered to the same interface's key")
+					end
+					interface[key] = handler
 				end
 			end
 		end
@@ -91,40 +93,14 @@ local register_remote_interfaces = function()
 
 		-- And I guess I have to still support these :(
 ---@diagnostic disable-next-line: deprecated
-		if lib.add_commands then lib.add_commands() end
----@diagnostic disable-next-line: deprecated
-		if lib.add_remote_interface then lib.add_remote_interface() end
+		if lib.add_commands or lib.add_remote_interface then
+			error("Please use the new version(s) instead of the deprecated callback")
+		end
   end
 
 
-	for name, interface in pairs(unmerged_interfaces) do
-		---@type table<string,function>
-		local merged_interface = {}
-
-		for key, handlers in pairs(interface) do
-
-			if not next(handlers, next(handlers)) then
-				-- We only have *one* handler. Just pass it directly
-				_, merged_interface[key] = next(handlers)
-			else
-				log("There are multiple handlers for the '"..name.."' inteface: "..key)
-
-				local action = function (...)
-					for _, handler in pairs(handlers) do
-						local output = {handler(...)}
-						if next(output) then
-							log("Multi-handler remote interface had a truthy return. Returning early!")
-							return table.unpack(output)
-						end
-					end
-				end
-
-				merged_interface[key] = action
-			end
-
-		end
-
-		remote.add_interface(name, merged_interface)
+	for name, interface in pairs(interfaces) do
+		remote.add_interface(name, interface)
 	end
 
 	for name, functions in pairs(custom_commands) do
@@ -256,7 +232,7 @@ end)
 ---@class custom_event_handler_lib : event_handler_lib
 local handler = {}
 
----@param lib custom_event_handler|event_handler
+---@param lib event_handler
 handler.add_lib = function(lib)
   for k, current in pairs (libraries) do
     if current == lib then
@@ -266,7 +242,7 @@ handler.add_lib = function(lib)
   table.insert(libraries, lib)
 end
 
----@param libs (custom_event_handler|event_handler)[]
+---@param libs event_handler[]
 handler.add_libraries = function(libs)
   for k, lib in pairs (libs) do
     handler.add_lib(lib)
