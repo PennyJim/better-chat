@@ -1,11 +1,12 @@
-local interface = require("__better-chat__.runtime.ChatInterface")
-local chatlog = require("__better-chat__.runtime.ChatLog")
-local printer = require("__better-chat__.runtime.ChatPrinter")
+local chatlog = require("chatlog")
 
 ---MARK: Manager
 
----@class ChatLogManager : custom_event_handler
-local manager = {events = {}--[[@as event_handler.events]], remote_interfaces = {}--[[@as custom_event_handler.remote_interfaces]]}
+---@class ChatLogManager : event_handler
+local manager = {
+	events = {}--[[@as event_handler.events]],
+	remote_interfaces = {}--[[@as event_handler.remote_interfaces]]
+}
 
 ---@param player_index uint
 local function build_player_log(player_index)
@@ -13,6 +14,13 @@ local function build_player_log(player_index)
 	---@cast player -?
 	if storage.player_logs[player_index] then return log("Player already had a log. '"..player.name.."' at "..player_index) end
 	storage.player_logs[player_index] = chatlog.new(storage.master_log, player)
+	--[[NOTE:
+		I have considered retroactively adding them to the list of recipients for their force
+		But... that's hightly likely to add people to 'player' force messages only for some other script to assign them to a force
+		If any mod has an actual team under 'player', this means that newly joining players might see secrets
+
+		I wonder if it makes sense to wait a tick before doing so?
+	]]
 end
 ---Adds a new chatlog for player_index if it didn't exist before
 manager.events[defines.events.on_player_created] = function (event)
@@ -38,12 +46,14 @@ manager.events[defines.events.on_player_removed] = function (event)
 	--- Remove references to this player's index
 	local log = storage.master_log
 	for chat_id, chat in log:from() do
-		---@cast chat Chat.whisper|Chat.player
-		if chat.type == "whisper"
-		or chat.type == "player" then
+		if chat.type == "player" then
 			if chat.recipient.index == player_index then
 				log:remove(chat_id)
 			end
+
+		elseif chat.type == "surface"
+			or chat.type == "force" then
+			chat.recipients[player_index] = nil
 		end
 
 		if chat.sender and chat.sender.index == player_index then
@@ -57,38 +67,71 @@ end
 ---@param player_index int
 manager.clear = function (player_index)
 	storage.player_logs[player_index] = chatlog.new()
+	--TODO: also clean the master log of messages exclusive to this player ..?
 end
 
----@class ChatParams.base
----@field message LocalisedString
----@field sender? ChatPlayer
----@field color? Color
----@field process_color? boolean
+---@alias PlayerReference ChatPlayer|PlayerIdentification
 
----@class ChatParams.global
+---@class ChatParams.base
+---The contents of the message.
+---@field message LocalisedString
+---The index of the player who the message will be attributed to.
+---@field sender? PlayerReference
+---The base color of the message.
+---@field color? Color
+---Whether or not the message is faded out by the player's settings. Defaults to `false`.
+---@field process_color? boolean
+---
+---If a sound should be emitted for this message. Defaults to `defines.print_sound.use_player_settings` if clear is `false`. Otherwise defaults to `defines.print_sound.never`.
+---@field sound? defines.print_sound
+---The sound to play. If not given, [UtilitySounds::console\_message](https://lua-api.factorio.com/latest/prototypes/UtilitySounds.html#console_message) will be used instead.
+---@field sound_path? SoundPath
+---The volume of the sound to play. Must be between 0 and 1 inclusive. Defaults to `1`.
+---@field volume_modifier? float
+
+---@class ChatParams.global : ChatParams.base
 ---@field type "global"|"command"
 ---@field recipient nil
 
----@class ChatParams.force_surface : ChatParams.base
----@field type "force"|"surface"
----@field recipient_index uint
+---@class ChatParams.force : ChatParams.base
+---@field type "force"
+---The force that received the message.
+---@field recipient ForceID
+
+---@class ChatParams.surface : ChatParams.base
+---@field type "surface"
+---The surface that received the message.
+---@field recipient SurfaceIdentification
 
 ---@class ChatParams.player : ChatParams.base
 ---@field type "player"
----@field recipient ChatPlayer
+---The player that received the message.
+---@field recipient PlayerReference
 
----@class ChatParams.whisper : ChatParams.base
----@field type "whisper"
----@field sender ChatPlayer
----@field recipient ChatPlayer
-
----@alias ChatParams 
+---@alias ChatParams
 ---| ChatParams.global
----| ChatParams.force_surface
+---| ChatParams.force
+---| ChatParams.surface
 ---| ChatParams.player
----| ChatParams.whisper
+
+---@class ChatParamsValidated.global : ChatParams.global
+---@field sender ChatPlayer?
+---@class ChatParamsValidated.force : ChatParams.force
+---@field sender ChatPlayer?
+---@field recipient uint
+---@class ChatParamsValidated.surface : ChatParams.surface
+---@field sender ChatPlayer?
+---@field recipient uint
+---@class ChatParamsValidated.player : ChatParams.player
+---@field sender ChatPlayer?
+---@field recipient ChatPlayer
+---@alias ChatParamsValidated
+---| ChatParamsValidated.global
+---| ChatParamsValidated.force
+---| ChatParamsValidated.surface
+---| ChatParamsValidated.player
 ---Adds a message to chat history
----@param tentative_chat ChatParams
+---@param tentative_chat ChatParamsValidated
 manager.add_message = function(tentative_chat)
 	---@type Chat
 	local new_chat = {
@@ -103,7 +146,8 @@ manager.add_message = function(tentative_chat)
 	}
 
 	if new_chat.type == "surface" then
-		local surface_index = tentative_chat.recipient_index
+		---@cast tentative_chat ChatParamsValidated.surface
+		local surface_index = tentative_chat.recipient
 		new_chat.recipient_index = surface_index
 		---@type uint[]
 		local list, count = {}, 0
@@ -118,54 +162,47 @@ manager.add_message = function(tentative_chat)
 		end
 
 	elseif new_chat.type == "force" then
-		local force_index = tentative_chat.recipient_index
+		---@cast tentative_chat ChatParamsValidated.force
+		local force_index = tentative_chat.recipient
 		new_chat.recipient_index = force_index
-		---@type uint[]
-		local list, count = {}, 0
+		---@type table<uint,true>
+		local list = {}
 		new_chat.recipients = list
 
 		for _, player in pairs(game.forces[force_index].players) do
-			count = count + 1
-			list[count] = player.index
+			list[player.index] = true
 		end
 
 	elseif new_chat.type == "player" then
+		---@cast tentative_chat ChatParamsValidated.player
 		new_chat.recipient = tentative_chat.recipient
-
-	elseif new_chat.type == "whisper" then
-		if not new_chat.sender then error("Whisper has no sender") end
-		local recipient = tentative_chat.recipient
-		if not recipient then error("Whisper has no recipient") end
-		new_chat.recipient = recipient
 	end
 
 
 	storage.master_log:add(new_chat, settings.global["bc-global-chat-history"].value--[[@as int]],
-		interface.remove_chat
+		nil -- This would be used to clean up any outside references to a chat
 	)
 
 	for player_index, player in pairs(game.players) do
 		---@cast player_index uint
-		interface.add_chat(player_index, new_chat)
-		
-		local force_index = player.force_index
+
 		if chatlog.passes_filter(new_chat, {
 			player_index = player_index,
-			force_index = force_index
 		}) then
 			-- Only add to it if it was already built
 			-- It should be automatically added when building it
 			local player_log = storage.player_logs[player_index]
 			if player_log then
-				player_log:add(new_chat, 36)
+				player_log:add(new_chat, 36) --TODO: Figure out what to do with this value
 			else
-				build_player_log(player_index)
+				build_player_log(player_index) --FIXME: this also doesn't use the 36 of the other method
 			end
 		end
 	end
 end
 
 manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
+	--FIXME: This is *entirely* old
   local setting = event.setting
   if event.setting_type == "runtime-global" then
     if setting == "bc-global-chat-history" then
@@ -178,7 +215,7 @@ manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
 					settings.global[setting].value
 				}
       }
-      printer.print_chat("global")
+      -- printer.print_chat("global")
     end
   else
     local player_index = event.player_index
@@ -186,9 +223,9 @@ manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
     if setting == "bc-player-closeable-chat" then
       -- Clear opened value when closeable is disabled
       -- Also does it when enabled, but they should just be in main menu
-      storage.isChatOpen[player_index--[[@as int]]] = nil
+      -- storage.isChatOpen[player_index--[[@as int]]] = nil
       -- Update chat to now match the openness it Should be now
-      printer.print_chat("player", player_index)
+      -- printer.print_chat("player", player_index)
     elseif (
       setting == "bc-color-fade" or
       setting == "bc-default-color" or
@@ -197,7 +234,7 @@ manager.events[defines.events.on_runtime_mod_setting_changed] = function (event)
       setting == "bc-debug-color"
     ) then
       -- Reprint chat to update the the printed chat
-      printer.print_chat("player", player_index)
+      -- printer.print_chat("player", player_index)
     end
   end
 end

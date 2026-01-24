@@ -7,7 +7,6 @@
 
 ---@alias ChatMessageType
 ---| PrintLevel
----| "whisper"
 ---| "command"
 
 ---@class ChatPlayer
@@ -31,62 +30,55 @@
 ---@class Chat.force_surface : Chat.base
 ---@field type "surface"|"force"
 ---@field recipient_index uint
----@field recipients uint[]
-
----@class Chat.whisper : Chat.base
----@field type "whisper"
----@field sender ChatPlayer
----@field recipient ChatPlayer
+---@field recipients table<uint,true>
 
 ---@alias Chat
 ---| Chat.base
 ---| Chat.player
 ---| Chat.force_surface
----| Chat.whisper
 
 ---@type table<ChatMessageType,fun(chat:Chat,player?:uint,force?:uint):boolean>
 local see_lookup = {
 	global = function() return true end,
 
+	command = function (chat, player, force)
+		if not player then return not force end
+		return chat.sender.index == player
+			or game.get_player(player).admin
+	end,
+
 	---@param chat Chat.force_surface
-	force = function (chat, _, force)
+	force = function (chat, player, force)
+		if player then
+			return chat.recipients[player]
+		end
 		if not force then return true end
 		return chat.recipient_index == force
 	end,
 
 	---@param chat Chat.player
-	player = function (chat, player)
-		if not player then return true end
+	player = function (chat, player, force)
+		if not player then return not force end
 		return chat.recipient.index == player
+			or chat.sender and chat.sender.index == player or false
 	end,
 
 	---@param chat Chat.force_surface
-	surface = function (chat, player)
-		if not player then return true end
-		for _, recipient_index in pairs(chat.recipients) do
-			if recipient_index == player then
-				return true
-			end
-		end
-		return false
+	surface = function (chat, player, force)
+		if not player then return not force end
+		return chat.recipients[player] or false
 	end,
-
-	---@param chat Chat.whisper
-	whisper = function (chat, player)
-		if not player then return true end
-		return chat.recipient.index == player or chat.sender.index == player
-	end,
-
-	command = function (chat, player, force)
-		if not player then return true end
-		return game.get_player(player).admin
-	end
 }
 
 ---@class ChatLog.filter
+---Whether or not the given player could've seen the message *at time of sending*.
 ---@field player_index? uint
+---Whether or not everyone in the force could've seen the message. This is fairly limited to just global and force specific message.
+---
+---If unset, everything is visble. Unused if `player_index` is set.
 ---@field force_index? uint
----@field type? {[ChatMessageType]:true?} Defaults to every message type if not given
+---Defaults to every message type if not given
+---@field type? {[ChatMessageType]:true?}
 
 --- Determine if the chat is visible based on the given filter
 ---@param chat Chat
@@ -196,8 +188,7 @@ function chatlog.new(global_log, player)
 	if not global_log then return newLog end
 
 	for _,chat in global_log:filter{
-		player_index = player.index,
-		force_index = player.force_index
+		player_index = player.index
 	} do
 		newLog:add(chat)
 	end
