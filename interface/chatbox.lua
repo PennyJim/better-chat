@@ -7,28 +7,40 @@ local chatbox = {events = {}} --[[@as event_handler]]
 
 ---@class chatbox_state
 ---@field player LuaPlayer
+---@field format_settings ChatFormatSettngs
 ---@field root LuaGuiElement
 ---@field chatlist LuaGuiElement
 ---@field is_healthy boolean To see if 
 ---@field refs table<string,LuaGuiElement>
 
 ---@param player LuaPlayer
----@param is_healthy boolean?
+---@param is_healthy boolean
 ---@return int height
-local function calculate_box_height(player, is_healthy)
-	local active_quickbars = 3
-	local height = player.display_resolution.height
+---@return int width
+local function calculate_box_size(player, is_healthy)
+	local active_quickbars = 2 -- TODO, make a setting
+	local resolution = player.display_resolution
 	local scale = player.display_scale
+
+	local height = resolution.height
 	local scaled_height = height/scale
 	local distance_to_bottom = 40 * active_quickbars + 52
 	if not is_healthy then
 		distance_to_bottom = distance_to_bottom + 13
 	end
-	return scaled_height - distance_to_bottom
+	local box_height = scaled_height - distance_to_bottom
+
+	local width = resolution.width
+	local scaled_width = width/scale
+	local midpoint = scaled_width / 2
+	local box_width = midpoint + 358
+
+	return box_height, box_width
 end
 
 ---@param player LuaPlayer
 local function create_state(player)
+	local box_height, box_width = calculate_box_size(player, true)
 	local root, refs = glib.add(player.gui.screen, {
 		args = {
 			name = "chatlist",
@@ -39,8 +51,8 @@ local function create_state(player)
 		},
 		-- _hover = handlers.test,
 		style_mods = {
-			height = calculate_box_height(player, true),
-			maximal_width = player.display_resolution.width/player.display_scale
+			height = box_height,
+			width = box_width,
 		},
 		elem_mods = {
 			location = {0, 0} -- Properly math it out
@@ -50,6 +62,7 @@ local function create_state(player)
 	---@type chatbox_state
 	local state = {
 		player = player,
+		format_settings = formater.fetch_settings(player.mod_settings),
 		root = root,
 		refs = refs,
 		chatlist = refs.chatlist,
@@ -96,7 +109,8 @@ end
 ---@param state chatbox_state|EventData.on_player_display_resolution_changed|EventData.on_player_display_scale_changed
 local function update_height(state)
 	if not state.chatlist then state = get_state(state.player_index) end
-	state.chatlist.style.height = calculate_box_height(state.player, state.is_healthy)
+	local style = state.chatlist.style
+	style.height, style.width = calculate_box_size(state.player, state.is_healthy)
 end
 chatbox.events[defines.events.on_player_display_resolution_changed] = update_height
 chatbox.events[defines.events.on_player_display_scale_changed] = update_height
@@ -117,21 +131,80 @@ chatbox.events[defines.events.on_tick] = function (event)
 	end
 end
 
+chatbox.events[defines.events.on_runtime_mod_setting_changed] = function (event)
+	local state = get_state(event.player_index)
+	state.format_settings = formater.fetch_settings(state.player.mod_settings)
+end
+
 ---@param chat Chat
 function chatbox.add_message(player, chat)
 	local state = get_state(player.index)
-	local elem = glib.add(state.chatlist, {
-		args = {type = "label", caption = {"",
-			formater.time(chat.tick) .. " | "..
-			chat.type .. " - ",
-			formater.chat_player(chat.sender), ": ",
-			chat.message
-		}},
-		style_mods = {
-			font_color = chat.color,
-			font = "default-game",
-			single_line = false,
+	local settings = state.format_settings
+
+	local base_color = chat.color
+	if base_color and chat.process_color then
+		base_color = formater.process_color(settings, base_color)
+	end
+
+	---@type StyleMods
+	local generic_style_mods
+	if base_color then
+		generic_style_mods = {
+			font_color = base_color
 		}
+	end
+
+	---@type GuiElemDef[]
+	local message, index = {}, 0
+
+	if settings.show_time then
+		index = index + 1
+		message[index] = {
+			args = {
+				type = "label", style = "bc_chat_prefix_label",
+				caption = formater.time(chat.tick)
+			},
+			style_mods = generic_style_mods
+		}
+	end
+
+	index = index + 1
+	message[index] = {
+		args = {
+			type = "progressbar", style = "bc_chat_badge_progressbar",
+			caption = chat.type, value = 1,
+		},
+		style_mods = {
+			color = chat.color
+		}
+	}
+
+	if chat.sender then
+		index = index + 1
+		message[index] = {
+			args = {
+				type = "label", style = "bc_chat_prefix_label",
+				caption = formater.chat_player(chat.sender, ": "),
+			},
+			style_mods = generic_style_mods,
+		}
+	end
+
+	index = index + 1
+	message[index] = {
+		args = {
+			type = "label", style = "bc_chat_message_label",
+			caption = chat.message
+		},
+		style_mods = generic_style_mods,
+	}
+
+	local elem = glib.add(state.chatlist, {
+		args = {
+			type = "flow", style = "packed_horizontal_flow",
+			direction ="horizontal",
+		},
+		children = message
 	}, state.refs)
 	state.chatlist.scroll_to_bottom()
 end
