@@ -129,7 +129,27 @@ local register_remote_interfaces = function()
 		end
 		commands.add_command(name, help, action)
 	end
+end
 
+---comment
+---@param eventid defines.events
+---@return string
+local event_name = function(eventid)
+  for name,id in pairs(defines.events) do
+    if id == eventid then
+      return name
+    end
+  end
+  return tostring(eventid)
+end
+
+local check_handler = function(id, handler, oldhandler)
+  if oldhandler then
+    local oldinfo = debug.getinfo(oldhandler, "S")
+    local newinfo = debug.getinfo(handler, "S")
+    error(string.format("duplicate handlers within module for event %s: first defined at %s:%d, replaced by redefinition at %s:%d", 
+      event_name(id), oldinfo.short_src, oldinfo.linedefined, newinfo.short_src, newinfo.linedefined))
+  end
 end
 
 local register_events = function()
@@ -143,9 +163,14 @@ local register_events = function()
   for lib_name, lib in pairs (libraries) do
 
     if lib.events then
-      for k, handler in pairs (lib.events--[[@as table<defines.events,function>]]) do
-        all_events[k] = all_events[k] or {}
-        all_events[k][lib_name] = handler
+      for k, handler in pairs (lib.events--[[@as table<defines.events|string,function>]]) do
+				local id = script.get_event_id(k)
+        all_events[id] = all_events[id] or {}
+
+				-- if a *single* module refers to the same event different ways, error...
+        local oldhandler = all_events[id][lib_name]
+        check_handler(id, handler, oldhandler)
+        all_events[id][lib_name] = handler
       end
     end
 

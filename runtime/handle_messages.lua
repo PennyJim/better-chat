@@ -362,7 +362,7 @@ end
 ---@param recipient integer?
 ---@param clear boolean? Whether or not the chat is cleared, `true` by default
 local function compatibility_send(message, color, send_level, recipient, clear)
-	if type(message) == "table" and message[1] then
+	if type(message) ~= "table" or message[1] then
 		---@cast message LocalisedString
 		return handle_messages.send_message({
 			message = message,

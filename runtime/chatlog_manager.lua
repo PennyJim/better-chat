@@ -194,9 +194,9 @@ manager.add_message = function(tentative_chat)
 			-- It should be automatically added when building it
 			local player_log = storage.player_logs[player_index]
 			if player_log then
-				player_log:add(new_chat, 36) --TODO: Figure out what to do with this value
+				player_log:add(new_chat, 50) --TODO: Figure out what to do with this value
 			else
-				build_player_log(player_index) --FIXME: this also doesn't use the 36 of the other method
+				build_player_log(player_index) --FIXME: this also doesn't use the 50 of the other method
 			end
 		end
 	end
