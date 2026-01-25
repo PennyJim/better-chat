@@ -1,4 +1,5 @@
 local glib = require("__glib__.glib")
+local formater = require("formatter")
 local handlers = {}
 
 ---@class chatbox : event_handler
@@ -116,49 +117,14 @@ chatbox.events[defines.events.on_tick] = function (event)
 	end
 end
 
----Formats the given tick in D+:HH:MM:SS
----@param tick int
----@return string
-local function format_time(tick)
-	---@type int, int, int, int
-	local seconds, minutes, hours, days
-	seconds = tick / 60
-	minutes, seconds = math.floor(seconds / 60), seconds % 60
-	hours, minutes = math.floor(minutes / 60), minutes % 60
-	days, hours = math.floor(hours / 24), hours % 24
-
-	if days > 0 then
-		return string.format("%d:%02d:%02d.%02d", days, hours, minutes, seconds)
-	elseif hours > 0 then
-		return string.format("%d:%02d.%02d", hours, minutes, seconds)
-	else
-		return string.format("%d.%02d", minutes, seconds)
-	end
-end
-
----@param player ChatPlayer?
-local function format_player(player)
-	if not player then return "" end
-	local color = player.color
-	return {"",
-		"[color="
-			..color.r..","
-			..color.g..","
-			..color.b
-		.."]",
-		player.name,
-		"[/color]"
-	}
-end
-
 ---@param chat Chat
 function chatbox.add_message(player, chat)
 	local state = get_state(player.index)
 	local elem = glib.add(state.chatlist, {
 		args = {type = "label", caption = {"",
-			format_time(chat.tick) .. " | "..
+			formater.time(chat.tick) .. " | "..
 			chat.type .. " - ",
-			format_player(chat.sender), ": ",
+			formater.chat_player(chat.sender), ": ",
 			chat.message
 		}},
 		style_mods = {
