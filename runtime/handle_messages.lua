@@ -208,10 +208,10 @@ end
 local icon_types = {"virtual-signal","item","fluid","entity","recipe","technology","space-location","achievement","item-group","tile"}
 ---Turns the message into a chat message
 ---@param sender LuaPlayer|ChatPlayer
----@param type PrintLevel
+---@param level PrintLevel
 ---@param text string
 ---@return string
-function handle_messages.process_message(sender, type, text)
+function handle_messages.process_message(sender, level, text)
 	--Process Item codes with images
 	local message = replace_shortcodes(text)
 

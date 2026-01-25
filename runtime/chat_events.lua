@@ -165,7 +165,7 @@ end
 function event_handler.on_load()
 	get_remote_events()
 	filter_events()
-	require("event_handler").finalize_libraries()
+	event_handler_lib.finalize_libraries()
 	disabled_handlers = storage.disabled_handlers
 end
 

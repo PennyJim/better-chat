@@ -172,6 +172,7 @@ manager.add_message = function(tentative_chat)
 		for _, player in pairs(game.forces[force_index].players) do
 			list[player.index] = true
 		end
+		--TODO: Add a setting to let messages also be visible to friendly forces
 
 	elseif new_chat.type == "player" then
 		---@cast tentative_chat ChatParamsValidated.player

@@ -1,5 +1,5 @@
-if ... ~= "__better-chat__.runtime.custom_event_handler" then
-	return require("__better-chat__.runtime.custom_event_handler")
+if ... ~= "__better-chat__.event_handler" then
+	return require("__better-chat__.event_handler")
 end
 local util = require("util")
 

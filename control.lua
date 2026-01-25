@@ -1,11 +1,11 @@
-local event_handler = require("event_handler")
+event_handler_lib = require("event_handler")
 
 ---@class BetterChatStorage
 storage = storage
 ---@type {[string]:metatable}
 metatables = {}
 
-event_handler.add_libraries{
+event_handler_lib.add_libraries{
 	require("runtime.chatlog_manager"),
 	require("runtime.chat_events"),
 }
