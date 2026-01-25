@@ -4,11 +4,12 @@ end
 local util = require("util")
 
 ---@class event_handler.remote_interfaces : {[string]:{[string]:function}}
+---@class event_handler.commands : {[string]:fun(event:CustomCommandData)}
 
 ---@class event_handler
 ---@field on_script_trigger? table<string,fun(event:EventData.on_script_trigger_effect)>
 ---@field remote_interfaces? event_handler.remote_interfaces
----@field commands? table<string,fun(event:CustomCommandData)>
+---@field commands? event_handler.commands
 ---@field command_helps? table<string,LocalisedString> If a help message is left unset, it'll default to `{"command-help."..name}`
 local tmp = {
 	---@deprecated DO NOT USE. Hate this interface
@@ -229,7 +230,7 @@ script.on_configuration_changed(function(data)
   end
 end)
 
----@class custom_event_handler_lib : event_handler_lib
+---@class event_handler_lib : event_handler_lib
 local handler = {}
 
 ---@param lib event_handler

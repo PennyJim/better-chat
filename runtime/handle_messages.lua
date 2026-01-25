@@ -205,8 +205,9 @@ end
 
 --MARK: public functions
 
+local icon_types = {"virtual-signal","item","fluid","entity","recipe","technology","space-location","achievement","item-group","tile"}
 ---Turns the message into a chat message
----@param sender LuaPlayer
+---@param sender LuaPlayer|ChatPlayer
 ---@param type PrintLevel
 ---@param text string
 ---@return string
@@ -215,8 +216,13 @@ function handle_messages.process_message(sender, type, text)
 	local message = replace_shortcodes(text)
 
 	--- Toggle based icon settings
-	local player_settings = settings.get_player_settings(sender)
-	local icons = {"virtual-signal","item","fluid","entity","recipe","technology","space-location","achievement","item-group","tile"}
+	---@type LuaCustomTable<string,ModSetting>
+	local player_settings
+	if type(sender) == "userdata" then
+		player_settings = settings.get_player_settings(sender)
+	else
+		player_settings = settings.player_default
+	end
 
 	---Planet is special and has its own tag besides space-location
 	if(player_settings["bc-space-location-icon"].value) then
@@ -225,7 +231,7 @@ function handle_messages.process_message(sender, type, text)
 		end)
 	end
 
-	for _,icon in pairs(icons) do
+	for _,icon in pairs(icon_types) do
 		if(player_settings["bc-"..icon.."-icon"].value) then
 			message = replace_all(message, "%["..icon:gsub("%-", "%%-").."=[^%s,%]]+]", function (match)
 				return "[img="..icon.."."..match:sub(3+#icon)

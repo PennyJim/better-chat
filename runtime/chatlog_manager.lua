@@ -77,7 +77,7 @@ end
 ---@field message LocalisedString
 ---The index of the player who the message will be attributed to.
 ---@field sender? PlayerReference
----The base color of the message.
+---The base color of the message. Defaults to white
 ---@field color? Color
 ---Whether or not the message is faded out by the player's settings. Defaults to `false`.
 ---@field process_color? boolean
