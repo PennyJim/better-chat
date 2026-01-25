@@ -1,4 +1,5 @@
 local chatlog = require("chatlog")
+local chatbox = require("interface.chatbox")
 
 ---MARK: Manager
 
@@ -197,6 +198,11 @@ manager.add_message = function(tentative_chat)
 				player_log:add(new_chat, 50) --TODO: Figure out what to do with this value
 			else
 				build_player_log(player_index) --FIXME: this also doesn't use the 50 of the other method
+			end
+
+			chatbox.add_message(player, new_chat)
+			if not __DebugAdapter then
+				player.clear_console()
 			end
 		end
 	end

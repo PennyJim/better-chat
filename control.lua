@@ -6,7 +6,10 @@ storage = storage
 metatables = {}
 
 event_handler_lib.add_libraries{
+	-- require("__glib__.glib"), -- Let it register its own events
+	require("interface.chatbox"),
 	require("runtime.chatlog_manager"),
+	require("runtime.handle_messages"),
 	require("runtime.chat_events"),
 }
 

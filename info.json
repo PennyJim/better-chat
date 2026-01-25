@@ -5,6 +5,10 @@
 	"version": "0.6.0",
 	"author": "PennyJim",
 	"factorio_version": "2.0",
+	"dependencies": [
+		"base",
+		"glib >= 0.1.8"
+	],
 	"package": {
 		"ignore": [
 			"*.xcf"
