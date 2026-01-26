@@ -399,24 +399,6 @@ end
 
 handle_messages.clear = chatlog_manager.clear
 
----Wraps the given LocalisedString or string in a LocalisedString
----that colors the text. Mostly just a shorthand to avoid
----turning the color objects into the argument array all the time
----@param string LocalisedString
----@param color Color
----@return LocalisedString
-function handle_messages.color(string, color)
-	return {"",
-		"[color="
-			..color[1] or color.r
-			..color[2] or color.g
-			..color[3] or color.b
-		.."]",
-			string,
-		"[/color]"
-	}
-end
-
 -- TODO: Add Nicknames?
 
 

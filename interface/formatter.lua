@@ -55,20 +55,40 @@ function formatter.time(tick)
 	end
 end
 
----@param player ChatPlayer
----@param suffix LocalisedString
-function formatter.chat_player(player, suffix)
-	local color = player.color
+---Wraps the given LocalisedString or string in a LocalisedString
+---that colors the text. Mostly just a shorthand to avoid
+---turning the color objects into the argument array all the time
+---@param string LocalisedString
+---@param color Color
+---@param suffix? LocalisedString
+---@return LocalisedString
+function formatter.color(string, color, suffix)
 	return {"",
 		"[color="
-			..color.r..","
-			..color.g..","
-			..color.b
+			..(color[1] or color.r)..","
+			..(color[2] or color.g)..","
+			..(color[3] or color.b)
 		.."]",
-		player.name,
+		string,
 		"[/color]",
-		suffix
+		suffix,
 	}
+end
+
+---@param player ChatPlayer
+---@param suffix? LocalisedString
+function formatter.chat_player(player, suffix)
+	return formatter.color(player.name, player.color, suffix)
+end
+
+---@param player ChatPlayer|LuaPlayer
+---@param suffix? LocalisedString
+function formatter.player(player, suffix)
+	if type(player) == "userdata" then
+		return formatter.color(player.name, player.chat_color, suffix)
+	else
+		return formatter.color(player.name, player.chat_color, suffix)
+	end
 end
 
 return formatter

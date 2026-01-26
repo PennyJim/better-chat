@@ -68,6 +68,7 @@ end
 ---@param player_index int
 manager.clear = function (player_index)
 	storage.player_logs[player_index] = chatlog.new()
+	chatbox.clear(player_index)
 	--TODO: also clean the master log of messages exclusive to this player ..?
 end
 
@@ -187,6 +188,9 @@ manager.add_message = function(tentative_chat)
 
 	for player_index, player in pairs(game.players) do
 		---@cast player_index uint
+		if not __DebugAdapter then
+			player.clear_console()
+		end
 
 		if chatlog.passes_filter(new_chat, {
 			player_index = player_index,
@@ -201,9 +205,6 @@ manager.add_message = function(tentative_chat)
 			end
 
 			chatbox.add_message(player, new_chat)
-			if not __DebugAdapter then
-				player.clear_console()
-			end
 		end
 	end
 end

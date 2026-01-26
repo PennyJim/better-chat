@@ -136,6 +136,12 @@ chatbox.events[defines.events.on_runtime_mod_setting_changed] = function (event)
 	state.format_settings = formater.fetch_settings(state.player.mod_settings)
 end
 
+---@param player_index uint
+function chatbox.clear(player_index)
+	local state = get_state(player_index)
+	state.chatlist.clear();
+end
+
 ---@param chat Chat
 function chatbox.add_message(player, chat)
 	local state = get_state(player.index)
