@@ -60,8 +60,19 @@ manager.events[defines.events.on_player_removed] = function (event)
 		if chat.sender and chat.sender.index == player_index then
 			chat.sender.index = nil
 		end
+
+		if chat.ignored_by then
+			chat.ignored_by[player_index] = nil
+		end
 	end
 end
+
+--TODO: when a player is promoted, mark anyone who's ignored them as `false`
+-- `true` will be ignored
+-- `false` will be ignored admin (so messages are still visible)
+-- `nil` will be anyone who's not ignored
+
+--TODO: Keep track of ignored players
 
 ---Empties the print log for the given player
 ---Messages will still be visible in the chat history
@@ -146,6 +157,12 @@ manager.add_message = function(tentative_chat)
 		color = tentative_chat.color,
 		process_color = tentative_chat.process_color,
 	}
+
+	if tentative_chat.sender and tentative_chat.sender.index then
+		local sender = game.get_player(tentative_chat.sender.index)
+		--TODO: get who's ignored the sender
+		
+	end
 
 	if new_chat.type == "surface" then
 		---@cast tentative_chat ChatParamsValidated.surface

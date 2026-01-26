@@ -20,6 +20,7 @@
 ---@field tick uint
 ---@field chat_id uint
 ---@field sender? ChatPlayer
+---@field ignored_by? {[uint]:true?}
 ---@field color? Color
 ---@field process_color? boolean
 
@@ -79,6 +80,10 @@ local see_lookup = {
 ---@field force_index? uint
 ---Defaults to every message type if not given
 ---@field type? {[ChatMessageType]:true?}
+---To be able to filter by sender. If a message with a sender has no player index associated, then it'll use the sender's name.
+---
+---`0` can be used to filter for messages without a sender. If unset, all senders are visible.
+---@field sender? {[uint|string]:true?}
 
 --- Determine if the chat is visible based on the given filter
 ---@param chat Chat
@@ -87,6 +92,23 @@ local see_lookup = {
 local function passes_filter(chat, filter)
 	-- make sure the chat is of a valid type
 	if filter.type and not filter.type[chat.type] then
+		return false
+	end
+
+	if filter.sender then
+		---@type uint|string
+		local key = 0
+		if chat.sender then
+			key = chat.sender.index or chat.sender.name
+		end
+		if not filter.sender[key] then
+			return false
+		end
+	end
+
+	if filter.player_index
+	and chat.ignored_by
+	and chat.ignored_by[filter.player_index] then
 		return false
 	end
 
