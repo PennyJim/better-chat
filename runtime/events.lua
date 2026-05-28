@@ -120,33 +120,94 @@ events[defines.events.on_player_respawned] = function (event)
 	}
 end
 
---Research Queueing
+--Research
 events[defines.events.on_research_finished] = function (event)
 	if event.by_script then return end
 	local research = event.research
 	local force = research.force
 	handle_messages.broadcast_friendly{
-		message = {"technology-researched", research.localised_name},
+		message = {"technology-researched", "[technology="..research.name.."]"},
 		color = force.color,
 		process_color = true,
 		send_level = "force",
 		recipient = force.index
 	}
 end
---Research -- TODO: Get on_research_queued to become a real event
--- events[defines.events.on_research_queued] = function (event)
--- 	-- if event.by_script then return end
--- 	send_message({"player-started-research", {"chat-localization.unknown-player"}, event.research.localised_name},
--- 		nil, "force", event.research.force.index)
--- end
-events[defines.events.on_research_cancelled] = function (event)
-	-- if event.by_script then return end
-	local tech = prototypes.technology
+events[defines.events.on_research_queued] = function (event)
+	if not event.player_index then return end
+	-- Game doesn 't report queueing with only one player
+	if #game.players <= 1 then return end
+
+	local player = game.get_player(event.player_index)
+	---@cast player -?
 	local force = event.force
+
+	-- Determine if they started or only queued the research
+	local _,current_research = next(force.research_queue)
+	---@cast current_research LuaTechnology
+	---@type string
+	local research_key
+	if current_research == event.research then
+		research_key = "player-started-research"
+	else
+		research_key = "player-queued-research"
+	end
+
+	handle_messages.broadcast_friendly{
+		message = {research_key,
+			"[technology="..event.research.name.."]",
+			color(player.name, player.chat_color),
+		},
+		color = force.color,
+		process_color = true,
+		send_level = "force",
+		recipient = force.index
+	}
+end
+events[defines.events.on_research_moved] = function (event)
+	if not event.player_index then return end
+	-- Game doesn 't report queueing with only one player
+	if #game.players <= 1 then return end
+	local player = game.get_player(event.player_index)
+	---@cast player -?
+	
+	local force = event.force
+
+	---@type string
+	local moved_key
+	if true then
+		moved_key = "player-moved-research-forwards"
+	else
+		moved_key = "player-moved-research-backwards"
+	end
+
+	handle_messages.broadcast_friendly{
+		message = {moved_key,
+			"[technology=]", -- TODO: Replace with some message that describes the pain of figuring that out
+			color(player.name, player.chat_color)
+		},
+		color = force.color,
+		process_color = true,
+		send_level = "force",
+		recipient = force.index,
+	}
+end
+events[defines.events.on_research_cancelled] = function (event)
+	if not event.player_index then return end
+	-- Game doesn 't report queueing with only one player
+	if #game.players <= 1 then return end
+
+	local player = game.get_player(event.player_index)
+	---@cast player -?
+	local force = event.force
+
 	local has_cleared = false
 	for research in pairs(event.research) do
 		handle_messages.broadcast_friendly{
-			message = {"player-cancelled-research", tech[research].localised_name, {"chat-localization.unknown-player"}},
+			message = {"player-cancelled-research",
+				"[technology="..research.."]",
+				color(player.name, player.chat_color)
+			},
 			color = force.color,
 			process_color = true,
 			send_level = "force",
