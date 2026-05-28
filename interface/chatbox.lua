@@ -18,7 +18,7 @@ local chatbox = {events = {}} --[[@as event_handler]]
 ---@return int height
 ---@return int width
 local function calculate_box_size(player, is_healthy)
-	local active_quickbars = 2 -- TODO, make a setting
+	local active_quickbars = 4 -- TODO, make a setting
 	local resolution = player.display_resolution
 	local scale = player.display_scale
 
